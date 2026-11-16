@@ -40,12 +40,6 @@ app.get('/download/apk', (req, res) => {
     return res.download(apkPath, 'KYNX-v0.9.32.apk');
   }
   
-  // Fallback to parent directory if available
-  const fallbackPath = path.join(__dirname, '..', 'KYNX-Cloud-latest.apk');
-  if (fs.existsSync(fallbackPath)) {
-    return res.download(fallbackPath, 'KYNX-v0.9.32.apk');
-  }
-
   // Cloud fallback (GitHub Releases or Render backend)
   const cloudUrl = process.env.APK_DOWNLOAD_URL || 'https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.32/KYNX-v0.9.32.apk';
   res.redirect(cloudUrl);
@@ -61,15 +55,14 @@ app.get('/health', (req, res) => {
   res.json({ status: "ok", app: "KYNX Website", version: RELEASE_INFO.version_name, developer: "KG" });
 });
 
-// Fallback to index.html for SPA routes
+// Fallback to index.html for root and SPA routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`[KYNX WEB] Server running on port ${PORT}`);
-  });
-}
+// Always listen so Express preset works in both local and Vercel container runtimes
+app.listen(PORT, () => {
+  console.log(`[KYNX WEB] Server running on port ${PORT}`);
+});
 
 module.exports = app;
