@@ -11,7 +11,7 @@ const RELEASE_INFO = {
   release_name: "Build 42: Turbo Media & Privacy Engine",
   apk_filename: "KYNX-latest.apk",
   file_size: "59.94 MB",
-  sha256: "2f1793a875bfb33d976fd7df3f93b722e23d9de40f47c999473bb85a2a7fa1cc",
+  sha256: "7e1bac64e777f373eb96bf1831b0df7a6794c52d1bab53e41bd7d395decb2165",
   release_date: "November 16, 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 15",
