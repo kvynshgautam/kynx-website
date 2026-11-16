@@ -215,28 +215,6 @@ body {
   gap: 12px;
 }
 
-.audio-toggle-pill {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
-  padding: 7px 14px;
-  border-radius: 99px;
-  font-size: 12px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.audio-toggle-pill:hover, .audio-toggle-pill.active {
-  border-color: var(--accent-purple);
-  color: var(--text-main);
-  background: rgba(139, 92, 246, 0.15);
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
-}
-
 .nav-cta-btn {
   background: linear-gradient(135deg, #8b5cf6, #6d28d9);
   color: white;

@@ -4,77 +4,12 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ==========================================
-  // 1. Web Audio Procedural Synthesizer (Cyber SFX)
+  // 1. Sound FX Disabled
   // ==========================================
-  let audioCtx = null;
-  let sfxEnabled = true;
-
-  function initAudio() {
-    if (!audioCtx) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        audioCtx = new AudioContext();
-      }
-    }
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-  }
-
-  function playCyberTone(freqStart, freqEnd, duration, type = 'sine', gainVal = 0.08) {
-    if (!sfxEnabled) return;
-    try {
-      initAudio();
-      if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freqStart, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(Math.max(freqEnd, 20), audioCtx.currentTime + duration);
-
-      gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
-    } catch (e) {
-      // Audio autoplay policy fallback
-    }
-  }
-
-  function playClickSound() { playCyberTone(1200, 600, 0.06, 'sine', 0.05); }
-  function playScanSound() { playCyberTone(400, 1600, 0.22, 'triangle', 0.06); }
-  function playPurgeSound() { playCyberTone(800, 80, 0.28, 'sawtooth', 0.08); }
-  function playHeartSound() { playCyberTone(580, 880, 0.12, 'sine', 0.06); }
-
-  // Sound Toggle Pill in Navbar
-  const audioToggleBtn = document.getElementById('audio-toggle-btn');
-  const audioLabel = document.getElementById('audio-label');
-  const audioIcon = document.getElementById('audio-icon');
-
-  if (audioToggleBtn) {
-    audioToggleBtn.addEventListener('click', () => {
-      initAudio();
-      sfxEnabled = !sfxEnabled;
-      if (sfxEnabled) {
-        audioLabel.textContent = 'SFX: ON';
-        audioIcon.textContent = '🔊';
-        audioToggleBtn.classList.add('active');
-        playClickSound();
-      } else {
-        audioLabel.textContent = 'SFX: OFF';
-        audioIcon.textContent = '🔇';
-        audioToggleBtn.classList.remove('active');
-      }
-    });
-  }
-
-  // First interaction audio unlock
-  window.addEventListener('click', () => initAudio(), { once: true });
-  window.addEventListener('scroll', () => initAudio(), { once: true });
+  function playClickSound() {}
+  function playScanSound() {}
+  function playPurgeSound() {}
+  function playHeartSound() {}
 
 
   // ==========================================
