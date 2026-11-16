@@ -1,21 +1,17 @@
 {
-  "version": 2,
+  "cleanUrls": true,
   "rewrites": [
-    {
-      "source": "/download/apk",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.js"
-    },
     {
       "source": "/privacy",
       "destination": "/privacy.html"
     },
     {
-      "source": "/(.*)",
-      "destination": "/$1"
+      "source": "/download",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/download/apk",
+      "destination": "/api/download.js"
     }
   ]
 }
