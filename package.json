@@ -2,11 +2,9 @@
   "name": "kynx-website",
   "version": "1.0.0",
   "description": "Official Web Portal and Download Center for KYNX Cyber Messenger",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "build": "echo 'Build complete'",
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node index.js"
   },
   "keywords": ["kynx", "messenger", "privacy", "android"],
   "author": "KG",
