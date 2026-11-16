@@ -6,21 +6,21 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.32",
-  version_code: 42,
-  release_name: "Build 42: Turbo Media & Privacy Engine",
+  version_name: "0.9.33",
+  version_code: 43,
+  release_name: "Build 43: Liquid Touch Pager & High-Speed Bottom Navigation",
   apk_filename: "KYNX-latest.apk",
-  file_size: "59.94 MB",
-  sha256: "7e1bac64e777f373eb96bf1831b0df7a6794c52d1bab53e41bd7d395decb2165",
+  file_size: "59.95 MB",
+  sha256: "3ca78f3224e55c69270bb3ad75241f63135ce725902cac6be108da0efe6c1733",
   release_date: "November 16, 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 15",
   changelog: [
-    "① View-Once Media Engine: Photos and videos self-destruct upon viewing and auto-purge permanently from disk.",
-    "Hardware Screenshot Protection: Enforced via FLAG_SECURE / SecureFlagPolicy to block recording and capture.",
-    "Native 120fps Fast Gestures: Swipe-right on any bubble to reply with haptic spring physics, and double-tap to quick-react ❤️.",
-    "Long-Press Send Actions: Tap to send, or long-press to choose 🔕 Send Silently or ⏰ Schedule Message.",
-    "5 Procedural Cyber GPU Wallpapers: Obsidian Abyss, Violet Aurora, Midnight Nebula, Emerald Matrix, Cyberpunk Crimson."
+    "Liquid Touch Bottom Navigation Bar: Physics-based sliding pill indicator with real-time gesture tracking.",
+    "120 FPS Horizontal Pager: Fluid thumb swipe between Chats, Contacts, Calls, Status, and Settings.",
+    "Instant Pre-Caching: Zero-lag beyondBoundsPageCount pre-warming eliminates stutter and blank frames.",
+    "Hardware Acceleration: GPU graphicsLayer translations for native 120Hz responsiveness.",
+    "Haptic Micro-Feedback: Subtle spring bounce and haptic click on tab touch."
   ]
 };
 
