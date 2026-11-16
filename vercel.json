@@ -3,12 +3,12 @@
   "redirects": [
     {
       "source": "/download/apk",
-      "destination": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.33/KYNX-v0.9.33-Build43.apk",
+      "destination": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
       "permanent": false
     },
     {
       "source": "/downloads/:path*",
-      "destination": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.33/KYNX-v0.9.33-Build43.apk",
+      "destination": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
       "permanent": false
     }
   ],

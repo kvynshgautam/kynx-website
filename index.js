@@ -6,21 +6,21 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.33",
-  version_code: 43,
-  release_name: "Build 43: Liquid Touch Pager & High-Speed Bottom Navigation",
+  version_name: "0.9.34",
+  version_code: 44,
+  release_name: "Build 44: 16 KB Page-Size Support & Liquid Touch Navigation",
   apk_filename: "KYNX-latest.apk",
-  file_size: "59.95 MB",
-  sha256: "3ca78f3224e55c69270bb3ad75241f63135ce725902cac6be108da0efe6c1733",
+  file_size: "62.8 MB",
+  sha256: "ea55fec33c6daadf4d40c186dbb4bfb2e94a9cbb372cb34b284ca4d67adb4b42",
   release_date: "November 16, 2026",
   developer: "KG",
-  min_android: "Android 8.0+ (API 26) to Android 15",
+  min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   changelog: [
+    "16 KB Page-Size Architecture: Fully compliant with Android 15 & 16 (API 35/36/37) on Google Pixel 8 Pro / Pixel 9.",
+    "Upgraded Native WebRTC 1.3.10: Recompiled with 16 KB ELF segment alignment for zero compatibility warnings.",
     "Liquid Touch Bottom Navigation Bar: Physics-based sliding pill indicator with real-time gesture tracking.",
     "120 FPS Horizontal Pager: Fluid thumb swipe between Chats, Contacts, Calls, Status, and Settings.",
-    "Instant Pre-Caching: Zero-lag beyondBoundsPageCount pre-warming eliminates stutter and blank frames.",
-    "Hardware Acceleration: GPU graphicsLayer translations for native 120Hz responsiveness.",
-    "Haptic Micro-Feedback: Subtle spring bounce and haptic click on tab touch."
+    "Hardware Acceleration: GPU graphicsLayer translations for native 120Hz responsiveness."
   ]
 };
 
@@ -38,7 +38,7 @@ app.get('/api/release', (req, res) => {
 });
 
 // Direct APK download route & CDN fallback
-const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.33/KYNX-v0.9.33-Build43.apk";
+const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk";
 
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
