@@ -56,6 +56,11 @@ app.get('/downloads/:filename', (req, res) => {
   return res.redirect(GITHUB_RELEASE_URL);
 });
 
+// KYNX Web Deck route (WhatsApp Web alternative)
+app.get('/web', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'web.html'));
+});
+
 // Privacy policy route
 app.get('/privacy', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
