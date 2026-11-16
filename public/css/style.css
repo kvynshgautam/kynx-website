@@ -160,17 +160,25 @@ body {
 }
 
 .nav-logo-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #7055f5, #3c24b2);
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 900;
-  font-size: 19px;
-  color: white;
-  box-shadow: 0 0 18px rgba(112, 85, 245, 0.6);
+  filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.7));
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+}
+
+.nav-brand:hover .nav-logo-box {
+  transform: scale(1.08) rotate(2deg);
+  filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.95));
+}
+
+.nav-logo-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
 }
 
 .nav-brand-text {
