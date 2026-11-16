@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KYNX — Privacy Policy</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .privacy-content {
+      padding: 140px 0 80px;
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.8;
+      color: #94a3b8;
+    }
+    .privacy-content h1 {
+      font-size: 38px;
+      color: #f8fafc;
+      margin-bottom: 8px;
+    }
+    .privacy-content h2 {
+      font-size: 22px;
+      color: #a78bfa;
+      margin-top: 36px;
+      margin-bottom: 12px;
+    }
+    .privacy-content p, .privacy-content ul {
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+    .privacy-content ul {
+      padding-left: 24px;
+    }
+    .privacy-content li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="nav-brand">
+      <div class="nav-logo-box">K</div>
+      <span class="nav-brand-text">KYNX</span>
+    </a>
+    <a href="/" class="nav-cta-btn">
+      <span>← Back to Home</span>
+    </a>
+  </nav>
+
+  <div class="container">
+    <div class="privacy-content">
+      <h1>Privacy Policy</h1>
+      <p>Last updated: November 16, 2026 • Developer: <strong>KG</strong></p>
+
+      <h2>1. Overview</h2>
+      <p>
+        KYNX ("we", "our", or "the app"), engineered by KG, is committed to safeguarding user privacy. We believe messaging should be instantaneous, private, and secure. We do not sell, rent, or monetize your personal information.
+      </p>
+
+      <h2>2. Data Collection & Usage</h2>
+      <ul>
+        <li><strong>Account Authentication:</strong> When registering, your email address is used strictly to deliver 6-digit OTP codes for secure passwordless login. Passwords, challenge tokens, and OTPs are cryptographically hashed using SHA-256 with salt.</li>
+        <li><strong>Messages & Attachments:</strong> In-transit chat messages and media files are transmitted via secure HTTPS/WSS and end-to-end WebRTC channels. Messages are stored locally on your device in SQLite.</li>
+        <li><strong>View-Once Media:</strong> Photos or videos sent with the View-Once flag are purged from server storage and device memory immediately upon being closed by the recipient.</li>
+        <li><strong>Camera & Microphone:</strong> Camera and microphone hardware permissions are requested solely when you initiate voice/video calls, capture photos, or record voice notes. Audio and video streams are peer-to-peer and never recorded on servers.</li>
+        <li><strong>Bluetooth:</strong> Bluetooth hardware permissions (Bluetooth Scan, Connect, Advertise) are utilized strictly for the offline peer-to-peer mesh chat mode when internet connectivity is unavailable.</li>
+      </ul>
+
+      <h2>3. Account Deletion & Right to be Forgotten</h2>
+      <p>
+        Users have the absolute right to delete their account and associated data at any time directly in the app via <strong>Settings → Account → Delete Account</strong> or by contacting the developer. Account deletion permanently purges all profile data, messages, and contact associations.
+      </p>
+
+      <h2>4. Security Architecture</h2>
+      <p>
+        KYNX enforces hardware-level protections, including <code>FLAG_SECURE</code> to block screenshots and recording of ephemeral media, robust JWT authorization, and rate-limiting against brute-force attacks.
+      </p>
+
+      <h2>5. Contact</h2>
+      <p>
+        For inquiries regarding this Privacy Policy, contact the developer at <strong>getkynx@gmail.com</strong>.
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container footer-content">
+      <div class="footer-text">
+        &copy; 2026 <strong>KYNX</strong>. Designed &amp; Engineered by <strong>KG</strong>.
+      </div>
+      <div class="footer-links">
+        <a href="/" class="footer-link">Home</a>
+        <a href="/download/apk" class="footer-link">Download APK</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KYNX — Connect Beyond Limits | Official Website & Download Portal</title>
+  <meta name="description" content="KYNX is a zero-lag cyber messenger engineered by KG with 0ms instant media, screenshot-protected view-once privacy, and offline Bluetooth mesh.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%237055F5'/><text y='.9em' x='15' font-size='75' font-weight='900' fill='white'>K</text></svg>">
+</head>
+<body>
+
+  <!-- Top Scroll Progress Bar -->
+  <div id="scroll-progress"></div>
+
+  <!-- Animated Interactive Canvas -->
+  <canvas id="bg-canvas"></canvas>
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="#" class="nav-brand">
+      <div class="nav-logo-box">K</div>
+      <span class="nav-brand-text">KYNX</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features" class="nav-link">Features</a></li>
+      <li><a href="#storyboard" class="nav-link">Live Showcase</a></li>
+      <li><a href="#performance" class="nav-link">Performance</a></li>
+      <li><a href="#creator" class="nav-link">About KG</a></li>
+      <li><a href="#download" class="nav-link">Download</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button id="audio-toggle-btn" class="audio-toggle-pill" title="Toggle UI Sound FX">
+        <span id="audio-icon">🔊</span>
+        <span id="audio-label">SFX: ON</span>
+      </button>
+      <a href="/download/apk" class="nav-cta-btn">
+        <span>⚡ Download APK</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-left">
+          <div class="badge-live">
+            <span class="badge-pulse-dot"></span>
+            <span>BUILD 42 (v0.9.32) IS LIVE • ZERO-LAG ENGINE</span>
+          </div>
+          <h1 class="hero-title">
+            CONNECT <br>
+            <span class="text-gradient">BEYOND LIMITS.</span>
+          </h1>
+          <p class="hero-description">
+            Next-generation cyber messenger engineered by <strong>KG</strong> with 0ms instant media, self-destructing view-once privacy, and offline Bluetooth peer-to-peer mesh. Designed for uncompromising speed and security.
+          </p>
+
+          <div class="hero-cta-group">
+            <a href="/download/apk" class="btn-primary-glow">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+              <span>Download KYNX (v0.9.32)</span>
+            </a>
+            <a href="#storyboard" class="btn-secondary-glass">
+              <span>Interactive Showcase ↓</span>
+            </a>
+          </div>
+
+          <div class="hero-meta">
+            <div class="meta-item">
+              <span style="color:#10b981">✓</span> 100% Free & Open
+            </div>
+            <div class="meta-item">
+              <span style="color:#8b5cf6">🛡️</span> Zero Ads & Trackers
+            </div>
+            <div class="meta-item">
+              <span style="color:#06b6d4">⚡</span> 120 FPS Native Compose
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero 3D Phone Mockup Canvas Showcase -->
+        <div class="hero-right mockup-wrapper">
+          <div class="floating-badge badge-top-left">
+            <span style="font-size:22px">①</span>
+            <div>
+              <strong style="font-size:12.5px; display:block">View-Once Media</strong>
+              <small style="color:#a78bfa; font-size:11px">Auto-purged from disk</small>
+            </div>
+          </div>
+
+          <div class="phone-mockup" id="hero-phone">
+            <div class="phone-notch"></div>
+            <div class="phone-header">
+              <div class="phone-avatar">GG</div>
+              <div>
+                <div class="phone-user-name">Gaurav Gautam</div>
+                <div class="phone-user-status">● online • 120 FPS</div>
+              </div>
+            </div>
+
+            <div class="phone-chat-body" id="hero-phone-body">
+              <div class="chat-bubble-peer">
+                Hey KG, app super fast chal rha h! Media bilkul instant khul rha h bina spinner ke 🔥
+              </div>
+              <div class="chat-bubble-mine">
+                Haan Gaurav! 128MB RAM LruCache + Zero-lag hardware compose engine chal rha h. ⚡
+              </div>
+
+              <!-- Interactive View-Once Simulation Chip -->
+              <div class="view-once-chip" id="vo-sim-btn">
+                <div class="vo-icon">①</div>
+                <div id="vo-status-display">
+                  <strong style="font-size:12px; color:white; display:block">View-Once Photo</strong>
+                  <span style="color:#e879f9; font-size:10.5px">Tap to view (Protected)</span>
+                </div>
+              </div>
+
+              <div class="chat-bubble-peer" id="demo-swipe-bubble" style="cursor:pointer" title="Double-tap to heart react, or click button below">
+                Double tap me for ❤️ react!
+                <div id="demo-heart-pill" style="display:none; margin-top:4px; padding:2px 8px; background:rgba(0,0,0,0.4); border-radius:12px; font-size:11px; align-items:center; gap:4px">
+                  <span>❤️</span> <span style="font-size:10px; color:#a78bfa">1</span>
+                </div>
+              </div>
+
+              <!-- Animated Quote Banner (revealed on swipe) -->
+              <div id="demo-quote-banner" style="display:none; background:#1b1d2e; border-left:3px solid #8b5cf6; padding:6px 10px; border-radius:6px; font-size:11px; margin-top:auto">
+                <strong style="color:#8b5cf6">Replying to Gaurav Gautam:</strong>
+                <p style="color:#94a3b8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Double tap me for ❤️ react!</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="floating-badge badge-bottom-right">
+            <span style="font-size:22px">⚡</span>
+            <div>
+              <strong style="font-size:12.5px; display:block">0ms Instant Media</strong>
+              <small style="color:#06b6d4; font-size:11px">RAM & Flash LruCache</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       PINNED SCROLL STORYBOARD SECTION (THE FEATURE THEATRE)
+       ======================================================== -->
+  <section class="storyboard-section" id="storyboard">
+    <div class="storyboard-pinned-container">
+      <div class="container">
+        <div class="storyboard-layout">
+          <!-- Left: Narrative Chapters that change on scroll -->
+          <div class="storyboard-narrative">
+            <div class="storyboard-nav-pills">
+              <span class="sb-pill active" data-step="0">01. TURBO MEDIA</span>
+              <span class="sb-pill" data-step="1">02. VIEW-ONCE</span>
+              <span class="sb-pill" data-step="2">03. 120HZ GESTURES</span>
+              <span class="sb-pill" data-step="3">04. GPU SHADERS</span>
+            </div>
+
+            <!-- Chapter 1 -->
+            <div class="chapter-step active" id="chapter-0">
+              <div class="chapter-num">CHAPTER 01 // ACCELERATION</div>
+              <h2 class="chapter-title">Zero-Lag Instant Media Engine</h2>
+              <p class="chapter-desc">
+                No loading spinners. No buffer pauses. High-resolution photos, audio notes, and attachments render frame-0 directly from RAM with multi-tier flash persistence.
+              </p>
+              <div class="hud-telemetry-box">
+                <div class="hud-item">
+                  <span class="hud-key">FRAME-0 DECODE LATENCY</span>
+                  <span class="hud-val">0.2 ms</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-key">RAM LRU ALLOCATION</span>
+                  <span class="hud-val">128 MB POOL</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-key">DISK LOOKUP THROUGHPUT</span>
+                  <span class="hud-val">120 MB/s DIRECT</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chapter 2 -->
+            <div class="chapter-step" id="chapter-1">
+              <div class="chapter-num">CHAPTER 02 // PRIVACY FORTRESS</div>
+              <h2 class="chapter-title">Hardware View-Once Protection</h2>
+              <p class="chapter-desc">
+                Military-grade ephemeral delivery. When a View-Once image is opened, Android's hardware <code style="color:#e879f9">FLAG_SECURE</code> blocks screenshots, screen recording, and casting. Once closed, cached bytes are permanently purged.
+              </p>
+              <div class="hud-telemetry-box">
+                <div class="hud-item">
+                  <span class="hud-key">HARDWARE SCREENSHOT DEFENSE</span>
+                  <span class="hud-val" style="color:#d946ef">FLAG_SECURE ACTIVE</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-key">STORAGE FOOTPRINT POST-OPEN</span>
+                  <span class="hud-val" style="color:#10b981">0 BYTES (PURGED)</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-key">REAL-TIME WEBSOCKET ACK</span>
+                  <span class="hud-val">&lt; 18 ms SYNCHRONIZED</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chapter 3 -->
+            <div class="chapter-step" id="chapter-2">
+              <div class="chapter-num">CHAPTER 03 // TACTILE PHYSICS</div>
+              <h2 class="chapter-title">120 FPS Gesture Mechanics</h2>
+              <p class="chapter-desc">
+                Engineered with Spring Physics and tactile haptic feedback. Flick right to instantly reply with a quote context. Double-tap any message to pop a ❤️ heart reaction without navigating sluggish menus.
+              </p>
+              <div class="hud-telemetry-box">
+                <div class="hud-item">
+                  <span class="hud-key">GESTURE ENGINE RESPONSE</span>
+                  <span class="hud-val">120 FPS NATIVE</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-key">HAPTIC BUMP LATENCY</span>
+                  <span class="hud-val">8 ms TACTILE</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-key">SPRING DAMPING RATIO</span>
+                  <span class="hud-val">0.78 (CRITICAL BOUNCE)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chapter 4 -->
+            <div class="chapter-step" id="chapter-3">
+              <div class="chapter-num">CHAPTER 04 // PROCEDURAL ART</div>
+              <h2 class="chapter-title">5 Cyber GPU Gradient Shaders</h2>
+              <p class="chapter-desc">
+                Zero bloated PNG or JPEG assets. Gorgeous procedural GPU wallpapers calculated dynamically in Skia hardware per chat room: Obsidian, Electric Violet, Cyber Nebula, Emerald Matrix, and Crimson Eclipse.
+              </p>
+              <div class="hud-telemetry-box">
+                <div class="hud-item">
+                  <span class="hud-key">GPU SHADER EXECUTION</span>
+                  <span class="hud-val">NATIVE SKIA GL</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-key">APK SIZE OVERHEAD</span>
+                  <span class="hud-val" style="color:#10b981">0.00 KB (ALGORITHMIC)</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-key">THEME PERSISTENCE</span>
+                  <span class="hud-val">PER-CONVERSATION SQLITE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: The Interactive 3D Storyboard Phone Stage -->
+          <div class="storyboard-phone-stage">
+            <div class="sb-phone-mockup" id="storyboard-phone">
+              <div class="phone-notch"></div>
+              <div class="phone-header">
+                <div class="phone-avatar">GG</div>
+                <div>
+                  <div class="phone-user-name">Gaurav Gautam</div>
+                  <div class="phone-user-status" id="sb-phone-status">● Live Demo • 120 FPS</div>
+                </div>
+              </div>
+
+              <div class="sb-phone-screen" id="sb-screen">
+                <!-- Chapter 1 Screen: Media Scanner with Laser -->
+                <div class="screen-chapter-1" id="screen-step-0">
+                  <div class="chat-bubble-mine" style="align-self:flex-start">
+                    Sending raw 4K shot with instant decode 📸
+                  </div>
+                  <div class="media-scanner-card">
+                    <div class="scanline"></div>
+                    <div style="text-align:center">
+                      <span style="font-size:48px; display:block; margin-bottom:8px">🏎️</span>
+                      <strong style="font-size:13px; color:white">Speed_Engine_4K.raw</strong>
+                    </div>
+                    <div class="media-speed-pill">⚡ 0ms DECODE</div>
+                  </div>
+                  <div class="chat-bubble-peer" style="margin-top:14px">
+                    Bhai bina delay ke dikh rhi h! Zero buffering! 🔥
+                  </div>
+                </div>
+
+                <!-- Chapter 2 Screen: View Once Shield & Auto Purge -->
+                <div class="screen-chapter-2" id="screen-step-1">
+                  <div class="vo-shield-circle">🛡️</div>
+                  <div class="vo-security-badge">HARDWARE FLAG_SECURE ACTIVE</div>
+                  <h4 style="font-size:16px; margin-bottom:6px">Screenshot Blocked</h4>
+                  <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin-bottom:16px">
+                    Media self-destructs upon closing. Cached bytes will auto-purge from disk.
+                  </p>
+                  <div style="background:rgba(0,0,0,0.5); padding:8px 14px; border-radius:10px; border:1px solid #10b981; font-family:var(--font-mono); font-size:11px; color:#10b981">
+                    STATUS: PURGED (0 BYTES LEFT)
+                  </div>
+                </div>
+
+                <!-- Chapter 3 Screen: Swipe to Reply & Heart React -->
+                <div class="screen-chapter-3" id="screen-step-2">
+                  <div class="chat-bubble-mine">
+                    KYNX gesture physics kaisa lga?
+                  </div>
+                  <div class="sb-swipe-target" id="sb-swipe-target">
+                    Swipe me right to reply or double-tap for ❤️
+                    <div class="sb-heart-burst" id="sb-heart-burst">
+                      <span>❤️</span> <strong style="color:#a78bfa">1</strong>
+                    </div>
+                  </div>
+                  <div class="sb-reply-banner" id="sb-reply-banner">
+                    <strong style="color:#8b5cf6">Replying to Gaurav Gautam:</strong>
+                    <div style="color:#94a3b8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Swipe me right to reply...</div>
+                  </div>
+                </div>
+
+                <!-- Chapter 4 Screen: GPU Shader Wallpapers -->
+                <div class="screen-chapter-4" id="screen-step-3">
+                  <div class="wallpaper-indicator-box">
+                    <span style="font-size:11px; font-family:var(--font-mono); color:var(--accent-purple-light); display:block; margin-bottom:4px">ACTIVE GPU SHADER</span>
+                    <strong id="active-shader-label" style="font-size:15px; color:white">Obsidian Velvet</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Performance Stats Section -->
+  <section class="section-padding" id="performance" style="background:#040508">
+    <div class="container">
+      <span class="section-tag">ENGINEERED FOR EXTREMES</span>
+      <h2 class="section-heading">Zero-Lag Architecture</h2>
+      <p class="section-sub">
+        Every millisecond counts. KYNX strips away heavy webviews and bulky frameworks, delivering pure native Jetpack Compose execution directly on device hardware.
+      </p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" data-val="2">&lt; 2ms</div>
+          <div class="stat-label">RAM & Flash Lookup Time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" data-val="120">120 FPS</div>
+          <div class="stat-label">Fluid Compose Frame Rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" data-val="0">0 Bytes</div>
+          <div class="stat-label">Storage Wasted Post View-Once</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" data-val="100">100% P2P</div>
+          <div class="stat-label">Offline Bluetooth Mesh Mode</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Flagship Features Section -->
+  <section class="section-padding" id="features">
+    <div class="container">
+      <span class="section-tag">FLAGSHIP UPGRADES</span>
+      <h2 class="section-heading">Built Different. By Design.</h2>
+      <p class="section-sub">Explore the breakthrough capabilities introduced in the latest Build 42 release.</p>
+
+      <div class="features-grid">
+        <!-- Feature 1: View Once -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper" style="color:#e879f9; background:rgba(232,121,249,0.12); border-color:rgba(232,121,249,0.3)">
+            ①
+          </div>
+          <h3 class="feature-title">View-Once Media Engine</h3>
+          <p class="feature-desc">
+            Self-destructing media that leaves zero trace. Hardware FLAG_SECURE prevents screenshots and screen recording. Closing the viewer permanently deletes cached bytes from device and server disk.
+          </p>
+          <div class="interactive-demo-box">
+            <div class="vo-interactive-button" onclick="document.getElementById('vo-sim-btn').click()">
+              <span style="font-size:12.5px; font-weight:600">Simulate View-Once</span>
+              <span class="vo-status-text">Try Interactive Demo →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 2: 120fps Gestures -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper" style="color:#06b6d4; background:rgba(6,182,212,0.12); border-color:rgba(6,182,212,0.3)">
+            👆
+          </div>
+          <h3 class="feature-title">Native 120fps Gestures</h3>
+          <p class="feature-desc">
+            Right-swipe any message bubble to trigger reply quoting with spring physics and tactile haptic bump. Double-tap any message to instantly react with ❤️ without opening sluggish menus.
+          </p>
+          <div class="interactive-demo-box">
+            <button id="btn-trigger-swipe" style="width:100%; padding:10px; border-radius:10px; background:rgba(6,182,212,0.15); border:1px solid rgba(6,182,212,0.3); color:#06b6d4; font-weight:700; cursor:pointer">
+              Simulate Swipe-to-Reply
+            </button>
+          </div>
+        </div>
+
+        <!-- Feature 3: Cyber Wallpapers -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper" style="color:#a78bfa; background:rgba(139,92,246,0.12); border-color:rgba(139,92,246,0.3)">
+            🎨
+          </div>
+          <h3 class="feature-title">5 Procedural GPU Wallpapers</h3>
+          <p class="feature-desc">
+            Zero asset bloat. Procedural GPU gradient shaders calculated directly in Skia hardware per conversation. Switch themes in real-time below:
+          </p>
+          <div class="wallpaper-chips">
+            <span class="wp-chip active" data-wp="obsidian" style="background:#08090e">Obsidian</span>
+            <span class="wp-chip" data-wp="violet" style="background:#0e0720">Violet</span>
+            <span class="wp-chip" data-wp="nebula" style="background:#040e1e">Nebula</span>
+            <span class="wp-chip" data-wp="emerald" style="background:#04140d">Emerald</span>
+            <span class="wp-chip" data-wp="crimson" style="background:#160510">Crimson</span>
+          </div>
+        </div>
+
+        <!-- Feature 4: Stealth Actions -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper" style="color:#fbbf24; background:rgba(251,191,36,0.12); border-color:rgba(251,191,36,0.3)">
+            🔕
+          </div>
+          <h3 class="feature-title">Long-Press Stealth Delivery</h3>
+          <p class="feature-desc">
+            Long-press the Send button to reveal options: <strong>🔕 Send Silently</strong> (delivers without buzzer/sound on receiver) or <strong>⏰ Schedule Message</strong> with quick presets.
+          </p>
+        </div>
+
+        <!-- Feature 5: Offline P2P Mesh -->
+        <div class="feature-card span-2">
+          <div class="feature-icon-wrapper" style="color:#10b981; background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.3)">
+            📡
+          </div>
+          <h3 class="feature-title">Hybrid Dual-Engine: Cloud & Offline Bluetooth</h3>
+          <p class="feature-desc">
+            When online, messages route through real-time low-latency WebSockets. When in basements, flights, or disasters without cellular signal, KYNX seamlessly switches to direct Bluetooth RFCOMM peer-to-peer mesh. Messages never drop.
+          </p>
+          <div style="display:flex; gap:16px; margin-top:14px; flex-wrap:wrap">
+            <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
+              🌐 <strong>WebSocket Relay:</strong> &lt; 40ms cloud latency
+            </div>
+            <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
+              ⚡ <strong>Bluetooth Mesh:</strong> 0 Internet required
+            </div>
+            <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
+              📦 <strong>Local SQLite Outbox:</strong> Zero message loss
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Developer Showcase: Meet the Creator (KG) -->
+  <section class="developer-section" id="creator">
+    <div class="container">
+      <span class="section-tag">LEAD ARCHITECT & CREATOR</span>
+      <h2 class="section-heading">Crafted by KG</h2>
+      <p class="section-sub">Driven by an obsession with extreme speed, zero bloat, and total user privacy.</p>
+
+      <div class="terminal-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="term-dot dot-red"></span>
+            <span class="term-dot dot-yellow"></span>
+            <span class="term-dot dot-green"></span>
+          </div>
+          <div class="terminal-title">kg@kynx-core:~$ whoami</div>
+          <div style="font-family:var(--font-mono); font-size:11px; color:#10b981">● ACTIVE ARCHITECT</div>
+        </div>
+
+        <div class="terminal-body">
+          <div class="dev-avatar-wrapper">
+            <div class="dev-avatar">
+              <div class="dev-avatar-inner">KG</div>
+            </div>
+            <span class="dev-role-badge">LEAD DEVELOPER</span>
+          </div>
+
+          <div class="dev-content">
+            <h3>KG</h3>
+            <div class="dev-tagline">Architect & Engineer of KYNX Messaging Core</div>
+            <p class="dev-bio">
+              "I built KYNX with an uncompromising vision: <strong>Zero Lag, Absolute Privacy, and Unbreakable Connectivity</strong>. While mainstream messenger apps are weighed down by tracking analytics, background ad services, and sluggish loading spinners, KYNX was engineered from line one in pure Jetpack Compose and an asynchronous Python FastAPI core for raw, instantaneous speed. Whether communicating across continents via cloud relays or chatting in a dead zone via Bluetooth mesh, KYNX delivers flawless performance."
+            </p>
+
+            <div class="dev-tech-tags">
+              <span class="tech-tag">Jetpack Compose</span>
+              <span class="tech-tag">Kotlin Coroutines & Flow</span>
+              <span class="tech-tag">FastAPI & Python 3.12</span>
+              <span class="tech-tag">WebRTC Audio/Video P2P</span>
+              <span class="tech-tag">SQLite + Neon Postgres</span>
+              <span class="tech-tag">Hardware FLAG_SECURE</span>
+              <span class="tech-tag">Bluetooth RFCOMM Mesh</span>
+            </div>
+
+            <!-- Interactive Terminal Prompt -->
+            <div class="terminal-interactive-box">
+              <div style="color:#a78bfa">kg@kynx-os:~$ <span id="term-cmd-text">kynx --status</span><span style="animation:pulseDot 1s infinite">_</span></div>
+              <div class="term-cmd-output" id="term-output">
+                [SYS] KYNX Core v0.9.32 Turbo [ONLINE]<br>
+                [ARCHITECT] KG (Lead Systems Engineer)<br>
+                [PEER_LINK] Gaurav Gautam (Connected via Cloud + Mesh)<br>
+                [LATENCY] 0.8ms | WebSockets: 100% | Bluetooth: ARMED<br>
+                [SECURITY] Hardware FLAG_SECURE + E2EE Active
+              </div>
+              <div class="term-btn-row">
+                <button class="term-btn" onclick="runTermCommand('status')">kynx --status</button>
+                <button class="term-btn" onclick="runTermCommand('benchmark')">kynx --benchmark</button>
+                <button class="term-btn" onclick="runTermCommand('mesh')">kynx --mesh</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download Center Section -->
+  <section class="download-section" id="download">
+    <div class="container">
+      <div class="download-card-big">
+        <div class="dl-version-pill">
+          <span>● BUILD 42</span>
+          <span>•</span>
+          <span>VERSION 0.9.32</span>
+          <span>•</span>
+          <span>59.94 MB</span>
+        </div>
+
+        <h2 class="dl-heading">Get KYNX for Android</h2>
+        <p class="dl-sub">
+          Experience ultra-fast cloud messaging, view-once privacy, and offline mesh capabilities on your Android device today.
+        </p>
+
+        <a href="/download/apk" class="dl-main-button" id="btn-dl-apk">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+          <span>Download Official APK (v0.9.32)</span>
+        </a>
+
+        <!-- Checksum Verification Card -->
+        <div class="dl-checksum-box">
+          <div style="text-align:left; overflow:hidden">
+            <span style="color:#a78bfa; display:block; font-weight:700">SHA-256 Checksum:</span>
+            <span id="sha-text" style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap; display:block">2f1793a875bfb33d976fd7df3f93b722e23d9de40f47c999473bb85a2a7fa1cc</span>
+          </div>
+          <button class="btn-copy" id="btn-copy-sha">Copy Hash</button>
+        </div>
+
+        <!-- 3-Step Installation Guide -->
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">01</div>
+            <h4>Download APK</h4>
+            <p>Tap the download button above to get the official release build directly onto your device.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-number">02</div>
+            <h4>Allow Installation</h4>
+            <p>If prompted by Android, tap "Settings" and enable "Allow from this source" for your browser.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-number">03</div>
+            <h4>Open & Enjoy</h4>
+            <p>Launch KYNX, verify your email with a secure 6-digit OTP, and experience 120 FPS messaging!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive View-Once Simulation Modal -->
+  <div id="vo-preview-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); z-index:99999; align-items:center; justify-content:center; flex-direction:column; padding:20px">
+    <div style="background:#131525; border:1px solid #d946ef; border-radius:24px; padding:24px; max-width:400px; width:100%; text-align:center; position:relative; box-shadow:0 0 50px rgba(217,70,239,0.3)">
+      <div style="display:inline-block; padding:4px 12px; background:rgba(217,70,239,0.2); border:1px solid #d946ef; border-radius:99px; font-size:11px; font-weight:700; color:#e879f9; margin-bottom:16px">
+        ① VIEW-ONCE ACTIVE • SCREENSHOTS BLOCKED
+      </div>
+      <div style="width:100%; height:200px; background:linear-gradient(135deg, #1f1136, #0e071c); border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:18px; border:1px solid rgba(255,255,255,0.08)">
+        <span style="font-size:48px">🔒</span>
+      </div>
+      <h4 style="font-size:17px; margin-bottom:8px">Hardware FLAG_SECURE Enforced</h4>
+      <p style="font-size:13px; color:#94a3b8; line-height:1.5; margin-bottom:20px">
+        This photo can only be viewed once. Closing this viewer will permanently purge the media from device memory and server disk.
+      </p>
+      <button id="vo-modal-close" style="width:100%; background:linear-gradient(135deg, #d946ef, #8b5cf6); border:none; color:white; padding:12px; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer">
+        Close & Self-Destruct
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-content">
+      <div class="footer-text">
+        &copy; 2026 <strong>KYNX</strong>. Designed &amp; Engineered by <strong>KG</strong>. All rights reserved.
+      </div>
+      <div class="footer-links">
+        <a href="#features" class="footer-link">Features</a>
+        <a href="#storyboard" class="footer-link">Showcase</a>
+        <a href="#creator" class="footer-link">About KG</a>
+        <a href="/privacy" class="footer-link">Privacy Policy</a>
+        <a href="/download/apk" class="footer-link">Download APK</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Animation & Interaction Scripts -->
+  <script src="js/vendor/lenis.min.js"></script>
+  <script src="js/vendor/gsap.min.js"></script>
+  <script src="js/vendor/ScrollTrigger.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
