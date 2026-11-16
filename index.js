@@ -37,15 +37,23 @@ app.get('/api/release', (req, res) => {
   res.json(RELEASE_INFO);
 });
 
-// Direct APK download route
+// Direct APK download route & CDN fallback
+const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.33/KYNX-v0.9.33-Build43.apk";
+
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
   if (fs.existsSync(apkPath)) {
     return res.download(apkPath, 'KYNX-v0.9.33.apk');
   }
-  
-  // Fallback to static CDN route
-  res.redirect('/downloads/KYNX-latest.apk');
+  return res.redirect(GITHUB_RELEASE_URL);
+});
+
+app.get('/downloads/:filename', (req, res) => {
+  const apkPath = path.join(__dirname, 'public', 'downloads', req.params.filename);
+  if (fs.existsSync(apkPath)) {
+    return res.download(apkPath);
+  }
+  return res.redirect(GITHUB_RELEASE_URL);
 });
 
 // Privacy policy route
