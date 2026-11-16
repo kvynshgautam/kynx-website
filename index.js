@@ -41,12 +41,11 @@ app.get('/api/release', (req, res) => {
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
   if (fs.existsSync(apkPath)) {
-    return res.download(apkPath, 'KYNX-v0.9.32.apk');
+    return res.download(apkPath, 'KYNX-v0.9.33.apk');
   }
   
-  // Cloud fallback (GitHub Releases or Render backend)
-  const cloudUrl = process.env.APK_DOWNLOAD_URL || 'https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.32/KYNX-v0.9.32.apk';
-  res.redirect(cloudUrl);
+  // Fallback to static CDN route
+  res.redirect('/downloads/KYNX-latest.apk');
 });
 
 // Privacy policy route
