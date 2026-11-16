@@ -6,21 +6,21 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.34",
-  version_code: 44,
-  release_name: "Build 44: 16 KB Page-Size Support & Liquid Touch Navigation",
+  version_name: "0.9.35",
+  version_code: 45,
+  release_name: "Build 45: Official Domain getkynx.vercel.app & 16 KB Page-Size Ready",
   apk_filename: "KYNX-latest.apk",
   file_size: "62.8 MB",
-  sha256: "ea55fec33c6daadf4d40c186dbb4bfb2e94a9cbb372cb34b284ca4d67adb4b42",
-  release_date: "November 16, 2026",
+  sha256: "16b15f6afeabb4d42d5e6c4fa1855aee85b30ad28a10d6f1488c06ba1558680d",
+  release_date: "November 17, 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   changelog: [
+    "In-App Official Website: Updated directly to getkynx.vercel.app across Settings and About.",
     "16 KB Page-Size Architecture: Fully compliant with Android 15 & 16 (API 35/36/37) on Google Pixel 8 Pro / Pixel 9.",
     "Upgraded Native WebRTC 1.3.10: Recompiled with 16 KB ELF segment alignment for zero compatibility warnings.",
     "Liquid Touch Bottom Navigation Bar: Physics-based sliding pill indicator with real-time gesture tracking.",
-    "120 FPS Horizontal Pager: Fluid thumb swipe between Chats, Contacts, Calls, Status, and Settings.",
-    "Hardware Acceleration: GPU graphicsLayer translations for native 120Hz responsiveness."
+    "120 FPS Horizontal Pager: Fluid thumb swipe between Chats, Contacts, Calls, Status, and Settings."
   ]
 };
 
