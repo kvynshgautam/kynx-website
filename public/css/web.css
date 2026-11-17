@@ -207,7 +207,16 @@ body {
 #qr-canvas {
   width: 200px;
   height: 200px;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+#qr-canvas canvas,
+#qr-canvas img {
+  width: 200px !important;
+  height: 200px !important;
+  display: block !important;
 }
 .qr-code-text {
   font-family: var(--font-mono);

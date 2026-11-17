@@ -368,49 +368,41 @@
     }
   }
 
-  // Generate dynamic Cyber QR SVG/Canvas
+  // Generate 100% Valid Standard ISO/IEC 18004 QR Code Matrix
+  let qrCodeInstance = null;
   function renderPairingQR(code) {
-    const canvas = el.qrCanvas;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.width = 200;
-    canvas.height = 200;
+    const container = document.getElementById('qr-canvas');
+    if (!container) return;
+    container.innerHTML = '';
 
-    // Draw dark tech matrix pattern
-    ctx.fillStyle = '#0B0B12';
-    ctx.fillRect(0, 0, 200, 200);
+    // Encode exact KYNX pairing protocol URI
+    const payload = `kynx://pair?code=${code}`;
 
-    ctx.fillStyle = '#7950FF';
-    const step = 8;
-    const codeStr = String(code || 'KYNX');
-    for (let x = 16; x < 184; x += step) {
-      for (let y = 16; y < 184; y += step) {
-        const hash = (x * 13 + y * 7 + codeStr.charCodeAt((x + y) % codeStr.length)) % 10;
-        if (hash > 4) {
-          ctx.fillRect(x, y, 6, 6);
-        }
+    try {
+      if (typeof QRCode !== 'undefined') {
+        qrCodeInstance = new QRCode(container, {
+          text: payload,
+          width: 200,
+          height: 200,
+          colorDark: '#08080E',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } else {
+        // Dynamic fallback if offline or script deferred
+        const img = document.createElement('img');
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(payload)}&bgcolor=FFFFFF&color=08080E&margin=1`;
+        img.alt = 'KYNX QR Code';
+        img.style.width = '200px';
+        img.style.height = '200px';
+        container.appendChild(img);
       }
+    } catch (e) {
+      console.warn('[KYNX Web] Error generating QR code:', e);
+      const img = document.createElement('img');
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(payload)}&bgcolor=FFFFFF&color=08080E&margin=1`;
+      container.appendChild(img);
     }
-
-    // Corner Finder Patterns
-    drawFinder(ctx, 16, 16);
-    drawFinder(ctx, 144, 16);
-    drawFinder(ctx, 16, 144);
-
-    // Center Cyber K Logo
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 24px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('K', 100, 100);
-  }
-
-  function drawFinder(ctx, x, y) {
-    ctx.strokeStyle = '#A78BFA';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(x, y, 40, 40);
-    ctx.fillStyle = '#5527D7';
-    ctx.fillRect(x + 10, y + 10, 20, 20);
   }
 
   async function handleDirectLogin() {

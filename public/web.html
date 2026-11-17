@@ -40,7 +40,7 @@
       <div id="qr-section" class="qr-container">
         <div class="qr-frame">
           <div class="qr-scanline"></div>
-          <canvas id="qr-canvas"></canvas>
+          <div id="qr-canvas"></div>
         </div>
         <div style="margin-top:10px; text-align:center;">
           <div style="font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:1.5px; margin-bottom:4px;">PAIRING CODE</div>
@@ -356,7 +356,8 @@
   <!-- In-App Cyber Heads-Up Notification Banner Container -->
   <div id="kynx-heads-up-container" class="kynx-heads-up-container"></div>
 
-  <!-- Core Web Engine Script -->
+  <!-- QR Code Generator & Core Web Engine Script -->
+  <script src="/js/qrcode.min.js"></script>
   <script src="/js/web-engine.js"></script>
 </body>
 </html>
