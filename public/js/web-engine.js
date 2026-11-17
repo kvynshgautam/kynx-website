@@ -929,89 +929,58 @@
   // ==========================================================================
   // SIGNATURE AUDIO & NOTIFICATION ENGINE (Exact Phone App Match)
   // ==========================================================================
-  let notifAudio = null;
-  let audioContext = null;
-  let audioUnlocked = false;
   let unreadCount = 0;
   const originalTitle = 'KYNX Web Deck — Connect Beyond Limits (Ghost Link)';
 
-  function initAudioSuite() {
-    try {
-      notifAudio = new Audio('/assets/kynx_notification.mp3');
-      notifAudio.preload = 'auto';
-    } catch (e) {
-      console.warn('Audio init error:', e);
+  function getNotifAudio() {
+    let audio = document.getElementById('kynx-notif-audio');
+    if (!audio) {
+      audio = new Audio('/assets/kynx_notification.mp3');
+      audio.id = 'kynx-notif-audio';
+      document.body.appendChild(audio);
     }
+    return audio;
+  }
 
+  function initAudioSuite() {
     const unlockHandler = () => {
-      if (audioUnlocked) return;
-      audioUnlocked = true;
       try {
-        if (!audioContext) {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) audioContext = new AudioCtx();
-        }
-        if (audioContext && audioContext.state === 'suspended') {
-          audioContext.resume();
-        }
-        if (notifAudio) {
-          notifAudio.volume = 0;
-          notifAudio.play().then(() => {
-            notifAudio.pause();
-            notifAudio.currentTime = 0;
-            notifAudio.volume = 1;
+        const audio = getNotifAudio();
+        if (audio) {
+          audio.volume = 0.01;
+          audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.volume = 1.0;
           }).catch(() => {});
         }
       } catch (err) {}
       document.removeEventListener('click', unlockHandler);
       document.removeEventListener('keydown', unlockHandler);
+      document.removeEventListener('touchstart', unlockHandler);
     };
 
     document.addEventListener('click', unlockHandler, { once: true });
     document.addEventListener('keydown', unlockHandler, { once: true });
+    document.addEventListener('touchstart', unlockHandler, { once: true });
   }
 
   function playNotificationSound() {
-    if (notifAudio) {
-      notifAudio.currentTime = 0;
-      notifAudio.volume = 0.95;
-      const promise = notifAudio.play();
-      if (promise !== undefined) {
-        promise.catch(() => {
-          synthNotificationChime();
-        });
-        return;
-      }
-    }
-    synthNotificationChime();
-  }
-
-  function synthNotificationChime() {
     try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      if (!audioContext) audioContext = new AudioCtx();
-      if (audioContext.state === 'suspended') audioContext.resume();
-
-      const now = audioContext.currentTime;
-      const osc = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, now); // D5
-      osc.frequency.exponentialRampToValueAtTime(880.00, now + 0.08); // A5
-      osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.18); // D6
-
-      gain.gain.setValueAtTime(0.35, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-
-      osc.connect(gain);
-      gain.connect(audioContext.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.45);
+      const audio = getNotifAudio();
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 1.0;
+        const p = audio.play();
+        if (p !== undefined) {
+          p.catch(err => {
+            console.warn('[KYNX Web] Audio playback error:', err);
+          });
+        }
+      }
     } catch (e) {
-      console.warn('Synth chime error:', e);
+      console.warn('[KYNX Web] Sound play exception:', e);
     }
   }
 
