@@ -6,21 +6,21 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.37",
-  version_code: 47,
-  release_name: "Build 47: Official Instant QR Scanner & 6-Digit Web Deck Pairing",
+  version_name: "0.9.38",
+  version_code: 48,
+  release_name: "Build 48: Dedicated 1-Tap QR Scanner & Instant ISO Web Deck Link",
   apk_filename: "KYNX-latest.apk",
   file_size: "65.3 MB",
-  sha256: "1816a40c0fb3af259281f463a6ab76517eb33e5e43eea5d41d951775d80b8841",
+  sha256: "48f49a3a392d2c3b9f83359fc04de233752307fbe6c859ce65b0b834c0d87d40",
   release_date: "November 17, 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   changelog: [
-    "Official Linked Devices: Instant 6-digit pairing code & Google Play zero-permission QR camera scanner.",
-    "KYNX Web Deck Live: Direct email/password login with 2FA OTP verification & automated live pairing.",
+    "Dedicated 1-Tap QR Scanner directly in TopAppBar & 3-dot menu on Chats screen.",
+    "True ISO/IEC 18004 QR Matrix rendering on KYNX Web Deck for instant camera acquisition.",
+    "kynx://pair deep-link intent handling with automated approval via KYNX app.",
     "Hardware-encrypted WebRTC Bridge: Live messaging & WebRTC call signaling sync between mobile & desktop.",
-    "Mesh AirDrop & Universal Clipboard: Zero-internet P2P file transfers and clipboard synchronization.",
-    "16 KB Page-Size Architecture: Fully compliant with Android 15 & 16 (API 35/36/37)."
+    "16 KB Page-Size Architecture: Fully compliant with Android 15 & 16."
   ]
 };
 
@@ -43,7 +43,7 @@ const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/release
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
   if (fs.existsSync(apkPath)) {
-    return res.download(apkPath, 'KYNX-v0.9.33.apk');
+    return res.download(apkPath, 'KYNX-v0.9.38.apk');
   }
   return res.redirect(GITHUB_RELEASE_URL);
 });
