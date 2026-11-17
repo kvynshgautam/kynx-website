@@ -375,32 +375,35 @@
     if (!container) return;
     container.innerHTML = '';
 
-    // Encode exact KYNX pairing protocol URI
-    const payload = `kynx://pair?code=${code}`;
+    // Universal payload: handles KYNX in-app scanner, Google Lens, and system camera via app links
+    const payload = `https://getkynx.vercel.app/web?pair=${code}`;
 
     try {
       if (typeof QRCode !== 'undefined') {
         qrCodeInstance = new QRCode(container, {
           text: payload,
-          width: 200,
-          height: 200,
-          colorDark: '#08080E',
-          colorLight: '#FFFFFF',
-          correctLevel: QRCode.CorrectLevel.M
+          width: 240,
+          height: 240,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H // Highest durability (30% error correction)
         });
       } else {
         // Dynamic fallback if offline or script deferred
         const img = document.createElement('img');
-        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(payload)}&bgcolor=FFFFFF&color=08080E&margin=1`;
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}&bgcolor=FFFFFF&color=000000&margin=4`;
         img.alt = 'KYNX QR Code';
-        img.style.width = '200px';
-        img.style.height = '200px';
+        img.style.width = '240px';
+        img.style.height = '240px';
         container.appendChild(img);
       }
     } catch (e) {
       console.warn('[KYNX Web] Error generating QR code:', e);
       const img = document.createElement('img');
-      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(payload)}&bgcolor=FFFFFF&color=08080E&margin=1`;
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}&bgcolor=FFFFFF&color=000000&margin=4`;
+      img.alt = 'KYNX QR Code';
+      img.style.width = '240px';
+      img.style.height = '240px';
       container.appendChild(img);
     }
   }

@@ -6,21 +6,21 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.38",
-  version_code: 48,
-  release_name: "Build 48: Dedicated 1-Tap QR Scanner & Instant ISO Web Deck Link",
+  version_name: "0.9.39",
+  version_code: 49,
+  release_name: "Build 49: High-Contrast ISO QR Quiet Zone & Instant Multi-Scanner Link",
   apk_filename: "KYNX-latest.apk",
   file_size: "65.3 MB",
-  sha256: "48f49a3a392d2c3b9f83359fc04de233752307fbe6c859ce65b0b834c0d87d40",
+  sha256: "f6c7b609ccef87d98b00804104674df79639df1d18598b3fad2024dcdb19c0fa",
   release_date: "November 17, 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   changelog: [
-    "Dedicated 1-Tap QR Scanner directly in TopAppBar & 3-dot menu on Chats screen.",
-    "True ISO/IEC 18004 QR Matrix rendering on KYNX Web Deck for instant camera acquisition.",
-    "kynx://pair deep-link intent handling with automated approval via KYNX app.",
-    "Hardware-encrypted WebRTC Bridge: Live messaging & WebRTC call signaling sync between mobile & desktop.",
-    "16 KB Page-Size Architecture: Fully compliant with Android 15 & 16."
+    "High-contrast ISO Quiet Zone for 100% instant QR code acquisition.",
+    "Removal of interfering laser scanline to guarantee camera focus and zero moiré distortion.",
+    "Universal web link pairing payload (https://getkynx.vercel.app/web?pair=...) compatible with KYNX scanner, Google Lens, and Samsung/iPhone camera.",
+    "Real-time visual Toast feedback during Web Deck pairing.",
+    "Hardware-encrypted WebRTC Bridge & 16 KB Page-Size Architecture."
   ]
 };
 
