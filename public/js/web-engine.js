@@ -456,21 +456,44 @@
   // DESKTOP WORKSPACE & CHAT
   // ==========================================================================
 
-  function showDeck() {
+  let conversationsPollTimer = null;
+  let activeSyncTimer = null;
+
+  async function showDeck() {
     hideAuth();
+
+    // Verify / load user profile if needed
+    if (!AppState.user || !AppState.user.id) {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+          headers: { 'Authorization': `Bearer ${AppState.token}` }
+        });
+        if (res.ok) {
+          AppState.user = await res.json();
+          localStorage.setItem('kynx_web_user', JSON.stringify(AppState.user));
+        }
+      } catch (e) {
+        console.warn('Could not refresh profile:', e);
+      }
+    }
+
     // Update user profile in sidebar
-    const initials = (AppState.user.displayName || AppState.user.username || 'KG')
+    const initials = ((AppState.user && (AppState.user.displayName || AppState.user.display_name || AppState.user.username)) || 'KG')
       .substring(0, 2)
       .toUpperCase();
     el.userAvatar.textContent = initials;
-    el.userName.textContent = AppState.user.displayName || AppState.user.username;
-    el.userHandle.textContent = '@' + (AppState.user.username || 'kynx_user');
+    el.userName.textContent = (AppState.user && (AppState.user.displayName || AppState.user.display_name || AppState.user.username)) || 'KYNX User';
+    el.userHandle.textContent = '@' + ((AppState.user && AppState.user.username) || 'kynx_user');
 
     // Connect WebSocket
     connectWebSocket();
 
     // Fetch Conversations
     loadConversations();
+
+    // Periodic refresh of conversations
+    if (conversationsPollTimer) clearInterval(conversationsPollTimer);
+    conversationsPollTimer = setInterval(loadConversations, 8000);
   }
 
   // WebSocket Engine
@@ -597,20 +620,42 @@
         🔒 Hardware Encrypted Peer Session (Render + WebRTC)
       </div>`;
 
-    // Fetch message history
+    // Fetch initial message history
+    await syncActiveConversation();
+
+    // Start auto sync for active conversation (every 3s fallback)
+    if (activeSyncTimer) clearInterval(activeSyncTimer);
+    activeSyncTimer = setInterval(syncActiveConversation, 3000);
+  }
+
+  async function syncActiveConversation() {
+    if (!AppState.token || !AppState.activeConversation) return;
+    const convId = AppState.activeConversation.id;
     try {
-      const res = await fetch(`${BACKEND_URL}/api/conversations/${conv.id}/messages?limit=50`, {
+      const res = await fetch(`${BACKEND_URL}/api/conversations/${convId}/messages?limit=50`, {
         headers: { 'Authorization': `Bearer ${AppState.token}` }
       });
       if (res.ok) {
         const data = await res.json();
         const msgs = Array.isArray(data) ? data : (data.messages || []);
-        AppState.messages[conv.id] = msgs;
-        msgs.forEach(appendMessageToUI);
-        scrollChatToBottom();
+        if (!AppState.messages[convId]) AppState.messages[convId] = [];
+        
+        let shouldScroll = false;
+        msgs.forEach(m => {
+          const exists = AppState.messages[convId].some(existing => existing.id === m.id || (existing.client_msg_id && existing.client_msg_id === m.id));
+          if (!exists) {
+            AppState.messages[convId].push(m);
+          }
+          const rendered = appendMessageToUI(m);
+          if (rendered) shouldScroll = true;
+        });
+
+        if (shouldScroll) {
+          scrollChatToBottom();
+        }
       }
     } catch (err) {
-      console.warn('Failed to load messages:', err);
+      console.warn('Failed to sync messages:', err);
     }
   }
 
@@ -620,10 +665,11 @@
     if (!text || !AppState.activeConversation) return;
 
     el.msgInput.value = '';
-    const tempId = 'msg_' + Date.now();
+    const tempId = 'kynx_msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : 'me';
     const newMsg = {
       id: tempId,
+      client_msg_id: tempId,
       conversation_id: AppState.activeConversation.id,
       text: text,
       sender_id: myId,
@@ -631,11 +677,15 @@
       isMine: true
     };
 
+    if (!AppState.messages[AppState.activeConversation.id]) {
+      AppState.messages[AppState.activeConversation.id] = [];
+    }
+    AppState.messages[AppState.activeConversation.id].push(newMsg);
     appendMessageToUI(newMsg);
     scrollChatToBottom();
 
     try {
-      await fetch(`${BACKEND_URL}/api/conversations/${AppState.activeConversation.id}/messages`, {
+      const res = await fetch(`${BACKEND_URL}/api/conversations/${AppState.activeConversation.id}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -643,9 +693,20 @@
         },
         body: JSON.stringify({ 
           conversation_id: AppState.activeConversation.id,
-          text: text 
+          text: text,
+          client_msg_id: tempId
         })
       });
+      if (res.ok) {
+        const saved = await res.json();
+        if (saved && saved.id) {
+          newMsg.id = saved.id;
+          const bubble = el.messagesCanvas.querySelector(`[data-msg-id="${tempId}"]`);
+          if (bubble) bubble.setAttribute('data-msg-id', saved.id);
+        }
+      } else {
+        console.warn('Failed to send HTTP message:', res.status);
+      }
     } catch (err) {
       console.error('Failed to post message:', err);
     }
@@ -654,12 +715,17 @@
   // Receive Incoming Message
   function receiveMessage(msg) {
     const convId = msg.conversationId || msg.conversation_id;
+    if (!convId) return;
     if (!AppState.messages[convId]) AppState.messages[convId] = [];
-    AppState.messages[convId].push(msg);
+
+    const exists = AppState.messages[convId].some(m => m.id === msg.id || (m.client_msg_id && m.client_msg_id === (msg.client_msg_id || msg.id)));
+    if (!exists) {
+      AppState.messages[convId].push(msg);
+    }
 
     if (AppState.activeConversation && AppState.activeConversation.id === convId) {
-      appendMessageToUI(msg);
-      scrollChatToBottom();
+      const rendered = appendMessageToUI(msg);
+      if (rendered) scrollChatToBottom();
     }
 
     // Refresh list preview
@@ -668,11 +734,17 @@
 
   // Append Message Card to Canvas
   function appendMessageToUI(msg) {
+    if (!msg) return false;
+    const msgId = msg.id || msg.client_msg_id;
+    if (msgId && el.messagesCanvas.querySelector(`[data-msg-id="${msgId}"]`)) {
+      return false; // Already in DOM
+    }
     const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
     const sender = msg.sender_id || msg.senderId;
     const isMine = (myId && sender === myId) || msg.isMine;
     const wrapper = document.createElement('div');
     wrapper.className = `msg-bubble-wrapper ${isMine ? 'mine' : 'peer'}`;
+    if (msgId) wrapper.setAttribute('data-msg-id', msgId);
 
     const time = formatTime(msg.created_at || msg.createdAt || Date.now());
 
@@ -687,6 +759,7 @@
     `;
 
     el.messagesCanvas.appendChild(wrapper);
+    return true;
   }
 
   function scrollChatToBottom() {
