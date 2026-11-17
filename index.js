@@ -43,7 +43,7 @@ const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/release
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
   if (fs.existsSync(apkPath)) {
-    return res.download(apkPath, 'KYNX-v0.9.38.apk');
+    return res.download(apkPath, `KYNX-v${RELEASE_INFO.version_name}.apk`);
   }
   return res.redirect(GITHUB_RELEASE_URL);
 });
