@@ -54,6 +54,7 @@
     userName: document.getElementById('user-name'),
     userHandle: document.getElementById('user-handle'),
     btnLogout: document.getElementById('btn-logout'),
+    btnToggleNotif: document.getElementById('btn-toggle-notif'),
     conversationsList: document.getElementById('conversations-list'),
     searchInput: document.getElementById('sidebar-search'),
     
@@ -142,6 +143,19 @@
 
     // Logout
     el.btnLogout.addEventListener('click', logout);
+
+    // Notification permission & test chime toggle
+    if (el.btnToggleNotif) {
+      el.btnToggleNotif.addEventListener('click', async () => {
+        playNotificationSound();
+        const perm = await requestNotificationPermission();
+        if (perm === 'granted') {
+          showHeadsUpCard('KYNX Notification Active', 'Instant sound & desktop alerts enabled just like your phone!', AppState.activeConversation?.id);
+        } else if (perm === 'denied') {
+          alert('Notification permission is blocked in your browser. Please click the lock/settings icon in your browser URL bar and allow Notifications.');
+        }
+      });
+    }
 
     // Send Message
     el.btnSend.addEventListener('click', sendMessage);
@@ -523,6 +537,20 @@
     el.userName.textContent = (AppState.user && (AppState.user.displayName || AppState.user.display_name || AppState.user.username)) || 'KYNX User';
     el.userHandle.textContent = '@' + ((AppState.user && AppState.user.username) || 'kynx_user');
 
+    // Initialize Audio & Notifications suite
+    initAudioSuite();
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        updateNotifIcon(true);
+      } else if (Notification.permission === 'default') {
+        updateNotifIcon(false);
+        // Prompt for notification permission on desk entrance
+        requestNotificationPermission();
+      } else {
+        updateNotifIcon(false);
+      }
+    }
+
     // Connect WebSocket
     connectWebSocket();
 
@@ -688,6 +716,12 @@
           const exists = AppState.messages[convId].some(existing => existing.id === m.id || (existing.client_msg_id && existing.client_msg_id === m.id));
           if (!exists) {
             AppState.messages[convId].push(m);
+            const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
+            const sender = m.sender_id || m.senderId;
+            const isMine = (myId && sender === myId) || m.isMine;
+            if (!isMine && (document.hidden || !document.hasFocus())) {
+              triggerMessageNotification(m);
+            }
           }
           const rendered = appendMessageToUI(m);
           if (rendered) shouldScroll = true;
@@ -773,6 +807,14 @@
 
     // Refresh list preview
     loadConversations();
+
+    // Trigger phone-style notification if incoming message
+    const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
+    const sender = msg.sender_id || msg.senderId;
+    const isMine = (myId && sender === myId) || msg.isMine;
+    if (!isMine) {
+      triggerMessageNotification(msg);
+    }
   }
 
   // Append Message Card to Canvas
@@ -882,6 +924,229 @@
 
   function closeCallOverlay() {
     el.callOverlay.style.display = 'none';
+  }
+
+  // ==========================================================================
+  // SIGNATURE AUDIO & NOTIFICATION ENGINE (Exact Phone App Match)
+  // ==========================================================================
+  let notifAudio = null;
+  let audioContext = null;
+  let audioUnlocked = false;
+  let unreadCount = 0;
+  const originalTitle = 'KYNX Web Deck — Connect Beyond Limits (Ghost Link)';
+
+  function initAudioSuite() {
+    try {
+      notifAudio = new Audio('/assets/kynx_notification.mp3');
+      notifAudio.preload = 'auto';
+    } catch (e) {
+      console.warn('Audio init error:', e);
+    }
+
+    const unlockHandler = () => {
+      if (audioUnlocked) return;
+      audioUnlocked = true;
+      try {
+        if (!audioContext) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) audioContext = new AudioCtx();
+        }
+        if (audioContext && audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+        if (notifAudio) {
+          notifAudio.volume = 0;
+          notifAudio.play().then(() => {
+            notifAudio.pause();
+            notifAudio.currentTime = 0;
+            notifAudio.volume = 1;
+          }).catch(() => {});
+        }
+      } catch (err) {}
+      document.removeEventListener('click', unlockHandler);
+      document.removeEventListener('keydown', unlockHandler);
+    };
+
+    document.addEventListener('click', unlockHandler, { once: true });
+    document.addEventListener('keydown', unlockHandler, { once: true });
+  }
+
+  function playNotificationSound() {
+    if (notifAudio) {
+      notifAudio.currentTime = 0;
+      notifAudio.volume = 0.95;
+      const promise = notifAudio.play();
+      if (promise !== undefined) {
+        promise.catch(() => {
+          synthNotificationChime();
+        });
+        return;
+      }
+    }
+    synthNotificationChime();
+  }
+
+  function synthNotificationChime() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioContext) audioContext = new AudioCtx();
+      if (audioContext.state === 'suspended') audioContext.resume();
+
+      const now = audioContext.currentTime;
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, now); // D5
+      osc.frequency.exponentialRampToValueAtTime(880.00, now + 0.08); // A5
+      osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.18); // D6
+
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.45);
+    } catch (e) {
+      console.warn('Synth chime error:', e);
+    }
+  }
+
+  async function requestNotificationPermission() {
+    if (!('Notification' in window)) return 'unsupported';
+    if (Notification.permission === 'granted') {
+      updateNotifIcon(true);
+      return 'granted';
+    }
+    if (Notification.permission !== 'denied') {
+      try {
+        const perm = await Notification.requestPermission();
+        updateNotifIcon(perm === 'granted');
+        return perm;
+      } catch (e) {
+        return 'default';
+      }
+    }
+    updateNotifIcon(false);
+    return Notification.permission;
+  }
+
+  function updateNotifIcon(active) {
+    if (!el.btnToggleNotif) return;
+    if (active) {
+      el.btnToggleNotif.style.color = 'var(--accent-green)';
+      el.btnToggleNotif.title = 'Notifications Active (Sound & Popups Enabled)';
+    } else {
+      el.btnToggleNotif.style.color = 'var(--text-muted)';
+      el.btnToggleNotif.title = 'Click to Enable Notifications & Audio';
+    }
+  }
+
+  window.addEventListener('focus', () => {
+    unreadCount = 0;
+    document.title = originalTitle;
+  });
+
+  function triggerMessageNotification(msg) {
+    const convId = msg.conversationId || msg.conversation_id;
+    const conv = AppState.conversations.find(c => String(c.id) === String(convId));
+    const peer = (conv && conv.peer) || {};
+    const senderName = msg.senderName || msg.sender_name || peer.display_name || peer.username || (conv && (conv.title || conv.displayName)) || 'KYNX Message';
+    const textPreview = msg.text || msg.content || (msg.is_view_once ? '🔒 View-Once Media' : 'Sent an attachment');
+
+    // 1. Play signature notification chime
+    playNotificationSound();
+
+    // 2. Tab title badge & flash
+    if (document.hidden || !document.hasFocus()) {
+      unreadCount++;
+      document.title = `(${unreadCount}) ${senderName}: ${textPreview.slice(0, 24)} • KYNX Web`;
+    }
+
+    // 3. Desktop Native Notification (Windows / Mac notification banner)
+    if (document.hidden || !document.hasFocus() || !AppState.activeConversation || String(AppState.activeConversation.id) !== String(convId)) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          const n = new Notification(senderName, {
+            body: textPreview,
+            icon: '/assets/kynx-logo.svg',
+            badge: '/assets/kynx-logo.svg',
+            tag: `kynx-${convId}`,
+            renotify: true
+          });
+          n.onclick = () => {
+            window.focus();
+            n.close();
+            openConversationById(convId);
+          };
+        } catch (e) {
+          console.warn('Native notification error:', e);
+        }
+      }
+    }
+
+    // 4. In-App Heads-Up Banner (Always pop up if not in this active chat or tab is hidden)
+    if (!AppState.activeConversation || String(AppState.activeConversation.id) !== String(convId) || document.hidden) {
+      showHeadsUpCard(senderName, textPreview, convId);
+    }
+  }
+
+  function showHeadsUpCard(senderName, textPreview, convId) {
+    const container = document.getElementById('kynx-heads-up-container');
+    if (!container) return;
+
+    const card = document.createElement('div');
+    card.className = 'kynx-heads-up-card';
+    const initials = (senderName || 'KG').substring(0, 2).toUpperCase();
+
+    card.innerHTML = `
+      <div class="heads-up-avatar">${escapeHtml(initials)}</div>
+      <div class="heads-up-body">
+        <div class="heads-up-top">
+          <span class="heads-up-name">${escapeHtml(senderName)}</span>
+          <span class="heads-up-time">Just now</span>
+        </div>
+        <div class="heads-up-text">${escapeHtml(textPreview)}</div>
+      </div>
+      <button class="heads-up-close" title="Dismiss">✕</button>
+    `;
+
+    card.addEventListener('click', (e) => {
+      if (e.target.classList.contains('heads-up-close')) {
+        e.stopPropagation();
+        card.classList.add('hiding');
+        setTimeout(() => card.remove(), 200);
+        return;
+      }
+      openConversationById(convId);
+      card.classList.add('hiding');
+      setTimeout(() => card.remove(), 200);
+    });
+
+    container.appendChild(card);
+
+    // Auto dismiss after 4.5 seconds
+    setTimeout(() => {
+      if (card.parentNode) {
+        card.classList.add('hiding');
+        setTimeout(() => card.remove(), 200);
+      }
+    }, 4500);
+  }
+
+  async function openConversationById(convId) {
+    if (!convId) return;
+    let target = AppState.conversations.find(c => String(c.id) === String(convId));
+    if (!target) {
+      await loadConversations();
+      target = AppState.conversations.find(c => String(c.id) === String(convId));
+    }
+    if (target) {
+      openConversation(target);
+    }
   }
 
   // Utilities
