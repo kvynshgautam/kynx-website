@@ -6,21 +6,21 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.36",
-  version_code: 46,
-  release_name: "Build 46: Official Linked Devices (KYNX Web Deck) & AirDrop Ready",
+  version_name: "0.9.37",
+  version_code: 47,
+  release_name: "Build 47: Official Instant QR Scanner & 6-Digit Web Deck Pairing",
   apk_filename: "KYNX-latest.apk",
-  file_size: "62.8 MB",
-  sha256: "c7cdc1b328c00b12484257ada0b3fd5fee50e342248cec1d0836b0cfeeb6e444",
+  file_size: "65.3 MB",
+  sha256: "1816a40c0fb3af259281f463a6ab76517eb33e5e43eea5d41d951775d80b8841",
   release_date: "November 17, 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   changelog: [
-    "Official Linked Devices: In-app device management in Settings with 6-digit Cyber pairing.",
-    "KYNX Web Deck Live: Full web workstation at getkynx.vercel.app/web with Ghost Shield privacy.",
+    "Official Linked Devices: Instant 6-digit pairing code & Google Play zero-permission QR camera scanner.",
+    "KYNX Web Deck Live: Direct email/password login with 2FA OTP verification & automated live pairing.",
+    "Hardware-encrypted WebRTC Bridge: Live messaging & WebRTC call signaling sync between mobile & desktop.",
     "Mesh AirDrop & Universal Clipboard: Zero-internet P2P file transfers and clipboard synchronization.",
-    "16 KB Page-Size Architecture: Fully compliant with Android 15 & 16 (API 35/36/37) on Google Pixel 8 Pro / Pixel 9.",
-    "120 FPS Liquid Touch Navigation: Fluid thumb swipe between Chats, Contacts, Calls, Status, and Settings."
+    "16 KB Page-Size Architecture: Fully compliant with Android 15 & 16 (API 35/36/37)."
   ]
 };
 
