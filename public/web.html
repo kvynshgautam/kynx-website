@@ -39,10 +39,16 @@
           <div class="qr-scanline"></div>
           <canvas id="qr-canvas"></canvas>
         </div>
-        <div class="qr-code-text" id="qr-code-text">KYNX-884920</div>
-        <small style="color:var(--text-sub); font-size:11.5px; margin-top:8px">
-          Auto-regenerates every 60s for cryptographic safety
-        </small>
+        <div style="margin-top:10px; text-align:center;">
+          <div style="font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:1.5px; margin-bottom:4px;">PAIRING CODE</div>
+          <div class="qr-code-text" id="qr-code-text" style="font-size:24px; font-weight:800; letter-spacing:3px; padding:8px 18px;">--- ---</div>
+          <div id="pair-status-text" style="color:var(--accent-cyan); font-size:12px; margin-top:8px; font-weight:500;">
+            ⚡ Waiting for link from KYNX App...
+          </div>
+          <button type="button" id="btn-refresh-pair" style="background:none; border:none; color:var(--text-muted); font-size:11.5px; margin-top:8px; cursor:pointer;">
+            🔄 Refresh Code
+          </button>
+        </div>
       </div>
 
       <!-- Right Column: Step-by-Step Instructions -->
@@ -53,7 +59,7 @@
           <div class="step-num">1</div>
           <div class="step-content">
             <strong>Open KYNX on your phone</strong>
-            <p>Ensure you have Build 45 (v0.9.35) or later installed.</p>
+            <p>Ensure you are signed in to your account.</p>
           </div>
         </div>
 
@@ -61,15 +67,15 @@
           <div class="step-num">2</div>
           <div class="step-content">
             <strong>Go to Settings > Linked Devices</strong>
-            <p>Tap "Link Desktop Deck" to open the QR camera scanner.</p>
+            <p>Tap "Linked Devices (KYNX Web)" in your settings.</p>
           </div>
         </div>
 
         <div class="step-item">
           <div class="step-num">3</div>
           <div class="step-content">
-            <strong>Scan the Cyber QR code</strong>
-            <p>Your session will pair automatically via 120 FPS P2P handshake.</p>
+            <strong>Enter Pairing Code or Scan</strong>
+            <p>Enter the 6-digit code shown here to pair instantly.</p>
           </div>
         </div>
 
@@ -83,6 +89,7 @@
 
         <!-- Direct Login Form (Hidden by default, toggled via button) -->
         <div id="direct-login-section" style="display:none; margin-top:16px;">
+          <!-- Step 1: Identifier + Password Form -->
           <form id="login-form">
             <div class="login-form-group">
               <label for="login-identifier">Username or Email</label>
@@ -93,8 +100,26 @@
               <input type="password" id="login-password" class="login-input" placeholder="••••••••" required>
             </div>
             <div id="login-error" style="color:var(--accent-red); font-size:12px; margin-bottom:10px;"></div>
-            <button type="submit" class="btn-submit-auth">Connect Session 🚀</button>
+            <button type="submit" id="btn-login-submit" class="btn-submit-auth">Connect Session 🚀</button>
           </form>
+
+          <!-- Step 2: 2FA Email OTP Verification (Hidden by default) -->
+          <div id="otp-section" style="display:none;">
+            <div style="margin-bottom:14px; text-align:left;">
+              <h4 style="font-size:15px; font-weight:700; color:var(--text-main); margin-bottom:4px;">Two-Step Verification</h4>
+              <p id="otp-email-masked" style="font-size:12.5px; color:var(--text-muted); line-height:1.4;">Enter the 6-digit security code sent to your registered email.</p>
+            </div>
+            <div class="login-form-group">
+              <label for="login-otp">6-Digit Verification Code</label>
+              <input type="text" id="login-otp" class="login-input" placeholder="123456" maxlength="6" pattern="[0-9]*" inputmode="numeric" style="letter-spacing: 4px; font-size: 18px; font-weight: 700; text-align: center;">
+            </div>
+            <div id="otp-error" style="color:var(--accent-red); font-size:12px; margin-bottom:10px;"></div>
+            <button type="button" id="btn-verify-otp" class="btn-submit-auth" style="margin-bottom:10px;">Verify & Sign In ⚡</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-top:8px;">
+              <button type="button" id="btn-back-to-pwd" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">← Back to Password</button>
+              <button type="button" id="btn-resend-otp" style="background:none; border:none; color:var(--accent-cyan); cursor:pointer;">Resend Code</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

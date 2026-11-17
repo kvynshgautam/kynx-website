@@ -12,6 +12,7 @@
   const AppState = {
     token: localStorage.getItem('kynx_web_token') || null,
     user: JSON.parse(localStorage.getItem('kynx_web_user') || 'null'),
+    tempToken: null,
     conversations: [],
     activeConversation: null,
     messages: {}, // conversationId -> Array of messages
@@ -19,6 +20,7 @@
     wsConnected: false,
     ghostShield: false,
     pairingId: null,
+    pairingCode: null,
     pairingPollTimer: null
   };
 
@@ -29,11 +31,23 @@
     directLoginSection: document.getElementById('direct-login-section'),
     qrCanvas: document.getElementById('qr-canvas'),
     qrCodeText: document.getElementById('qr-code-text'),
+    pairStatusText: document.getElementById('pair-status-text'),
+    btnRefreshPair: document.getElementById('btn-refresh-pair'),
     toggleLoginBtn: document.getElementById('toggle-direct-login'),
     loginForm: document.getElementById('login-form'),
     loginIdentifier: document.getElementById('login-identifier'),
     loginPassword: document.getElementById('login-password'),
     loginError: document.getElementById('login-error'),
+    btnLoginSubmit: document.getElementById('btn-login-submit'),
+    
+    // OTP Section
+    otpSection: document.getElementById('otp-section'),
+    otpEmailMasked: document.getElementById('otp-email-masked'),
+    loginOtp: document.getElementById('login-otp'),
+    otpError: document.getElementById('otp-error'),
+    btnVerifyOtp: document.getElementById('btn-verify-otp'),
+    btnBackToPwd: document.getElementById('btn-back-to-pwd'),
+    btnResendOtp: document.getElementById('btn-resend-otp'),
     
     // Desktop Deck
     userAvatar: document.getElementById('user-avatar'),
@@ -89,7 +103,7 @@
       const isDirect = el.directLoginSection.style.display !== 'none';
       el.directLoginSection.style.display = isDirect ? 'none' : 'block';
       el.qrContainer.style.display = isDirect ? 'flex' : 'none';
-      el.toggleLoginBtn.textContent = isDirect ? '⚡ Login with Email/Password Instead' : '📱 Scan Cyber QR Instead';
+      el.toggleLoginBtn.textContent = isDirect ? '⚡ Login with Email/Password Instead' : '📱 Scan Cyber QR / Pairing Code';
     });
 
     // Handle Direct Login Form
@@ -97,6 +111,33 @@
       e.preventDefault();
       await handleDirectLogin();
     });
+
+    // OTP verification actions
+    if (el.btnVerifyOtp) {
+      el.btnVerifyOtp.addEventListener('click', handleVerifyOtp);
+    }
+    if (el.loginOtp) {
+      el.loginOtp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleVerifyOtp();
+        }
+      });
+    }
+    if (el.btnBackToPwd) {
+      el.btnBackToPwd.addEventListener('click', () => {
+        el.otpSection.style.display = 'none';
+        el.loginForm.style.display = 'block';
+      });
+    }
+    if (el.btnResendOtp) {
+      el.btnResendOtp.addEventListener('click', handleResendOtp);
+    }
+
+    // Refresh pairing code
+    if (el.btnRefreshPair) {
+      el.btnRefreshPair.addEventListener('click', startPairingFlow);
+    }
 
     // Logout
     el.btnLogout.addEventListener('click', logout);
@@ -154,15 +195,81 @@
     }
   }
 
-  function startPairingFlow() {
-    AppState.pairingId = 'KYNX-' + Math.floor(100000 + Math.random() * 900000);
-    renderPairingQR(AppState.pairingId);
-    el.qrCodeText.textContent = AppState.pairingId;
+  async function startPairingFlow() {
+    if (AppState.pairingPollTimer) {
+      clearInterval(AppState.pairingPollTimer);
+      AppState.pairingPollTimer = null;
+    }
+
+    if (el.qrCodeText) el.qrCodeText.textContent = '--- ---';
+    if (el.pairStatusText) el.pairStatusText.textContent = '⚡ Requesting pairing session...';
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/pair/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!res.ok) throw new Error('Could not create pairing session');
+      const data = await res.json();
+
+      AppState.pairingId = data.pair_id;
+      AppState.pairingCode = data.code;
+
+      // Format 6 digits with clean spacing (e.g. 849 201)
+      const codeStr = String(data.code || '');
+      const formatted = codeStr.length === 6 ? `${codeStr.slice(0, 3)} ${codeStr.slice(3)}` : codeStr;
+      if (el.qrCodeText) el.qrCodeText.textContent = formatted;
+      if (el.pairStatusText) el.pairStatusText.textContent = '⚡ Waiting for approval from KYNX App...';
+
+      renderPairingQR(data.code);
+
+      // Start polling pairing status every 2.5s
+      AppState.pairingPollTimer = setInterval(pollPairingStatus, 2500);
+    } catch (err) {
+      console.warn('Pairing session error:', err);
+      if (el.pairStatusText) el.pairStatusText.textContent = '⚠️ Could not reach KYNX Cloud. Tap Refresh.';
+    }
+  }
+
+  async function pollPairingStatus() {
+    if (!AppState.pairingId) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/pair/status?pair_id=${encodeURIComponent(AppState.pairingId)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data.status === 'approved' && data.access_token) {
+        clearInterval(AppState.pairingPollTimer);
+        AppState.pairingPollTimer = null;
+
+        AppState.token = data.access_token;
+        AppState.user = data.user || {
+          id: 'user_' + Date.now(),
+          displayName: 'KYNX User',
+          username: 'kynx_user'
+        };
+
+        localStorage.setItem('kynx_web_token', AppState.token);
+        localStorage.setItem('kynx_web_user', JSON.stringify(AppState.user));
+
+        if (el.pairStatusText) el.pairStatusText.textContent = '✅ Paired! Unlocking Web Deck...';
+        setTimeout(() => {
+          hideAuth();
+          showDeck();
+        }, 600);
+      } else if (data.status === 'expired') {
+        startPairingFlow();
+      }
+    } catch (err) {
+      // Quiet background polling error
+    }
   }
 
   // Generate dynamic Cyber QR SVG/Canvas
   function renderPairingQR(code) {
     const canvas = el.qrCanvas;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     canvas.width = 200;
     canvas.height = 200;
@@ -173,9 +280,10 @@
 
     ctx.fillStyle = '#8b5cf6';
     const step = 8;
+    const codeStr = String(code || 'KYNX');
     for (let x = 16; x < 184; x += step) {
       for (let y = 16; y < 184; y += step) {
-        const hash = (x * 13 + y * 7 + code.charCodeAt((x + y) % code.length)) % 10;
+        const hash = (x * 13 + y * 7 + codeStr.charCodeAt((x + y) % codeStr.length)) % 10;
         if (hash > 4) {
           ctx.fillRect(x, y, 6, 6);
         }
@@ -214,34 +322,121 @@
     }
 
     try {
+      el.loginError.style.color = 'var(--accent-cyan)';
       el.loginError.textContent = 'Authenticating with KYNX Cloud...';
+      
       const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password })
+        body: JSON.stringify({ username_or_email: identifier, password: password })
       });
 
       const data = await res.json();
-      if (!res.ok || !data.token) {
-        throw new Error(data.error || data.message || 'Login failed. Please check credentials.');
+      el.loginError.style.color = 'var(--accent-red)';
+      
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || data.message || 'Login failed. Please check credentials.');
       }
 
-      // Save credentials
-      AppState.token = data.token;
-      AppState.user = data.user || {
-        id: data.userId || 'user_' + Date.now(),
-        displayName: data.displayName || identifier.split('@')[0],
-        username: data.username || identifier.split('@')[0],
-        email: data.email || identifier
-      };
+      // 1. Two-Factor OTP Required
+      if (data.status === 'otp_required') {
+        AppState.tempToken = data.temp_token;
+        el.loginError.textContent = '';
+        el.loginForm.style.display = 'none';
+        el.otpSection.style.display = 'block';
+        el.otpEmailMasked.textContent = `Security code sent to ${data.email_masked || 'your registered email'}.`;
+        el.loginOtp.value = '';
+        el.otpError.textContent = '';
+        el.loginOtp.focus();
+        return;
+      }
 
+      // 2. Direct Token Returned
+      if (data.access_token) {
+        AppState.token = data.access_token;
+        AppState.user = data.user || {
+          id: 'user_' + Date.now(),
+          displayName: identifier.split('@')[0],
+          username: identifier.split('@')[0],
+          email: identifier
+        };
+
+        localStorage.setItem('kynx_web_token', AppState.token);
+        localStorage.setItem('kynx_web_user', JSON.stringify(AppState.user));
+
+        hideAuth();
+        showDeck();
+      } else {
+        throw new Error('Unexpected response from server.');
+      }
+    } catch (err) {
+      el.loginError.style.color = 'var(--accent-red)';
+      el.loginError.textContent = err.message;
+    }
+  }
+
+  async function handleVerifyOtp() {
+    const otp = el.loginOtp.value.trim();
+    el.otpError.textContent = '';
+    
+    if (!otp || otp.length < 4) {
+      el.otpError.textContent = 'Please enter the 6-digit verification code.';
+      return;
+    }
+    
+    try {
+      el.otpError.style.color = 'var(--accent-cyan)';
+      el.otpError.textContent = 'Verifying security code...';
+      
+      const res = await fetch(`${BACKEND_URL}/api/auth/login/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temp_token: AppState.tempToken, otp: otp })
+      });
+      
+      const data = await res.json();
+      el.otpError.style.color = 'var(--accent-red)';
+      
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || data.message || 'Verification failed.');
+      }
+      
+      AppState.token = data.access_token;
+      AppState.user = data.user;
+      
       localStorage.setItem('kynx_web_token', AppState.token);
       localStorage.setItem('kynx_web_user', JSON.stringify(AppState.user));
-
-      hideAuth();
-      showDeck();
+      
+      el.otpError.style.color = 'var(--accent-green)';
+      el.otpError.textContent = 'Verified! Entering Web Deck...';
+      
+      setTimeout(() => {
+        hideAuth();
+        showDeck();
+      }, 500);
     } catch (err) {
-      el.loginError.textContent = err.message;
+      el.otpError.style.color = 'var(--accent-red)';
+      el.otpError.textContent = err.message;
+    }
+  }
+
+  async function handleResendOtp() {
+    if (!AppState.tempToken) return;
+    try {
+      el.otpError.style.color = 'var(--accent-cyan)';
+      el.otpError.textContent = 'Requesting new code...';
+      const res = await fetch(`${BACKEND_URL}/api/auth/login/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temp_token: AppState.tempToken })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Could not resend code.');
+      el.otpError.style.color = 'var(--accent-green)';
+      el.otpError.textContent = 'New code sent! Please check your email.';
+    } catch (err) {
+      el.otpError.style.color = 'var(--accent-red)';
+      el.otpError.textContent = err.message;
     }
   }
 
@@ -315,11 +510,13 @@
   }
 
   function handleWebSocketMessage(msg) {
-    if (msg.type === 'chat_message' || msg.message) {
+    if (msg.type === 'message' || msg.type === 'chat_message' || msg.message) {
       const message = msg.message || msg;
       receiveMessage(message);
     } else if (msg.type === 'typing') {
-      showPeerTyping(msg.senderName, msg.isTyping);
+      const sender = msg.display_name || msg.username || msg.senderName;
+      const isTyping = msg.is_typing !== undefined ? msg.is_typing : msg.isTyping;
+      showPeerTyping(sender, isTyping);
     } else if (msg.type === 'call_signal' || msg.callId) {
       showIncomingCall(msg);
     }
@@ -333,7 +530,7 @@
       });
       if (res.ok) {
         const data = await res.json();
-        AppState.conversations = data.conversations || data || [];
+        AppState.conversations = Array.isArray(data) ? data : (data.conversations || []);
         renderConversations();
       }
     } catch (err) {
@@ -346,7 +543,7 @@
     if (AppState.conversations.length === 0) {
       el.conversationsList.innerHTML = `
         <div style="padding: 24px; text-align: center; color: var(--text-sub); font-size: 13px;">
-          No conversations found.<br>Search or send a message to start!
+          No conversations found.<br>Send a message on KYNX App to start!
         </div>`;
       return;
     }
@@ -355,10 +552,12 @@
       const card = document.createElement('div');
       card.className = `chat-item-card ${AppState.activeConversation?.id === conv.id ? 'active' : ''}`;
       
-      const title = conv.otherUserName || conv.displayName || conv.title || 'Encrypted Peer';
+      const peer = conv.peer || {};
+      const title = peer.display_name || peer.username || conv.title || conv.displayName || 'Encrypted Peer';
       const initials = title.substring(0, 2).toUpperCase();
-      const lastMsg = conv.lastMessage?.text || conv.snippet || 'Tap to open chat';
-      const time = conv.lastMessageAt ? formatTime(conv.lastMessageAt) : '';
+      const lastMsg = conv.last_message?.text || conv.lastMessage?.text || conv.snippet || 'Tap to open chat';
+      const timeRaw = conv.last_message?.created_at || conv.lastMessageAt || conv.updated_at;
+      const time = timeRaw ? formatTime(timeRaw) : '';
 
       card.innerHTML = `
         <div class="item-avatar">${initials}</div>
@@ -387,7 +586,8 @@
     el.emptyState.style.display = 'none';
     el.activeChatView.style.display = 'flex';
 
-    const title = conv.otherUserName || conv.displayName || conv.title || 'Encrypted Peer';
+    const peer = conv.peer || {};
+    const title = peer.display_name || peer.username || conv.title || conv.displayName || 'Encrypted Peer';
     el.peerAvatar.textContent = title.substring(0, 2).toUpperCase();
     el.peerName.textContent = title;
     el.peerStatus.innerHTML = `● online • 120 FPS`;
@@ -404,7 +604,7 @@
       });
       if (res.ok) {
         const data = await res.json();
-        const msgs = data.messages || data || [];
+        const msgs = Array.isArray(data) ? data : (data.messages || []);
         AppState.messages[conv.id] = msgs;
         msgs.forEach(appendMessageToUI);
         scrollChatToBottom();
@@ -421,12 +621,13 @@
 
     el.msgInput.value = '';
     const tempId = 'msg_' + Date.now();
+    const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : 'me';
     const newMsg = {
       id: tempId,
-      conversationId: AppState.activeConversation.id,
+      conversation_id: AppState.activeConversation.id,
       text: text,
-      senderId: AppState.user.id,
-      createdAt: new Date().toISOString(),
+      sender_id: myId,
+      created_at: new Date().toISOString(),
       isMine: true
     };
 
@@ -440,7 +641,10 @@
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${AppState.token}`
         },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ 
+          conversation_id: AppState.activeConversation.id,
+          text: text 
+        })
       });
     } catch (err) {
       console.error('Failed to post message:', err);
@@ -464,11 +668,13 @@
 
   // Append Message Card to Canvas
   function appendMessageToUI(msg) {
-    const isMine = msg.senderId === AppState.user.id || msg.isMine;
+    const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
+    const sender = msg.sender_id || msg.senderId;
+    const isMine = (myId && sender === myId) || msg.isMine;
     const wrapper = document.createElement('div');
     wrapper.className = `msg-bubble-wrapper ${isMine ? 'mine' : 'peer'}`;
 
-    const time = formatTime(msg.createdAt || msg.created_at || Date.now());
+    const time = formatTime(msg.created_at || msg.createdAt || Date.now());
 
     wrapper.innerHTML = `
       <div class="msg-bubble-content">
