@@ -78,11 +78,42 @@
     btnAttachMedia: document.getElementById('btn-attach-media'),
     fileInput: document.getElementById('file-upload-input'),
     
-    // Calling Modal
+    // WebRTC Calling Modal HUD
     callOverlay: document.getElementById('call-overlay'),
+    callTypeBadge: document.getElementById('call-type-badge'),
+    callTypeText: document.getElementById('call-type-text'),
+    btnCallMinimize: document.getElementById('btn-call-minimize'),
+    callVideoStage: document.getElementById('call-video-stage'),
+    remoteVideo: document.getElementById('remote-video'),
+    localVideo: document.getElementById('local-video'),
+    videoPeerName: document.getElementById('video-peer-name'),
+    videoCallStatus: document.getElementById('video-call-status'),
+    callAudioCard: document.getElementById('call-audio-card'),
+    callAvatarContainer: document.getElementById('call-avatar-container'),
+    callAvatarInitials: document.getElementById('call-avatar-initials'),
     callerName: document.getElementById('caller-name'),
+    callStatus: document.getElementById('call-status'),
+    callTimer: document.getElementById('call-timer'),
+    remoteAudio: document.getElementById('remote-audio'),
+    ringtoneAudio: document.getElementById('kynx-ringtone-audio'),
+    callControlsDock: document.getElementById('call-controls-dock'),
+    callIncomingActions: document.getElementById('call-incoming-actions'),
+    callActiveActions: document.getElementById('call-active-actions'),
     btnAcceptCall: document.getElementById('btn-accept-call'),
     btnDeclineCall: document.getElementById('btn-decline-call'),
+    btnCallMuteMic: document.getElementById('btn-call-mute-mic'),
+    iconMicOn: document.getElementById('icon-mic-on'),
+    iconMicOff: document.getElementById('icon-mic-off'),
+    btnCallToggleCam: document.getElementById('btn-call-toggle-cam'),
+    iconCamOn: document.getElementById('icon-cam-on'),
+    iconCamOff: document.getElementById('icon-cam-off'),
+    btnCallHangup: document.getElementById('btn-call-hangup'),
+    callMinimizedBar: document.getElementById('call-minimized-bar'),
+    callMinAvatar: document.getElementById('call-min-avatar'),
+    callMinName: document.getElementById('call-min-name'),
+    callMinTimer: document.getElementById('call-min-timer'),
+    btnMinExpand: document.getElementById('btn-min-expand'),
+    btnMinHangup: document.getElementById('btn-min-hangup'),
     btnAudioCall: document.getElementById('btn-start-audio-call'),
     btnVideoCall: document.getElementById('btn-start-video-call')
   };
@@ -221,13 +252,32 @@
       filterConversations(e.target.value.toLowerCase());
     });
 
-    // Call buttons
-    el.btnAudioCall.addEventListener('click', () => initiateCall('voice'));
-    el.btnVideoCall.addEventListener('click', () => initiateCall('video'));
-    el.btnDeclineCall.addEventListener('click', closeCallOverlay);
-    el.btnAcceptCall.addEventListener('click', () => {
-      alert('Connecting WebRTC call...');
-      closeCallOverlay();
+    // WebRTC Calling Buttons & Controls
+    if (el.btnAudioCall) el.btnAudioCall.addEventListener('click', () => initiateCall('voice'));
+    if (el.btnVideoCall) el.btnVideoCall.addEventListener('click', () => initiateCall('video'));
+    if (el.btnAcceptCall) el.btnAcceptCall.addEventListener('click', acceptIncomingCall);
+    if (el.btnDeclineCall) el.btnDeclineCall.addEventListener('click', declineIncomingCall);
+    if (el.btnCallMuteMic) el.btnCallMuteMic.addEventListener('click', toggleCallMute);
+    if (el.btnCallToggleCam) el.btnCallToggleCam.addEventListener('click', toggleCallVideo);
+    if (el.btnCallHangup) el.btnCallHangup.addEventListener('click', () => endCall('Call ended'));
+    if (el.btnCallMinimize) el.btnCallMinimize.addEventListener('click', toggleCallMinimize);
+    if (el.btnMinExpand) el.btnMinExpand.addEventListener('click', toggleCallMinimize);
+    if (el.btnMinHangup) el.btnMinHangup.addEventListener('click', () => endCall('Call ended'));
+
+    // Sidebar navigation tabs (Chats, Calls, Contacts)
+    document.querySelectorAll('.sidebar-nav-tabs .nav-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar-nav-tabs .nav-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tabName = btn.textContent.trim().toLowerCase();
+        if (tabName.includes('chats')) {
+          renderConversations();
+        } else if (tabName.includes('calls')) {
+          loadAndRenderCalls();
+        } else if (tabName.includes('contacts')) {
+          loadAndRenderContacts();
+        }
+      });
     });
   }
 
@@ -606,8 +656,18 @@
       const sender = msg.display_name || msg.username || msg.senderName;
       const isTyping = msg.is_typing !== undefined ? msg.is_typing : msg.isTyping;
       showPeerTyping(sender, isTyping);
-    } else if (msg.type === 'call_signal' || msg.callId) {
-      showIncomingCall(msg);
+    } else if (msg.type === 'call_offer') {
+      handleIncomingCall(msg);
+    } else if (msg.type === 'call_answer') {
+      handleCallAnswer(msg);
+    } else if (msg.type === 'call_ice_candidate') {
+      handleRemoteIceCandidate(msg);
+    } else if (msg.type === 'call_ringing') {
+      handleCallRinging(msg);
+    } else if (msg.type === 'call_reject') {
+      handleCallReject(msg);
+    } else if (msg.type === 'call_hangup') {
+      handleCallHangup(msg);
     }
   }
 
@@ -910,20 +970,963 @@
     }
   }
 
-  // 5. Calling HUD
-  function initiateCall(type) {
-    if (!AppState.activeConversation) return;
-    el.callerName.textContent = `Calling ${el.peerName.textContent} (${type.toUpperCase()})...`;
-    el.callOverlay.style.display = 'flex';
+  // ==========================================================================
+  // WEBRTC HIGH-DEFINITION CALLING ENGINE (Audio & Video Deck)
+  // Seamless compatibility with Android WebRtcCallManager & Render relay
+  // ==========================================================================
+
+  const RTC_CONFIG = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun.cloudflare.com:3478' },
+      { urls: 'stun:openrelay.metered.ca:80' },
+      {
+        urls: [
+          'turn:openrelay.metered.ca:80',
+          'turn:openrelay.metered.ca:443',
+          'turn:openrelay.metered.ca:443?transport=tcp'
+        ],
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
+    ]
+  };
+
+  const CallManager = {
+    state: 'idle', // 'idle' | 'dialing' | 'ringing' | 'incoming' | 'connecting' | 'connected'
+    callId: null,
+    peerId: null,
+    peerName: 'Encrypted Peer',
+    callType: 'voice', // 'voice' | 'video'
+    isOutgoing: false,
+    pc: null,
+    localStream: null,
+    remoteStream: null,
+    pendingOfferSdp: null,
+    pendingCandidates: [],
+    connectedAt: 0,
+    durationTimer: null,
+    timeoutTimer: null,
+    isMuted: false,
+    isVideoDisabled: false,
+    isMinimized: false,
+
+    reset() {
+      this.state = 'idle';
+      this.callId = null;
+      this.peerId = null;
+      this.peerName = 'Encrypted Peer';
+      this.callType = 'voice';
+      this.isOutgoing = false;
+      this.pc = null;
+      this.localStream = null;
+      this.remoteStream = null;
+      this.pendingOfferSdp = null;
+      this.pendingCandidates = [];
+      this.connectedAt = 0;
+      if (this.durationTimer) { clearInterval(this.durationTimer); this.durationTimer = null; }
+      if (this.timeoutTimer) { clearTimeout(this.timeoutTimer); this.timeoutTimer = null; }
+      this.isMuted = false;
+      this.isVideoDisabled = false;
+      this.isMinimized = false;
+    }
+  };
+
+  function sendWsFrame(payload) {
+    if (AppState.ws && AppState.ws.readyState === WebSocket.OPEN) {
+      AppState.ws.send(JSON.stringify(payload));
+      return true;
+    }
+    console.warn('[KYNX WebRTC] Cannot send frame, WebSocket closed:', payload.type);
+    return false;
   }
 
-  function showIncomingCall(signal) {
-    el.callerName.textContent = `${signal.fromDisplayName || 'Encrypted Peer'} is calling you...`;
-    el.callOverlay.style.display = 'flex';
+  function getPeerId(conv) {
+    if (!conv) return null;
+    if (conv.peer && conv.peer.id) return conv.peer.id;
+    if (conv.peer_id) return conv.peer_id;
+    if (conv.target_id) return conv.target_id;
+    if (Array.isArray(conv.participants)) {
+      const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
+      const other = conv.participants.find(p => p.id !== myId);
+      if (other) return other.id;
+    }
+    return null;
   }
 
-  function closeCallOverlay() {
-    el.callOverlay.style.display = 'none';
+  function getPeerDisplayName(conv) {
+    if (!conv) return 'Encrypted Peer';
+    const peer = conv.peer || {};
+    return peer.display_name || peer.username || conv.title || conv.displayName || 'Encrypted Peer';
+  }
+
+  // Audio Tones (SUP Ringback tone generator via Web Audio API)
+  let ringbackAudioCtx = null;
+  let ringbackTimer = null;
+
+  function playRingback() {
+    stopRingback();
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      ringbackAudioCtx = new AudioCtx();
+
+      function ringCycle() {
+        if (!ringbackAudioCtx || ringbackAudioCtx.state === 'closed') return;
+        const osc1 = ringbackAudioCtx.createOscillator();
+        const osc2 = ringbackAudioCtx.createOscillator();
+        const gain = ringbackAudioCtx.createGain();
+
+        osc1.frequency.value = 440;
+        osc2.frequency.value = 480;
+        gain.gain.value = 0.08;
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ringbackAudioCtx.destination);
+
+        osc1.start();
+        osc2.start();
+
+        setTimeout(() => {
+          try {
+            osc1.stop();
+            osc2.stop();
+            osc1.disconnect();
+            osc2.disconnect();
+          } catch (_) {}
+        }, 1600);
+
+        ringbackTimer = setTimeout(ringCycle, 4000);
+      }
+
+      ringCycle();
+    } catch (e) {
+      console.warn('[KYNX WebRTC] Ringback tone error:', e);
+    }
+  }
+
+  function stopRingback() {
+    if (ringbackTimer) {
+      clearTimeout(ringbackTimer);
+      ringbackTimer = null;
+    }
+    if (ringbackAudioCtx) {
+      try {
+        ringbackAudioCtx.close();
+      } catch (_) {}
+      ringbackAudioCtx = null;
+    }
+  }
+
+  function playIncomingRingtone() {
+    try {
+      const audio = el.ringtoneAudio || document.getElementById('kynx-ringtone-audio');
+      if (audio) {
+        audio.currentTime = 0;
+        audio.volume = 1.0;
+        const p = audio.play();
+        if (p !== undefined) {
+          p.catch(e => console.warn('[KYNX WebRTC] Browser blocked ringtone autoplay:', e));
+        }
+      }
+    } catch (e) {
+      console.warn('[KYNX WebRTC] Incoming ringtone error:', e);
+    }
+  }
+
+  function stopIncomingRingtone() {
+    try {
+      const audio = el.ringtoneAudio || document.getElementById('kynx-ringtone-audio');
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    } catch (_) {}
+  }
+
+  function renderCallOverlay() {
+    if (!el.callOverlay) return;
+
+    if (CallManager.state === 'idle') {
+      el.callOverlay.style.display = 'none';
+      if (el.callMinimizedBar) el.callMinimizedBar.style.display = 'none';
+      return;
+    }
+
+    if (CallManager.isMinimized) {
+      el.callOverlay.style.display = 'none';
+      if (el.callMinimizedBar) {
+        el.callMinimizedBar.style.display = 'flex';
+        if (el.callMinName) el.callMinName.textContent = CallManager.peerName;
+      }
+      return;
+    }
+
+    if (el.callMinimizedBar) el.callMinimizedBar.style.display = 'none';
+    el.callOverlay.style.display = 'flex';
+
+    const isVideo = (CallManager.callType === 'video');
+
+    // Update Badge
+    if (el.callTypeText) {
+      el.callTypeText.textContent = isVideo ? 'WebRTC HD Video Call' : 'WebRTC HD Voice Call';
+    }
+
+    // Toggle Stages (Video stage vs Audio card)
+    if (isVideo && (CallManager.state === 'connected' || CallManager.state === 'dialing' || CallManager.state === 'connecting')) {
+      if (el.callVideoStage) el.callVideoStage.style.display = 'block';
+      if (el.callAudioCard) el.callAudioCard.style.display = 'none';
+      if (el.videoPeerName) el.videoPeerName.textContent = CallManager.peerName;
+    } else {
+      if (el.callVideoStage) el.callVideoStage.style.display = 'none';
+      if (el.callAudioCard) el.callAudioCard.style.display = 'block';
+    }
+
+    // Update caller name and initials
+    if (el.callerName) el.callerName.textContent = CallManager.peerName;
+    if (el.callAvatarInitials) {
+      el.callAvatarInitials.textContent = CallManager.peerName.substring(0, 2).toUpperCase() || '📞';
+    }
+
+    // Update Status text
+    if (el.callStatus) {
+      if (CallManager.state === 'dialing') {
+        el.callStatus.textContent = 'Calling peer...';
+      } else if (CallManager.state === 'ringing') {
+        el.callStatus.textContent = 'Ringing...';
+      } else if (CallManager.state === 'incoming') {
+        el.callStatus.textContent = `Incoming ${isVideo ? 'Video' : 'Voice'} Call`;
+      } else if (CallManager.state === 'connecting') {
+        el.callStatus.textContent = 'Establishing peer connection...';
+      } else if (CallManager.state === 'connected') {
+        el.callStatus.textContent = 'Connected (Encrypted Direct Link)';
+      }
+    }
+
+    // Toggle incoming vs active buttons
+    if (CallManager.state === 'incoming') {
+      if (el.callIncomingActions) el.callIncomingActions.style.display = 'flex';
+      if (el.callActiveActions) el.callActiveActions.style.display = 'none';
+    } else {
+      if (el.callIncomingActions) el.callIncomingActions.style.display = 'none';
+      if (el.callActiveActions) el.callActiveActions.style.display = 'flex';
+    }
+
+    // Show/hide Camera button based on call type
+    if (el.btnCallToggleCam) {
+      el.btnCallToggleCam.style.display = isVideo ? 'flex' : 'none';
+    }
+
+    // Show timer when connected
+    if (el.callTimer) {
+      el.callTimer.style.display = (CallManager.state === 'connected') ? 'block' : 'none';
+    }
+  }
+
+  // Initiate Outgoing Call
+  async function initiateCall(type = 'voice') {
+    if (!AppState.activeConversation) {
+      alert('Please select a conversation to start a call.');
+      return;
+    }
+    if (!AppState.ws || !AppState.wsConnected) {
+      alert('You are offline. Please wait for reconnection before placing a call.');
+      return;
+    }
+    if (CallManager.state !== 'idle') {
+      alert('You are already in an active call.');
+      return;
+    }
+
+    const peerId = getPeerId(AppState.activeConversation);
+    if (!peerId) {
+      alert('Could not determine peer identity for this conversation.');
+      return;
+    }
+
+    const peerName = getPeerDisplayName(AppState.activeConversation);
+    const callId = 'call_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    const isVideo = (type === 'video');
+
+    CallManager.reset();
+    CallManager.state = 'dialing';
+    CallManager.callId = callId;
+    CallManager.peerId = peerId;
+    CallManager.peerName = peerName;
+    CallManager.callType = type;
+    CallManager.isOutgoing = true;
+
+    renderCallOverlay();
+
+    try {
+      const constraints = {
+        audio: true,
+        video: isVideo ? { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' } : false
+      };
+
+      let localStream;
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        if (isVideo) {
+          console.warn('[KYNX WebRTC] Camera capture failed, falling back to audio-only:', err);
+          localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          CallManager.callType = 'voice';
+        } else {
+          throw err;
+        }
+      }
+
+      CallManager.localStream = localStream;
+      if (el.localVideo && isVideo) {
+        el.localVideo.srcObject = localStream;
+        el.localVideo.play().catch(() => {});
+      }
+
+      const pc = new RTCPeerConnection(RTC_CONFIG);
+      CallManager.pc = pc;
+
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+      pc.ontrack = (event) => {
+        console.log('[KYNX WebRTC] ontrack received on caller:', event.streams);
+        if (event.streams && event.streams[0]) {
+          CallManager.remoteStream = event.streams[0];
+          if (el.remoteVideo) {
+            el.remoteVideo.srcObject = event.streams[0];
+            el.remoteVideo.play().catch(e => console.warn('remoteVideo play err:', e));
+          }
+          if (el.remoteAudio) {
+            el.remoteAudio.srcObject = event.streams[0];
+            el.remoteAudio.play().catch(e => console.warn('remoteAudio play err:', e));
+          }
+        }
+      };
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          sendWsFrame({
+            type: 'call_ice_candidate',
+            target_id: peerId,
+            callee_id: peerId,
+            call_type: CallManager.callType,
+            call_id: callId,
+            candidate: event.candidate.candidate,
+            sdp_mid: event.candidate.sdpMid,
+            sdp_mline_index: event.candidate.sdpMLineIndex
+          });
+        }
+      };
+
+      pc.onconnectionstatechange = () => {
+        console.log('[KYNX WebRTC] Caller connection state:', pc.connectionState);
+        if (pc.connectionState === 'connected') {
+          onCallConnected();
+        } else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+          endCall('Connection lost');
+        }
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      sendWsFrame({
+        type: 'call_offer',
+        target_id: peerId,
+        callee_id: peerId,
+        call_type: CallManager.callType,
+        call_id: callId,
+        sdp: offer.sdp
+      });
+
+      playRingback();
+
+      // Arm 45-second dialing timeout
+      CallManager.timeoutTimer = setTimeout(() => {
+        if (CallManager.state === 'dialing' || CallManager.state === 'ringing') {
+          endCall('No answer');
+        }
+      }, 45000);
+
+      // Log call initiation on server
+      if (AppState.token) {
+        fetch(`${BACKEND_URL}/api/calls`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${AppState.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            callee_id: peerId,
+            call_type: CallManager.callType,
+            status: 'initiated'
+          })
+        }).then(r => r.json()).then(data => {
+          if (data && data.id) CallManager.callId = data.id;
+        }).catch(() => {});
+      }
+
+    } catch (err) {
+      console.error('[KYNX WebRTC] Failed to initiate call:', err);
+      alert('Could not access microphone/camera. Please grant browser permissions.');
+      endCall('Call failed to start');
+    }
+  }
+
+  // Handle Incoming Call from Peer (Phone or Web)
+  function handleIncomingCall(msg) {
+    console.log('[KYNX WebRTC] Incoming call signal:', msg);
+    const fromUserId = msg.from_user_id || msg.fromUserId;
+    const fromName = msg.from_display_name || msg.fromDisplayName || msg.from_username || 'Encrypted Peer';
+    const callType = msg.call_type || msg.callType || 'voice';
+    const callId = msg.call_id || msg.callId || ('call_' + Date.now());
+    const sdp = msg.sdp;
+
+    if (CallManager.state !== 'idle') {
+      sendWsFrame({
+        type: 'call_reject',
+        target_id: fromUserId,
+        callee_id: fromUserId,
+        call_type: callType,
+        call_id: callId,
+        reason: 'busy'
+      });
+      return;
+    }
+
+    CallManager.reset();
+    CallManager.state = 'incoming';
+    CallManager.callId = callId;
+    CallManager.peerId = fromUserId;
+    CallManager.peerName = fromName;
+    CallManager.callType = callType;
+    CallManager.pendingOfferSdp = sdp;
+    CallManager.isOutgoing = false;
+
+    // Send call_ringing back to caller so their phone/client knows our deck is ringing
+    sendWsFrame({
+      type: 'call_ringing',
+      target_id: fromUserId,
+      callee_id: fromUserId,
+      call_type: callType,
+      call_id: callId
+    });
+
+    playIncomingRingtone();
+    renderCallOverlay();
+
+    showHeadsUpCard(`Incoming ${callType === 'video' ? 'Video' : 'Voice'} Call`, `${fromName} is calling you on KYNX!`);
+    triggerBrowserNotification(`Incoming ${callType === 'video' ? 'Video' : 'Voice'} Call`, `${fromName} is calling you`);
+
+    CallManager.timeoutTimer = setTimeout(() => {
+      if (CallManager.state === 'incoming') {
+        endCall('Missed call');
+      }
+    }, 45000);
+  }
+
+  // Accept Incoming Call
+  async function acceptIncomingCall() {
+    if (CallManager.state !== 'incoming' || !CallManager.pendingOfferSdp) return;
+
+    stopIncomingRingtone();
+    clearTimeout(CallManager.timeoutTimer);
+
+    CallManager.state = 'connecting';
+    renderCallOverlay();
+
+    const isVideo = (CallManager.callType === 'video');
+
+    try {
+      const constraints = {
+        audio: true,
+        video: isVideo ? { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' } : false
+      };
+
+      let localStream;
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        if (isVideo) {
+          console.warn('[KYNX WebRTC] Video capture failed, fallback to audio:', err);
+          localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          CallManager.callType = 'voice';
+        } else {
+          throw err;
+        }
+      }
+
+      CallManager.localStream = localStream;
+      if (el.localVideo && isVideo) {
+        el.localVideo.srcObject = localStream;
+        el.localVideo.play().catch(() => {});
+      }
+
+      const pc = new RTCPeerConnection(RTC_CONFIG);
+      CallManager.pc = pc;
+
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+      pc.ontrack = (event) => {
+        console.log('[KYNX WebRTC] ontrack received on callee:', event.streams);
+        if (event.streams && event.streams[0]) {
+          CallManager.remoteStream = event.streams[0];
+          if (el.remoteVideo) {
+            el.remoteVideo.srcObject = event.streams[0];
+            el.remoteVideo.play().catch(e => console.warn('remoteVideo play err:', e));
+          }
+          if (el.remoteAudio) {
+            el.remoteAudio.srcObject = event.streams[0];
+            el.remoteAudio.play().catch(e => console.warn('remoteAudio play err:', e));
+          }
+        }
+      };
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          sendWsFrame({
+            type: 'call_ice_candidate',
+            target_id: CallManager.peerId,
+            callee_id: CallManager.peerId,
+            call_type: CallManager.callType,
+            call_id: CallManager.callId,
+            candidate: event.candidate.candidate,
+            sdp_mid: event.candidate.sdpMid,
+            sdp_mline_index: event.candidate.sdpMLineIndex
+          });
+        }
+      };
+
+      pc.onconnectionstatechange = () => {
+        console.log('[KYNX WebRTC] Callee connection state:', pc.connectionState);
+        if (pc.connectionState === 'connected') {
+          onCallConnected();
+        } else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+          endCall('Connection lost');
+        }
+      };
+
+      await pc.setRemoteDescription(new RTCSessionDescription({
+        type: 'offer',
+        sdp: CallManager.pendingOfferSdp
+      }));
+
+      // Flush queued candidates
+      for (const cand of CallManager.pendingCandidates) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(cand));
+        } catch (e) {
+          console.warn('Could not add queued candidate:', e);
+        }
+      }
+      CallManager.pendingCandidates = [];
+
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      sendWsFrame({
+        type: 'call_answer',
+        target_id: CallManager.peerId,
+        callee_id: CallManager.peerId,
+        call_type: CallManager.callType,
+        call_id: CallManager.callId,
+        sdp: answer.sdp
+      });
+
+    } catch (err) {
+      console.error('[KYNX WebRTC] Failed to accept call:', err);
+      alert('Microphone/Camera permission error.');
+      declineIncomingCall();
+    }
+  }
+
+  // Handle Answer from Peer
+  async function handleCallAnswer(msg) {
+    if (CallManager.state !== 'dialing' && CallManager.state !== 'ringing') return;
+    stopRingback();
+    clearTimeout(CallManager.timeoutTimer);
+
+    CallManager.state = 'connecting';
+    renderCallOverlay();
+
+    try {
+      if (CallManager.pc && msg.sdp) {
+        await CallManager.pc.setRemoteDescription(new RTCSessionDescription({
+          type: 'answer',
+          sdp: msg.sdp
+        }));
+
+        for (const cand of CallManager.pendingCandidates) {
+          try {
+            await CallManager.pc.addIceCandidate(new RTCIceCandidate(cand));
+          } catch (e) {
+            console.warn('Could not add queued candidate:', e);
+          }
+        }
+        CallManager.pendingCandidates = [];
+      }
+    } catch (e) {
+      console.error('[KYNX WebRTC] Failed to apply remote answer:', e);
+      endCall('Failed to connect call');
+    }
+  }
+
+  // Handle Remote ICE Candidate
+  async function handleRemoteIceCandidate(msg) {
+    const cand = {
+      candidate: msg.candidate,
+      sdpMid: msg.sdp_mid || msg.sdpMid,
+      sdpMLineIndex: msg.sdp_mline_index !== undefined ? msg.sdp_mline_index : msg.sdpMLineIndex
+    };
+
+    if (!CallManager.pc || !CallManager.pc.remoteDescription || !CallManager.pc.remoteDescription.type) {
+      CallManager.pendingCandidates.push(cand);
+      return;
+    }
+
+    try {
+      await CallManager.pc.addIceCandidate(new RTCIceCandidate(cand));
+    } catch (e) {
+      console.warn('[KYNX WebRTC] Error adding ICE candidate:', e);
+    }
+  }
+
+  // Handle Ringing status from Peer
+  function handleCallRinging(msg) {
+    if (CallManager.state === 'dialing') {
+      CallManager.state = 'ringing';
+      renderCallOverlay();
+    }
+  }
+
+  // Decline Incoming Call
+  function declineIncomingCall() {
+    if (CallManager.state === 'incoming') {
+      sendWsFrame({
+        type: 'call_reject',
+        target_id: CallManager.peerId,
+        callee_id: CallManager.peerId,
+        call_type: CallManager.callType,
+        call_id: CallManager.callId,
+        reason: 'declined'
+      });
+    }
+    endCall('Call declined');
+  }
+
+  // Handle Reject from Peer
+  function handleCallReject(msg) {
+    const reason = (msg.reason === 'busy') ? `${CallManager.peerName} is on another call` : `${CallManager.peerName} declined the call`;
+    endCall(reason);
+  }
+
+  // Handle Hangup from Peer
+  function handleCallHangup(msg) {
+    const reason = (msg.reason === 'unavailable') ? `${CallManager.peerName} is unavailable` : 'Call ended';
+    endCall(reason);
+  }
+
+  // Connected state callback
+  function onCallConnected() {
+    if (CallManager.state === 'connected') return;
+    stopRingback();
+    stopIncomingRingtone();
+    clearTimeout(CallManager.timeoutTimer);
+
+    CallManager.state = 'connected';
+    CallManager.connectedAt = Date.now();
+
+    renderCallOverlay();
+
+    if (CallManager.durationTimer) clearInterval(CallManager.durationTimer);
+    CallManager.durationTimer = setInterval(() => {
+      if (!CallManager.connectedAt) return;
+      const sec = Math.floor((Date.now() - CallManager.connectedAt) / 1000);
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      const timeStr = `${m}:${s}`;
+
+      if (el.callTimer) el.callTimer.textContent = timeStr;
+      if (el.videoCallStatus) el.videoCallStatus.textContent = timeStr;
+      if (el.callMinTimer) el.callMinTimer.textContent = timeStr;
+    }, 1000);
+  }
+
+  // End Call locally
+  function endCall(reason = null) {
+    stopRingback();
+    stopIncomingRingtone();
+    clearTimeout(CallManager.timeoutTimer);
+    if (CallManager.durationTimer) {
+      clearInterval(CallManager.durationTimer);
+      CallManager.durationTimer = null;
+    }
+
+    if (CallManager.state === 'dialing' || CallManager.state === 'ringing' || CallManager.state === 'connected' || CallManager.state === 'connecting') {
+      sendWsFrame({
+        type: 'call_hangup',
+        target_id: CallManager.peerId,
+        callee_id: CallManager.peerId,
+        call_type: CallManager.callType,
+        call_id: CallManager.callId,
+        reason: reason || 'hangup'
+      });
+    }
+
+    if (CallManager.localStream) {
+      CallManager.localStream.getTracks().forEach(t => {
+        try { t.stop(); } catch (_) {}
+      });
+      CallManager.localStream = null;
+    }
+
+    if (CallManager.pc) {
+      try { CallManager.pc.close(); } catch (_) {}
+      CallManager.pc = null;
+    }
+
+    if (el.localVideo) el.localVideo.srcObject = null;
+    if (el.remoteVideo) el.remoteVideo.srcObject = null;
+    if (el.remoteAudio) el.remoteAudio.srcObject = null;
+
+    const duration = CallManager.connectedAt ? Math.floor((Date.now() - CallManager.connectedAt) / 1000) : 0;
+    const oldCallId = CallManager.callId;
+    const isOutgoing = CallManager.isOutgoing;
+
+    CallManager.reset();
+    renderCallOverlay();
+
+    if (reason) {
+      showHeadsUpCard('Call Ended', reason);
+    }
+
+    if (isOutgoing && oldCallId && AppState.token) {
+      fetch(`${BACKEND_URL}/api/calls/${oldCallId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${AppState.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: duration > 0 ? 'completed' : 'missed',
+          duration_seconds: duration
+        })
+      }).catch(() => {});
+    }
+  }
+
+  // In-Call Controls
+  function toggleCallMute() {
+    if (!CallManager.localStream) return;
+    const audioTracks = CallManager.localStream.getAudioTracks();
+    if (audioTracks.length === 0) return;
+
+    CallManager.isMuted = !CallManager.isMuted;
+    audioTracks.forEach(t => t.enabled = !CallManager.isMuted);
+
+    if (el.btnCallMuteMic) {
+      el.btnCallMuteMic.classList.toggle('muted', CallManager.isMuted);
+    }
+    if (el.iconMicOn && el.iconMicOff) {
+      el.iconMicOn.style.display = CallManager.isMuted ? 'none' : 'block';
+      el.iconMicOff.style.display = CallManager.isMuted ? 'block' : 'none';
+    }
+  }
+
+  function toggleCallVideo() {
+    if (!CallManager.localStream) return;
+    const videoTracks = CallManager.localStream.getVideoTracks();
+    if (videoTracks.length === 0) return;
+
+    CallManager.isVideoDisabled = !CallManager.isVideoDisabled;
+    videoTracks.forEach(t => t.enabled = !CallManager.isVideoDisabled);
+
+    if (el.btnCallToggleCam) {
+      el.btnCallToggleCam.classList.toggle('disabled-track', CallManager.isVideoDisabled);
+    }
+    if (el.iconCamOn && el.iconCamOff) {
+      el.iconCamOn.style.display = CallManager.isVideoDisabled ? 'none' : 'block';
+      el.iconCamOff.style.display = CallManager.isVideoDisabled ? 'block' : 'none';
+    }
+  }
+
+  function toggleCallMinimize() {
+    CallManager.isMinimized = !CallManager.isMinimized;
+    renderCallOverlay();
+  }
+
+  // Load and Render Calls Tab in Sidebar
+  async function loadAndRenderCalls() {
+    if (!AppState.token) return;
+    el.conversationsList.innerHTML = `
+      <div style="padding: 30px 20px; text-align: center; color: var(--text-sub); font-size: 13px;">
+        <div class="typing-dots" style="margin-bottom: 12px; justify-content: center;">
+          <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+        </div>
+        Syncing Call Logs...
+      </div>`;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/calls`, {
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch calls');
+      const calls = await res.json();
+
+      el.conversationsList.innerHTML = '';
+      if (!Array.isArray(calls) || calls.length === 0) {
+        el.conversationsList.innerHTML = `
+          <div style="padding: 36px 20px; text-align: center; color: var(--text-sub); font-size: 13px;">
+            📞 No recent calls.<br>Start an audio or video call with any contact!
+          </div>`;
+        return;
+      }
+
+      const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
+
+      calls.forEach(call => {
+        const isOutgoing = (call.caller_id === myId);
+        const peerName = isOutgoing ? (call.callee_display_name || call.callee_username || 'Peer') : (call.caller_display_name || call.caller_username || 'Caller');
+        const initials = peerName.substring(0, 2).toUpperCase();
+        const isVideo = (call.call_type === 'video');
+        const durationSec = call.duration_seconds || 0;
+        const durStr = durationSec > 0 ? `${Math.floor(durationSec / 60)}m ${durationSec % 60}s` : (call.status || 'Missed');
+        const timeStr = call.created_at ? formatTime(call.created_at) : '';
+        const isMissed = (call.status === 'missed' || call.status === 'rejected');
+
+        const card = document.createElement('div');
+        card.className = 'chat-item-card';
+        card.innerHTML = `
+          <div class="item-avatar">${initials}</div>
+          <div class="item-info">
+            <div class="item-top">
+              <span class="item-title">${escapeHtml(peerName)}</span>
+              <span class="item-time">${timeStr}</span>
+            </div>
+            <div class="item-bottom" style="gap: 6px;">
+              <span style="font-size: 12px; color: ${isMissed ? '#FF526B' : '#20C997'}; font-weight: 600;">
+                ${isOutgoing ? '↗ Outgoing' : '↙ Incoming'} ${isVideo ? 'Video' : 'Voice'} (${durStr})
+              </span>
+            </div>
+          </div>
+          <button class="call-btn-cyber" style="width: 34px; height: 34px; flex-shrink: 0;" title="Call Again">
+            ${isVideo ? '📹' : '📞'}
+          </button>
+        `;
+
+        const callBtn = card.querySelector('button');
+        callBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const targetId = isOutgoing ? call.callee_id : call.caller_id;
+          // Find conversation or initiate directly
+          const matchedConv = AppState.conversations.find(c => getPeerId(c) === targetId);
+          if (matchedConv) {
+            openConversation(matchedConv).then(() => initiateCall(call.call_type || 'voice'));
+          } else {
+            AppState.activeConversation = {
+              id: 'temp_' + targetId,
+              peer: { id: targetId, display_name: peerName }
+            };
+            initiateCall(call.call_type || 'voice');
+          }
+        });
+
+        el.conversationsList.appendChild(card);
+      });
+
+    } catch (e) {
+      console.warn('Could not load calls:', e);
+      el.conversationsList.innerHTML = `
+        <div style="padding: 24px; text-align: center; color: var(--accent-red); font-size: 13px;">
+          Failed to load call history.
+        </div>`;
+    }
+  }
+
+  // Load and Render Contacts Tab in Sidebar
+  async function loadAndRenderContacts() {
+    if (!AppState.token) return;
+    el.conversationsList.innerHTML = `
+      <div style="padding: 30px 20px; text-align: center; color: var(--text-sub); font-size: 13px;">
+        <div class="typing-dots" style="margin-bottom: 12px; justify-content: center;">
+          <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+        </div>
+        Loading Contacts...
+      </div>`;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/contacts`, {
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch contacts');
+      const contacts = await res.json();
+
+      el.conversationsList.innerHTML = '';
+      if (!Array.isArray(contacts) || contacts.length === 0) {
+        el.conversationsList.innerHTML = `
+          <div style="padding: 36px 20px; text-align: center; color: var(--text-sub); font-size: 13px;">
+            👥 No contacts yet.<br>Add friends in the KYNX mobile app!
+          </div>`;
+        return;
+      }
+
+      contacts.forEach(contact => {
+        const title = contact.display_name || contact.username || 'Contact';
+        const initials = title.substring(0, 2).toUpperCase();
+        const card = document.createElement('div');
+        card.className = 'chat-item-card';
+        card.innerHTML = `
+          <div class="item-avatar">${initials}</div>
+          <div class="item-info">
+            <div class="item-top">
+              <span class="item-title">${escapeHtml(title)}</span>
+              <span class="item-time">@${escapeHtml(contact.username || '')}</span>
+            </div>
+            <div class="item-bottom">
+              <span class="item-preview">${escapeHtml(contact.status_message || 'Online on KYNX')}</span>
+            </div>
+          </div>
+        `;
+
+        card.addEventListener('click', async () => {
+          // Open or create conversation
+          const existing = AppState.conversations.find(c => getPeerId(c) === contact.id);
+          if (existing) {
+            openConversation(existing);
+          } else {
+            try {
+              const createRes = await fetch(`${BACKEND_URL}/api/conversations`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${AppState.token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ recipient_id: contact.id })
+              });
+              if (createRes.ok) {
+                const newConv = await createRes.json();
+                AppState.conversations.unshift(newConv);
+                openConversation(newConv);
+              }
+            } catch (err) {
+              console.warn('Error opening conversation with contact:', err);
+            }
+          }
+        });
+
+        el.conversationsList.appendChild(card);
+      });
+
+    } catch (e) {
+      console.warn('Could not load contacts:', e);
+      el.conversationsList.innerHTML = `
+        <div style="padding: 24px; text-align: center; color: var(--accent-red); font-size: 13px;">
+          Failed to load contacts.
+        </div>`;
+    }
   }
 
   // ==========================================================================
