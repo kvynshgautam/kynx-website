@@ -474,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnCopySha && shaTextElem) {
     btnCopySha.addEventListener('click', () => {
       playClickSound();
-      const fullHash = "3ca78f3224e55c69270bb3ad75241f63135ce725902cac6be108da0efe6c1733";
+      const fullHash = shaTextElem.textContent.trim() || "1816a40c0fb3af259281f463a6ab76517eb33e5e43eea5d41d951775d80b8841";
       navigator.clipboard.writeText(fullHash).then(() => {
         btnCopySha.textContent = "Copied! ✓";
         setTimeout(() => {
