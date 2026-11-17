@@ -313,10 +313,10 @@
     canvas.height = 200;
 
     // Draw dark tech matrix pattern
-    ctx.fillStyle = '#0b0f24';
+    ctx.fillStyle = '#0B0B12';
     ctx.fillRect(0, 0, 200, 200);
 
-    ctx.fillStyle = '#8b5cf6';
+    ctx.fillStyle = '#7950FF';
     const step = 8;
     const codeStr = String(code || 'KYNX');
     for (let x = 16; x < 184; x += step) {
@@ -334,7 +334,7 @@
     drawFinder(ctx, 16, 144);
 
     // Center Cyber K Logo
-    ctx.fillStyle = '#06b6d4';
+    ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 24px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -342,10 +342,10 @@
   }
 
   function drawFinder(ctx, x, y) {
-    ctx.strokeStyle = '#06b6d4';
+    ctx.strokeStyle = '#A78BFA';
     ctx.lineWidth = 4;
     ctx.strokeRect(x, y, 40, 40);
-    ctx.fillStyle = '#8b5cf6';
+    ctx.fillStyle = '#5527D7';
     ctx.fillRect(x + 10, y + 10, 20, 20);
   }
 
@@ -360,7 +360,7 @@
     }
 
     try {
-      el.loginError.style.color = 'var(--accent-cyan)';
+      el.loginError.style.color = 'var(--accent-purple-light)';
       el.loginError.textContent = 'Authenticating with KYNX Cloud...';
       
       const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
@@ -423,7 +423,7 @@
     }
     
     try {
-      el.otpError.style.color = 'var(--accent-cyan)';
+      el.otpError.style.color = 'var(--accent-purple-light)';
       el.otpError.textContent = 'Verifying security code...';
       
       const res = await fetch(`${BACKEND_URL}/api/auth/login/verify-otp`, {
@@ -461,7 +461,7 @@
   async function handleResendOtp() {
     if (!AppState.tempToken) return;
     try {
-      el.otpError.style.color = 'var(--accent-cyan)';
+      el.otpError.style.color = 'var(--accent-purple-light)';
       el.otpError.textContent = 'Requesting new code...';
       const res = await fetch(`${BACKEND_URL}/api/auth/login/resend-otp`, {
         method: 'POST',
