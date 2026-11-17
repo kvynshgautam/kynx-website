@@ -599,6 +599,11 @@
       card.addEventListener('click', () => openConversation(conv));
       el.conversationsList.appendChild(card);
     });
+
+    // Auto-select first conversation if none selected yet
+    if (!AppState.activeConversation && AppState.conversations.length > 0) {
+      openConversation(AppState.conversations[0]);
+    }
   }
 
   // Open Active Conversation
