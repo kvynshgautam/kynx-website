@@ -68,12 +68,13 @@
     msgInput: document.getElementById('chat-input'),
     btnSend: document.getElementById('btn-send-msg'),
     
-    // Tools
+    // Tools & Actions
     btnGhostShield: document.getElementById('btn-ghost-shield'),
-    clipboardBox: document.getElementById('clipboard-content'),
-    btnCopyPhone: document.getElementById('btn-copy-phone'),
-    btnPastePhone: document.getElementById('btn-paste-phone'),
-    airdropZone: document.getElementById('airdrop-zone'),
+    btnChatMenu: document.getElementById('btn-chat-menu'),
+    chatMoreMenu: document.getElementById('chat-more-menu'),
+    menuBtnAirdrop: document.getElementById('menu-btn-airdrop'),
+    menuBtnClearChat: document.getElementById('menu-btn-clear-chat'),
+    btnAttachMedia: document.getElementById('btn-attach-media'),
     fileInput: document.getElementById('file-upload-input'),
     
     // Calling Modal
@@ -156,13 +157,50 @@
     // Ghost Shield Mode (Anti-shoulder surfing)
     el.btnGhostShield.addEventListener('click', toggleGhostShield);
 
-    // AirDrop file trigger
-    el.airdropZone.addEventListener('click', () => el.fileInput.click());
-    el.fileInput.addEventListener('change', handleFileUpload);
+    // 3-Dots dropdown menu
+    if (el.btnChatMenu && el.chatMoreMenu) {
+      el.btnChatMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = el.chatMoreMenu.style.display === 'flex';
+        el.chatMoreMenu.style.display = isOpen ? 'none' : 'flex';
+      });
 
-    // Universal Clipboard buttons
-    el.btnCopyPhone.addEventListener('click', copyToPhone);
-    el.btnPastePhone.addEventListener('click', pasteFromPhone);
+      document.addEventListener('click', (e) => {
+        if (!el.chatMoreMenu.contains(e.target) && e.target !== el.btnChatMenu) {
+          el.chatMoreMenu.style.display = 'none';
+        }
+      });
+    }
+
+    // Mesh AirDrop inside 3-dots menu
+    if (el.menuBtnAirdrop) {
+      el.menuBtnAirdrop.addEventListener('click', () => {
+        if (el.chatMoreMenu) el.chatMoreMenu.style.display = 'none';
+        el.fileInput.click();
+      });
+    }
+
+    // Clear Chat inside 3-dots menu
+    if (el.menuBtnClearChat) {
+      el.menuBtnClearChat.addEventListener('click', () => {
+        if (el.chatMoreMenu) el.chatMoreMenu.style.display = 'none';
+        if (confirm('Clear current messages from screen?')) {
+          el.messagesCanvas.innerHTML = `
+            <div style="text-align: center; color: var(--text-sub); font-size: 12px; margin: 20px 0;">
+              🗑️ Chat view cleared
+            </div>`;
+        }
+      });
+    }
+
+    // Attach media button
+    if (el.btnAttachMedia) {
+      el.btnAttachMedia.addEventListener('click', () => {
+        el.fileInput.click();
+      });
+    }
+
+    el.fileInput.addEventListener('change', handleFileUpload);
 
     // Search filter
     el.searchInput.addEventListener('input', (e) => {
@@ -174,7 +212,7 @@
     el.btnVideoCall.addEventListener('click', () => initiateCall('video'));
     el.btnDeclineCall.addEventListener('click', closeCallOverlay);
     el.btnAcceptCall.addEventListener('click', () => {
-      alert('Connecting 120 FPS WebRTC call...');
+      alert('Connecting WebRTC call...');
       closeCallOverlay();
     });
   }
@@ -618,7 +656,7 @@
     const title = peer.display_name || peer.username || conv.title || conv.displayName || 'Encrypted Peer';
     el.peerAvatar.textContent = title.substring(0, 2).toUpperCase();
     el.peerName.textContent = title;
-    el.peerStatus.innerHTML = `● online • 120 FPS`;
+    el.peerStatus.innerHTML = `● online`;
 
     el.messagesCanvas.innerHTML = `
       <div style="text-align: center; color: var(--text-sub); font-size: 12px; margin: 20px 0;">
@@ -789,24 +827,7 @@
     }
   }
 
-  // 2. Universal Clipboard Sync
-  function copyToPhone() {
-    const text = el.clipboardBox.value || el.clipboardBox.textContent;
-    if (!text) return;
-    navigator.clipboard.writeText(text);
-    alert('📋 Text synced to KYNX Universal Clipboard!');
-  }
-
-  async function pasteFromPhone() {
-    try {
-      const text = await navigator.clipboard.readText();
-      el.clipboardBox.textContent = text;
-    } catch (e) {
-      console.warn('Clipboard read permission denied:', e);
-    }
-  }
-
-  // 3. AirDrop Local File Upload
+  // 2. AirDrop Local File Upload
   function handleFileUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
