@@ -131,8 +131,398 @@
     btnMinExpand: document.getElementById('btn-min-expand'),
     btnMinHangup: document.getElementById('btn-min-hangup'),
     btnAudioCall: document.getElementById('btn-start-audio-call'),
-    btnVideoCall: document.getElementById('btn-start-video-call')
+    btnVideoCall: document.getElementById('btn-start-video-call'),
+
+    // Build 56 Power Features: Burn-After-Reading, Watch Together, Walkie-Talkie
+    btnWalkieTalkie: document.getElementById('btn-walkie-talkie'),
+    btnWatchTogether: document.getElementById('btn-watch-together'),
+    watchDrawer: document.getElementById('watch-together-drawer'),
+    watchLiveDot: document.getElementById('watch-live-dot'),
+    watchTimeBadge: document.getElementById('watch-time-badge'),
+    watchUrlInput: document.getElementById('watch-url-input'),
+    btnWatchLoad: document.getElementById('btn-watch-load'),
+    btnWatchLofi: document.getElementById('btn-watch-lofi'),
+    btnWatchSynth: document.getElementById('btn-watch-synth'),
+    btnWatchClose: document.getElementById('btn-watch-close'),
+    watchStageWrap: document.getElementById('watch-stage-wrap'),
+    watchYtIframe: document.getElementById('watch-yt-iframe'),
+    btnWatchBack10: document.getElementById('btn-watch-back10'),
+    btnWatchToggle: document.getElementById('btn-watch-toggle'),
+    btnWatchFwd10: document.getElementById('btn-watch-fwd10'),
+    btnWatchSync: document.getElementById('btn-watch-sync'),
+    pttHoldBar: document.getElementById('ptt-hold-bar'),
+    btnPttExit: document.getElementById('btn-ptt-exit'),
+    btnPttHold: document.getElementById('btn-ptt-hold'),
+    chatFooterControls: document.getElementById('chat-footer-controls'),
+    btnBurnTimer: document.getElementById('btn-burn-timer')
   };
+
+  // ==========================================================================
+  // BUILD 56 POWER PROTOCOLS (Cross-Platform Android <-> Web Deck)
+  // ==========================================================================
+  const PowerState = {
+    burnSeconds: 0,
+    walkieMode: false,
+    pttRecording: false,
+    pttRecorder: null,
+    pttStream: null,
+    pttChunks: [],
+    pttStartedAt: 0,
+    pttTimer: null,
+    pttAudioEl: null,
+    seenPttIds: new Set(),
+    chatHistorySeeded: false,
+    watchVideoId: null,
+    watchPlaying: false,
+    watchSec: 0,
+    watchTickTimer: null,
+    lastWatchMsgId: null
+  };
+
+  function parseBurnMessage(raw) {
+    if (!raw || typeof raw !== 'string' || !raw.startsWith('[[KYNX_BURN:')) return null;
+    const m = raw.match(/^\[\[KYNX_BURN:(\d{1,3})\]\]([\s\S]*)$/);
+    if (!m) return null;
+    return { seconds: Math.min(300, Math.max(5, parseInt(m[1], 10) || 10)), body: m[2] };
+  }
+
+  function parseWatchMessage(raw) {
+    if (!raw || typeof raw !== 'string' || !raw.startsWith('[[KYNX_WATCH:') || !raw.endsWith(']]')) return null;
+    try {
+      const obj = JSON.parse(raw.slice('[[KYNX_WATCH:'.length, -2));
+      const v = String(obj.v || '');
+      const a = String(obj.a || 'play');
+      const t = Math.max(0, parseInt(obj.t, 10) || 0);
+      if (a !== 'close' && !/^[A-Za-z0-9_-]{11}$/.test(v)) return null;
+      return { videoId: v, action: a, timeSec: t, ts: obj.ts || Date.now() };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function isPttMessage(raw, mediaType) {
+    if (!raw || typeof raw !== 'string') return false;
+    const trimmed = raw.trim();
+    if (trimmed === '[[KYNX_PTT]]' && (!mediaType || String(mediaType).includes('audio'))) return true;
+    return trimmed.startsWith('[[KYNX_MESH_PTT:') && trimmed.endsWith(']]');
+  }
+
+  function formatPowerPreview(raw) {
+    if (!raw || typeof raw !== 'string') return raw;
+    if (parseBurnMessage(raw)) return '🔥 Secret burn message';
+    if (parseWatchMessage(raw)) return '🎵 Watch Together room';
+    if (isPttMessage(raw)) return '📻 Walkie-Talkie burst';
+    return raw;
+  }
+
+  function extractYouTubeId(input) {
+    if (!input) return null;
+    const s = input.trim();
+    if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+    const m = s.match(/(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?.*v=)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  function encodeWatchCommand(videoId, action, timeSec) {
+    return `[[KYNX_WATCH:${JSON.stringify({ v: videoId || '', a: action, t: Math.max(0, Math.floor(timeSec || 0)), ts: Date.now() })}]]`;
+  }
+
+  function formatWatchSec(sec) {
+    const s = Math.max(0, Math.floor(sec || 0));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+
+  function getBurnedIdsSet() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem('kynx_burned_ids') || '[]'));
+    } catch (_) {
+      return new Set();
+    }
+  }
+
+  function markBurnedId(msgId) {
+    if (!msgId) return;
+    const set = getBurnedIdsSet();
+    set.add(String(msgId));
+    const arr = Array.from(set).slice(-400);
+    try { localStorage.setItem('kynx_burned_ids', JSON.stringify(arr)); } catch (_) {}
+  }
+
+  function playRadioChirp(isStart) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      const now = ctx.currentTime;
+      if (isStart) {
+        osc.frequency.setValueAtTime(920, now);
+        osc.frequency.exponentialRampToValueAtTime(1480, now + 0.08);
+      } else {
+        osc.frequency.setValueAtTime(1180, now);
+        osc.frequency.exponentialRampToValueAtTime(660, now + 0.09);
+      }
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.12);
+      setTimeout(() => { try { ctx.close(); } catch (_) {} }, 250);
+    } catch (_) {}
+  }
+
+  function playPttAudioUrl(mediaUrl, withChirp = true) {
+    if (!mediaUrl) return;
+    if (withChirp) playRadioChirp(true);
+    try {
+      if (PowerState.pttAudioEl) {
+        PowerState.pttAudioEl.pause();
+        PowerState.pttAudioEl = null;
+      }
+      const audio = new Audio(mediaUrl);
+      PowerState.pttAudioEl = audio;
+      setTimeout(() => {
+        audio.play().catch(err => console.warn('[KYNX PTT] Autoplay blocked until interaction:', err));
+      }, withChirp ? 120 : 0);
+    } catch (e) {
+      console.warn('[KYNX PTT] Playback error:', e);
+    }
+  }
+
+  function updateBurnTimerButton() {
+    if (!el.btnBurnTimer) return;
+    const sec = PowerState.burnSeconds;
+    if (sec > 0) {
+      const lbl = sec === 60 ? '1m' : `${sec}s`;
+      el.btnBurnTimer.classList.add('active');
+      el.btnBurnTimer.textContent = `🔥 ${lbl}`;
+      if (el.msgInput) {
+        el.msgInput.classList.add('burn-armed');
+        el.msgInput.placeholder = `🔥 Burn in ${lbl} • Type secret message...`;
+      }
+    } else {
+      el.btnBurnTimer.classList.remove('active');
+      el.btnBurnTimer.textContent = '🔥';
+      if (el.msgInput) {
+        el.msgInput.classList.remove('burn-armed');
+        el.msgInput.placeholder = 'Type a message (Enter to send, Shift+Enter for new line)...';
+      }
+    }
+  }
+
+  function setWalkieTalkieMode(enabled) {
+    PowerState.walkieMode = Boolean(enabled);
+    if (el.btnWalkieTalkie) el.btnWalkieTalkie.classList.toggle('active', PowerState.walkieMode);
+    if (el.pttHoldBar) el.pttHoldBar.style.display = PowerState.walkieMode ? 'block' : 'none';
+    if (el.chatFooterControls) el.chatFooterControls.style.display = PowerState.walkieMode ? 'none' : 'flex';
+    if (!PowerState.walkieMode && PowerState.pttRecording) {
+      stopPttTransmit(true);
+    }
+  }
+
+  function ytPostCmd(func, args = []) {
+    if (!el.watchYtIframe || !el.watchYtIframe.contentWindow) return;
+    try {
+      el.watchYtIframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args }), '*');
+    } catch (_) {}
+  }
+
+  function updateWatchUi() {
+    if (!el.watchDrawer) return;
+    if (el.btnWatchTogether) el.btnWatchTogether.classList.toggle('active', Boolean(PowerState.watchVideoId));
+    if (el.watchTimeBadge) el.watchTimeBadge.textContent = formatWatchSec(PowerState.watchSec);
+    if (el.watchLiveDot) el.watchLiveDot.style.background = PowerState.watchPlaying ? '#10b981' : '#f59e0b';
+    if (el.btnWatchToggle) el.btnWatchToggle.textContent = PowerState.watchPlaying ? '⏸ Pause All' : '▶ Play All';
+  }
+
+  function startWatchTicker() {
+    if (PowerState.watchTickTimer) clearInterval(PowerState.watchTickTimer);
+    PowerState.watchTickTimer = setInterval(() => {
+      if (PowerState.watchPlaying && PowerState.watchVideoId) {
+        PowerState.watchSec++;
+        updateWatchUi();
+      }
+    }, 1000);
+  }
+
+  function applyWatchCommandLocally(cmd) {
+    if (!cmd || !el.watchDrawer) return;
+    if (cmd.action === 'close') {
+      PowerState.watchVideoId = null;
+      PowerState.watchPlaying = false;
+      if (PowerState.watchTickTimer) { clearInterval(PowerState.watchTickTimer); PowerState.watchTickTimer = null; }
+      if (el.watchYtIframe) el.watchYtIframe.src = 'about:blank';
+      if (el.watchStageWrap) el.watchStageWrap.style.display = 'none';
+      el.watchDrawer.style.display = 'none';
+      updateWatchUi();
+      return;
+    }
+
+    el.watchDrawer.style.display = 'block';
+    if (el.watchStageWrap) el.watchStageWrap.style.display = 'block';
+    const needsReload = PowerState.watchVideoId !== cmd.videoId;
+    PowerState.watchVideoId = cmd.videoId;
+    PowerState.watchSec = cmd.timeSec || 0;
+    PowerState.watchPlaying = (cmd.action !== 'pause');
+
+    if (needsReload && el.watchYtIframe) {
+      const auto = PowerState.watchPlaying ? 1 : 0;
+      const origin = encodeURIComponent(window.location.origin);
+      el.watchYtIframe.src = `https://www.youtube.com/embed/${encodeURIComponent(cmd.videoId)}?enablejsapi=1&autoplay=${auto}&start=${PowerState.watchSec}&rel=0&playsinline=1&origin=${origin}`;
+    } else {
+      ytPostCmd('seekTo', [PowerState.watchSec, true]);
+      ytPostCmd(PowerState.watchPlaying ? 'playVideo' : 'pauseVideo');
+    }
+    startWatchTicker();
+    updateWatchUi();
+  }
+
+  async function broadcastWatchSync(videoId, action, timeSec) {
+    if (!AppState.activeConversation || !AppState.token) return;
+    const text = encodeWatchCommand(videoId, action, timeSec);
+    applyWatchCommandLocally({ videoId, action, timeSec, ts: Date.now() });
+    const convId = AppState.activeConversation.id;
+    const tempId = 'kynx_watch_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : 'me';
+    const msgObj = {
+      id: tempId,
+      client_msg_id: tempId,
+      conversation_id: convId,
+      text,
+      sender_id: myId,
+      created_at: new Date().toISOString(),
+      isMine: true
+    };
+    if (!AppState.messages[convId]) AppState.messages[convId] = [];
+    AppState.messages[convId].push(msgObj);
+    PowerState.lastWatchMsgId = tempId;
+    appendMessageToUI(msgObj);
+    scrollChatToBottom();
+    await postMessagePayload(convId, { conversation_id: convId, text, client_msg_id: tempId }, msgObj, tempId);
+  }
+
+  async function startPttTransmit() {
+    if (PowerState.pttRecording || !AppState.activeConversation || !AppState.token) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Your browser does not support Walkie-Talkie microphone recording.');
+      return;
+    }
+    try {
+      cancelActiveVoiceRecording();
+      PowerState.pttStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+      PowerState.pttRecorder = mimeType
+        ? new MediaRecorder(PowerState.pttStream, { mimeType, audioBitsPerSecond: 32000 })
+        : new MediaRecorder(PowerState.pttStream);
+      PowerState.pttChunks = [];
+      PowerState.pttRecording = true;
+      PowerState.pttStartedAt = Date.now();
+      playRadioChirp(true);
+
+      if (el.btnPttHold) {
+        el.btnPttHold.classList.add('transmitting');
+        el.btnPttHold.textContent = '🔴 TRANSMITTING 0:00 • Release to Send';
+      }
+      if (PowerState.pttTimer) clearInterval(PowerState.pttTimer);
+      PowerState.pttTimer = setInterval(() => {
+        const sec = Math.floor((Date.now() - PowerState.pttStartedAt) / 1000);
+        if (el.btnPttHold && PowerState.pttRecording) {
+          el.btnPttHold.textContent = `🔴 TRANSMITTING 0:${String(sec).padStart(2, '0')} • Release to Send`;
+        }
+        if (sec >= 30) stopPttTransmit(false);
+      }, 300);
+
+      PowerState.pttRecorder.ondataavailable = (ev) => {
+        if (ev.data && ev.data.size > 0) PowerState.pttChunks.push(ev.data);
+      };
+      PowerState.pttRecorder.start();
+    } catch (err) {
+      PowerState.pttRecording = false;
+      showHeadsUpCard('Microphone Needed', 'Allow mic permission to use Walkie-Talkie.');
+    }
+  }
+
+  function stopPttTransmit(cancelOnly = false) {
+    if (!PowerState.pttRecording) return;
+    PowerState.pttRecording = false;
+    if (PowerState.pttTimer) { clearInterval(PowerState.pttTimer); PowerState.pttTimer = null; }
+    if (el.btnPttHold) {
+      el.btnPttHold.classList.remove('transmitting');
+      el.btnPttHold.textContent = '📻 HOLD TO TALK (or Hold Space) • Instant Voice';
+    }
+    const elapsed = Date.now() - PowerState.pttStartedAt;
+    const rec = PowerState.pttRecorder;
+    const stream = PowerState.pttStream;
+    PowerState.pttRecorder = null;
+    PowerState.pttStream = null;
+    playRadioChirp(false);
+
+    if (!rec) {
+      if (stream) stream.getTracks().forEach(t => { try { t.stop(); } catch (_) {} });
+      return;
+    }
+
+    rec.onstop = async () => {
+      if (stream) stream.getTracks().forEach(t => { try { t.stop(); } catch (_) {} });
+      const chunks = PowerState.pttChunks.slice();
+      PowerState.pttChunks = [];
+      if (cancelOnly || elapsed < 350 || chunks.length === 0 || !AppState.activeConversation) return;
+
+      const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
+      const ext = (blob.type || '').includes('ogg') ? 'ogg' : 'webm';
+      const file = new File([blob], `ptt_${Date.now()}.${ext}`, { type: blob.type || 'audio/webm' });
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const upRes = await fetch(`${BACKEND_URL}/api/media/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${AppState.token}` },
+          body: formData
+        });
+        if (!upRes.ok) throw new Error('Walkie-Talkie upload failed');
+        const uploaded = await upRes.json();
+        const convId = AppState.activeConversation.id;
+        const tempId = 'kynx_ptt_' + Date.now();
+        const msgRes = await fetch(`${BACKEND_URL}/api/conversations/${convId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${AppState.token}`
+          },
+          body: JSON.stringify({
+            conversation_id: convId,
+            text: '[[KYNX_PTT]]',
+            client_msg_id: tempId,
+            media_url: uploaded.url,
+            media_type: 'audio'
+          })
+        });
+        if (msgRes.ok) {
+          const saved = await msgRes.json();
+          PowerState.seenPttIds.add(saved.id);
+          if (!AppState.messages[convId]) AppState.messages[convId] = [];
+          AppState.messages[convId].push(saved);
+          appendMessageToUI(saved);
+          scrollChatToBottom();
+          loadConversations();
+        }
+      } catch (err) {
+        showHeadsUpCard('Walkie-Talkie Failed', err.message || 'Could not send voice burst.');
+      }
+    };
+
+    try {
+      if (rec.state !== 'inactive') rec.stop();
+    } catch (_) {
+      if (stream) stream.getTracks().forEach(t => { try { t.stop(); } catch (_) {} });
+    }
+  }
 
   // Initialize Web Deck
   function init() {
@@ -278,6 +668,108 @@
 
     if (el.btnCancelReply) {
       el.btnCancelReply.addEventListener('click', clearReplyTarget);
+    }
+
+    // Build 56 Power Feature Bindings: Burn-After-Reading, Watch Together, Walkie-Talkie
+    if (el.btnBurnTimer) {
+      el.btnBurnTimer.addEventListener('click', () => {
+        const order = [0, 10, 30, 60];
+        const nextIdx = (order.indexOf(PowerState.burnSeconds) + 1) % order.length;
+        PowerState.burnSeconds = order[nextIdx];
+        updateBurnTimerButton();
+        if (el.msgInput) el.msgInput.focus();
+      });
+    }
+
+    if (el.btnWalkieTalkie) {
+      el.btnWalkieTalkie.addEventListener('click', () => {
+        setWalkieTalkieMode(!PowerState.walkieMode);
+      });
+    }
+    if (el.btnPttExit) {
+      el.btnPttExit.addEventListener('click', () => setWalkieTalkieMode(false));
+    }
+    if (el.btnPttHold) {
+      el.btnPttHold.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        startPttTransmit();
+      });
+      const releasePtt = () => stopPttTransmit(false);
+      el.btnPttHold.addEventListener('pointerup', releasePtt);
+      el.btnPttHold.addEventListener('pointercancel', releasePtt);
+      el.btnPttHold.addEventListener('pointerleave', releasePtt);
+    }
+    window.addEventListener('keydown', (e) => {
+      if (!PowerState.walkieMode || e.code !== 'Space' || e.repeat) return;
+      const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+      e.preventDefault();
+      startPttTransmit();
+    });
+    window.addEventListener('keyup', (e) => {
+      if (!PowerState.walkieMode || e.code !== 'Space') return;
+      if (PowerState.pttRecording) {
+        e.preventDefault();
+        stopPttTransmit(false);
+      }
+    });
+
+    if (el.btnWatchTogether && el.watchDrawer) {
+      el.btnWatchTogether.addEventListener('click', () => {
+        const isOpen = el.watchDrawer.style.display !== 'none';
+        el.watchDrawer.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen && el.watchUrlInput) el.watchUrlInput.focus();
+      });
+    }
+    if (el.btnWatchLoad && el.watchUrlInput) {
+      const loadFromInput = () => {
+        const id = extractYouTubeId(el.watchUrlInput.value);
+        if (!id) {
+          showHeadsUpCard('Invalid YouTube Link', 'Paste a valid YouTube URL or 11-character video ID.');
+          return;
+        }
+        el.watchUrlInput.value = '';
+        broadcastWatchSync(id, 'play', 0);
+      };
+      el.btnWatchLoad.addEventListener('click', loadFromInput);
+      el.watchUrlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); loadFromInput(); }
+      });
+    }
+    if (el.btnWatchLofi) el.btnWatchLofi.addEventListener('click', () => broadcastWatchSync('jfKfPfyJRdk', 'play', 0));
+    if (el.btnWatchSynth) el.btnWatchSynth.addEventListener('click', () => broadcastWatchSync('4xDzrJKXOOY', 'play', 0));
+    if (el.btnWatchClose) {
+      el.btnWatchClose.addEventListener('click', () => {
+        if (PowerState.watchVideoId) {
+          broadcastWatchSync(PowerState.watchVideoId, 'close', 0);
+        } else if (el.watchDrawer) {
+          el.watchDrawer.style.display = 'none';
+        }
+      });
+    }
+    if (el.btnWatchToggle) {
+      el.btnWatchToggle.addEventListener('click', () => {
+        if (!PowerState.watchVideoId) return;
+        broadcastWatchSync(PowerState.watchVideoId, PowerState.watchPlaying ? 'pause' : 'play', PowerState.watchSec);
+      });
+    }
+    if (el.btnWatchBack10) {
+      el.btnWatchBack10.addEventListener('click', () => {
+        if (!PowerState.watchVideoId) return;
+        broadcastWatchSync(PowerState.watchVideoId, 'seek', Math.max(0, PowerState.watchSec - 10));
+      });
+    }
+    if (el.btnWatchFwd10) {
+      el.btnWatchFwd10.addEventListener('click', () => {
+        if (!PowerState.watchVideoId) return;
+        broadcastWatchSync(PowerState.watchVideoId, 'seek', PowerState.watchSec + 10);
+      });
+    }
+    if (el.btnWatchSync) {
+      el.btnWatchSync.addEventListener('click', () => {
+        if (!PowerState.watchVideoId) return;
+        broadcastWatchSync(PowerState.watchVideoId, PowerState.watchPlaying ? 'play' : 'pause', PowerState.watchSec);
+      });
     }
 
     if (el.btnMobileBack) {
@@ -929,7 +1421,8 @@
       const peer = conv.peer || {};
       const title = peer.display_name || peer.username || conv.title || conv.displayName || 'Encrypted Peer';
       const initials = title.substring(0, 2).toUpperCase();
-      const lastMsg = conv.last_message?.text || conv.lastMessage?.text || conv.snippet || 'Tap to open chat';
+      const rawLastMsg = conv.last_message?.text || conv.lastMessage?.text || conv.snippet || 'Tap to open chat';
+      const lastMsg = formatPowerPreview(rawLastMsg) || 'Tap to open chat';
       const timeRaw = conv.last_message?.created_at || conv.lastMessageAt || conv.updated_at;
       const time = timeRaw ? formatTime(timeRaw) : '';
 
@@ -961,6 +1454,11 @@
   async function openConversation(conv, openMobilePanel = true) {
     AppState.activeConversation = conv;
     clearReplyTarget();
+    PowerState.chatHistorySeeded = false;
+    PowerState.seenPttIds.clear();
+    PowerState.lastWatchMsgId = null;
+    applyWatchCommandLocally({ action: 'close' });
+    setWalkieTalkieMode(false);
     if (AppState.activeTab === 'chats') {
       renderConversations();
       if (AppState.searchQuery) filterConversations(AppState.searchQuery);
@@ -1008,6 +1506,7 @@
         if (!AppState.messages[convId]) AppState.messages[convId] = [];
         
         let shouldScroll = false;
+        const wasSeeded = PowerState.chatHistorySeeded;
         msgs.forEach(m => {
           const exists = AppState.messages[convId].some(existing => existing.id === m.id || (existing.client_msg_id && existing.client_msg_id === m.id));
           if (!exists) {
@@ -1017,6 +1516,19 @@
             const isMine = (myId && sender === myId) || m.isMine;
             if (!isMine && (document.hidden || !document.hasFocus())) {
               triggerMessageNotification(m);
+            }
+            if (wasSeeded) {
+              const txt = m.text || m.content || '';
+              const wCmd = parseWatchMessage(txt);
+              if (wCmd && m.id !== PowerState.lastWatchMsgId) {
+                PowerState.lastWatchMsgId = m.id;
+                applyWatchCommandLocally(wCmd);
+              }
+              if (!isMine && isPttMessage(txt, m.media_type || m.mediaType) && !PowerState.seenPttIds.has(m.id)) {
+                PowerState.seenPttIds.add(m.id);
+                const mUrl = resolveMediaUrl(m.media_url || m.mediaUrl);
+                if (mUrl) playPttAudioUrl(mUrl, true);
+              }
             }
           } else {
             // Sync live edits, deletions, and reactions on existing bubbles
@@ -1029,9 +1541,15 @@
               applyMessageReactionsInUI(m.id, m.reactions);
             }
           }
+          if (!wasSeeded) {
+            const txt = m.text || m.content || '';
+            if (isPttMessage(txt, m.media_type || m.mediaType) && m.id) PowerState.seenPttIds.add(m.id);
+            if (parseWatchMessage(txt) && m.id) PowerState.lastWatchMsgId = m.id;
+          }
           const rendered = appendMessageToUI(m);
           if (rendered) shouldScroll = true;
         });
+        PowerState.chatHistorySeeded = true;
 
         if (shouldScroll) {
           scrollChatToBottom();
@@ -1044,8 +1562,15 @@
 
   // Send Message
   async function sendMessage() {
-    const text = el.msgInput.value.trim();
-    if (!text || !AppState.activeConversation) return;
+    const rawTyped = el.msgInput.value.trim();
+    if (!rawTyped || !AppState.activeConversation) return;
+    const text = PowerState.burnSeconds > 0
+      ? `[[KYNX_BURN:${PowerState.burnSeconds}]]${rawTyped}`
+      : rawTyped;
+    if (PowerState.burnSeconds > 0) {
+      PowerState.burnSeconds = 0;
+      updateBurnTimerButton();
+    }
 
     el.msgInput.value = '';
     const replySnapshot = AppState.replyTo ? { ...AppState.replyTo } : null;
@@ -1154,6 +1679,22 @@
     if (AppState.activeConversation && AppState.activeConversation.id === convId) {
       const rendered = appendMessageToUI(msg);
       if (rendered) scrollChatToBottom();
+
+      // Live Watch Together sync & Walkie-Talkie instant auto-play
+      const txt = msg.text || msg.content || '';
+      const wCmd = parseWatchMessage(txt);
+      if (wCmd && msg.id !== PowerState.lastWatchMsgId) {
+        PowerState.lastWatchMsgId = msg.id;
+        applyWatchCommandLocally(wCmd);
+      }
+      const myIdNow = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
+      const senderNow = msg.sender_id || msg.senderId;
+      const isMineNow = (myIdNow && senderNow === myIdNow) || msg.isMine;
+      if (!isMineNow && isPttMessage(txt, msg.media_type || msg.mediaType) && !PowerState.seenPttIds.has(msg.id)) {
+        PowerState.seenPttIds.add(msg.id);
+        const mUrl = resolveMediaUrl(msg.media_url || msg.mediaUrl);
+        if (mUrl) playPttAudioUrl(mUrl, true);
+      }
     }
 
     // Refresh list preview
@@ -1478,9 +2019,46 @@
       ? `<div class="msg-quoted-reply"><div class="msg-quoted-sender">${escapeHtml(replyToSender)}</div><div class="msg-quoted-text">${escapeHtml(replyToText)}</div></div>`
       : '';
 
+    const watchCmd = !isDeleted ? parseWatchMessage(rawText) : null;
+    const burnPayload = (!isDeleted && !watchCmd) ? parseBurnMessage(rawText) : null;
+    const isPttMsg = !isDeleted && isPttMessage(rawText, mediaType);
+    const isAlreadyBurned = Boolean(burnPayload && msgId && getBurnedIdsSet().has(String(msgId)));
+
     let bodyHtml = '';
     if (isDeleted) {
       bodyHtml = `<div class="msg-deleted-text">🚫 This message was deleted</div>`;
+    } else if (watchCmd) {
+      const lbl = watchCmd.action === 'play'
+        ? `🎵 Watch Together · Playing (${formatWatchSec(watchCmd.timeSec)})`
+        : watchCmd.action === 'pause'
+          ? `⏸ Watch Together · Paused (${formatWatchSec(watchCmd.timeSec)})`
+          : watchCmd.action === 'seek'
+            ? `⏩ Watch Together · Synced to ${formatWatchSec(watchCmd.timeSec)}`
+            : '⏹ Watch Together · Room ended';
+      bodyHtml = `${quotedHtml}<div class="watch-msg-pill" data-watch-pill="1">${escapeHtml(lbl)}</div>`;
+    } else if (isPttMsg) {
+      bodyHtml = `${quotedHtml}
+        <div class="ptt-msg-card" data-ptt-play="1">
+          <div class="ptt-play-circle">🔊</div>
+          <div>
+            <div class="ptt-msg-title">📻 Walkie-Talkie Burst</div>
+            <div class="ptt-msg-sub">${mediaUrl ? 'Click to replay instant voice' : 'Offline Mesh Voice Burst'}</div>
+          </div>
+        </div>`;
+    } else if (burnPayload) {
+      if (isAlreadyBurned) {
+        bodyHtml = `${quotedHtml}<div class="burn-erased-pill">💨 Burned &amp; Erased</div>`;
+      } else {
+        const secLbl = burnPayload.seconds === 60 ? '1m' : `${burnPayload.seconds}s`;
+        bodyHtml = `${quotedHtml}
+          <div class="burn-card" data-burn-reveal="1">
+            <span style="font-size:20px;">🔥</span>
+            <div>
+              <div class="burn-card-title">${isMine ? `Burn Message (${secLbl})` : 'Secret Burn Message'}</div>
+              <div class="burn-card-sub">Click to reveal • Self-destructs in ${secLbl}</div>
+            </div>
+          </div>`;
+      }
     } else {
       let mediaHtml = '';
       if (isViewOnce) {
@@ -1530,7 +2108,7 @@
       : '';
 
     const reactionsHtml = formatReactionsHtml(msg.reactions);
-    const canEdit = isMine && !mediaUrl && !isViewOnce;
+    const canEdit = isMine && !mediaUrl && !isViewOnce && !watchCmd && !burnPayload && !isPttMsg;
     const hoverBarHtml = (!isDeleted && msgId)
       ? `<div class="msg-hover-actions">
           <button type="button" class="msg-act-btn" data-act="reply" title="Reply">↩️</button>
@@ -1584,6 +2162,68 @@
         const currentId = wrapper.getAttribute('data-msg-id');
         const emoji = pill.getAttribute('data-react');
         if (currentId && emoji) toggleMessageReaction(currentId, emoji);
+      });
+    }
+
+    // Wire interactive Build 56 Power Feature cards (Watch pill, PTT replay, Burn countdown)
+    const watchPillEl = wrapper.querySelector('[data-watch-pill]');
+    if (watchPillEl && watchCmd) {
+      watchPillEl.addEventListener('click', () => {
+        if (watchCmd.action !== 'close' && watchCmd.videoId) {
+          applyWatchCommandLocally({ ...watchCmd, action: 'play', ts: Date.now() });
+        } else if (el.watchDrawer) {
+          el.watchDrawer.style.display = 'block';
+        }
+      });
+    }
+
+    const pttPlayEl = wrapper.querySelector('[data-ptt-play]');
+    if (pttPlayEl && mediaUrl) {
+      pttPlayEl.addEventListener('click', () => playPttAudioUrl(mediaUrl, true));
+    }
+
+    const burnCardEl = wrapper.querySelector('[data-burn-reveal]');
+    if (burnCardEl && burnPayload) {
+      burnCardEl.addEventListener('click', () => {
+        const bodySlot = wrapper.querySelector('.msg-body-slot');
+        if (!bodySlot) return;
+        const total = burnPayload.seconds;
+        let rem = total;
+        bodySlot.innerHTML = `${quotedHtml}
+          <div class="burn-revealed-box">
+            <div class="burn-countdown-label">🔥 BURNING IN <span class="burn-rem">${rem}</span>s</div>
+            <div class="burn-secret-text">${escapeHtml(burnPayload.body)}</div>
+            <div class="burn-progress-track"><div class="burn-progress-fill" style="width:100%"></div></div>
+          </div>`;
+        const remSpan = bodySlot.querySelector('.burn-rem');
+        const fillEl = bodySlot.querySelector('.burn-progress-fill');
+        const timer = setInterval(async () => {
+          rem--;
+          if (rem > 0) {
+            if (remSpan) remSpan.textContent = String(rem);
+            if (fillEl) fillEl.style.width = `${Math.max(0, (rem / total) * 100)}%`;
+            return;
+          }
+          clearInterval(timer);
+          const currentId = wrapper.getAttribute('data-msg-id');
+          markBurnedId(currentId);
+          bodySlot.innerHTML = `${quotedHtml}<div class="burn-erased-pill">💨 Burned &amp; Erased</div>`;
+          if (currentId && AppState.token && !String(currentId).startsWith('kynx_msg_')) {
+            try {
+              if (isMine) {
+                await fetch(`${BACKEND_URL}/api/messages/${currentId}`, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': `Bearer ${AppState.token}` }
+                });
+              } else {
+                await fetch(`${BACKEND_URL}/api/messages/${currentId}/hide`, {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${AppState.token}` }
+                });
+              }
+            } catch (_) {}
+          }
+        }, 1000);
       });
     }
 
@@ -2949,7 +3589,8 @@
     const conv = AppState.conversations.find(c => String(c.id) === String(convId));
     const peer = (conv && conv.peer) || {};
     const senderName = msg.senderName || msg.sender_name || peer.display_name || peer.username || (conv && (conv.title || conv.displayName)) || 'KYNX Message';
-    const textPreview = msg.text || msg.content || (msg.is_view_once ? '🔒 View-Once Media' : 'Sent an attachment');
+    const rawPreview = msg.text || msg.content || '';
+    const textPreview = formatPowerPreview(rawPreview) || (msg.is_view_once ? '🔒 View-Once Media' : 'Sent an attachment');
 
     // 1. Play signature notification chime
     playNotificationSound();

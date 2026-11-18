@@ -1,11 +1,11 @@
 {
-  "version_code": 55,
-  "version_name": "0.9.45",
-  "description": "KYNX v0.9.45 (Build 55) Zero-Lag Flagship Upgrade: Native Android Picture-in-Picture (PiP) Video Calls, App-Wide Privacy Shield (Block Screenshots & Recents Blur), Installable Web Desktop App (PWA), Ctrl+V Screenshot Paste & Drag-Drop File Teleport, Live WebRTC Screen Sharing, Emoji Picker & Live Message Editing.",
+  "version_code": 56,
+  "version_name": "0.9.46",
+  "description": "KYNX v0.9.46 (Build 56) Signature Power Trio: Instant Walkie-Talkie Push-to-Talk (Online + Offline Bluetooth Mesh with live auto-play & radio chirp), Synced Watch / Listen Together YouTube Mini Room (Android + Web Deck real-time sync), and Burn-After-Reading Secret Text Messages (10s / 30s / 1m countdown & auto-erase).",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "416fdbaf9d303f7ba031320829c7d2e5fb7e51ee846817b4d4e740f3d16ae13b",
+  "sha256_checksum": "6d95a9d6483905559ab4ae80657eb176bb7be3f6c7420eed846421f950dcb3fd",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-18T10:21:00+00:00",
-  "file_size_bytes": 65346858
+  "published_at": "2026-11-18T11:13:43+00:00",
+  "file_size_bytes": 65428778
 }

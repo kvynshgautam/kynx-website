@@ -215,8 +215,14 @@
             </div>
           </div>
 
-          <!-- Actions: Ghost Shield, Calling & 3-Dot More Menu -->
+          <!-- Actions: Walkie-Talkie, Watch Together, Ghost Shield, Calling & 3-Dot More Menu -->
           <div class="chat-header-actions">
+            <button class="call-btn-cyber" id="btn-walkie-talkie" title="Instant Walkie-Talkie (Push-to-Talk)">
+              📻
+            </button>
+            <button class="call-btn-cyber" id="btn-watch-together" title="Synced Watch / Listen Together Room">
+              🎵
+            </button>
             <button class="ghost-shield-toggle-btn" id="btn-ghost-shield" title="Hide messages from people behind you">
               🛡️ Ghost Shield
             </button>
@@ -250,6 +256,33 @@
           </div>
         </div>
 
+        <!-- Synced Watch / Listen Together Mini Room -->
+        <div class="watch-together-drawer" id="watch-together-drawer" style="display:none;">
+          <div class="watch-drawer-header">
+            <div class="watch-drawer-title">
+              <span class="watch-live-dot" id="watch-live-dot"></span>
+              <span>🎵 Watch Together · Synced Room</span>
+              <span class="watch-time-badge" id="watch-time-badge">0:00</span>
+            </div>
+            <div class="watch-url-row">
+              <input type="text" id="watch-url-input" class="watch-url-input" placeholder="Paste YouTube URL or ID..." />
+              <button class="watch-mini-btn primary" id="btn-watch-load">Load</button>
+              <button class="watch-mini-btn" id="btn-watch-lofi" title="Lofi Beats">🎧 Lofi</button>
+              <button class="watch-mini-btn" id="btn-watch-synth" title="Synthwave">🌌 Synth</button>
+              <button class="watch-mini-btn danger" id="btn-watch-close" title="Close Synced Room">✕</button>
+            </div>
+          </div>
+          <div class="watch-stage-wrap" id="watch-stage-wrap" style="display:none;">
+            <iframe id="watch-yt-iframe" class="watch-yt-iframe" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            <div class="watch-controls-bar">
+              <button class="watch-ctrl-btn" id="btn-watch-back10">⏪ -10s</button>
+              <button class="watch-ctrl-btn primary" id="btn-watch-toggle">⏸ Pause All</button>
+              <button class="watch-ctrl-btn" id="btn-watch-fwd10">+10s ⏩</button>
+              <button class="watch-ctrl-btn" id="btn-watch-sync">🔄 Re-Sync</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Messages Canvas -->
         <div class="messages-history-canvas" id="messages-canvas">
           <!-- Dynamic bubbles injected by web-engine.js -->
@@ -270,12 +303,24 @@
         <!-- Floating Emoji Picker Popover -->
         <div class="emoji-picker-popover" id="emoji-picker-popover" style="display:none;"></div>
 
+        <!-- Instant Walkie-Talkie Push-to-Talk Bar (Hidden until toggled) -->
+        <div class="ptt-hold-bar" id="ptt-hold-bar" style="display:none;">
+          <div class="ptt-bar-top">
+            <span class="ptt-channel-label"><span class="ptt-dot"></span> LIVE WALKIE-TALKIE • Auto-plays on peer device</span>
+            <button class="ptt-exit-btn" id="btn-ptt-exit">⌨️ Keyboard</button>
+          </div>
+          <button class="ptt-transmit-btn" id="btn-ptt-hold" type="button">
+            📻 HOLD TO TALK (or Hold Space) • Instant Voice
+          </button>
+        </div>
+
         <!-- Input Footer Controls -->
-        <div class="chat-footer-controls">
+        <div class="chat-footer-controls" id="chat-footer-controls">
           <button class="input-tool-btn" id="btn-attach-media" title="Add Media / Send File (or Ctrl+V / Drag-Drop)">
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
           </button>
           <button class="input-tool-btn" id="btn-emoji-picker" title="Insert Emoji">😊</button>
+          <button class="input-tool-btn burn-toggle-btn" id="btn-burn-timer" title="Burn-After-Reading Timer (OFF → 10s → 30s → 1m)">🔥</button>
           <button class="input-tool-btn" id="btn-record-voice" title="Record Voice Note">
             <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
           </button>
