@@ -647,20 +647,51 @@
     conversationsPollTimer = setInterval(loadConversations, 8000);
   }
 
-  // WebSocket Engine
+  // WebSocket Engine (25s Keepalive Ping + Deduplicated Auto-Reconnect)
+  let wsPingTimer = null;
+  let wsReconnectTimer = null;
+
+  function stopWsHeartbeat() {
+    if (wsPingTimer) {
+      clearInterval(wsPingTimer);
+      wsPingTimer = null;
+    }
+  }
+
+  function scheduleWsReconnect(delayMs = 3000) {
+    if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
+    wsReconnectTimer = setTimeout(() => {
+      wsReconnectTimer = null;
+      connectWebSocket();
+    }, delayMs);
+  }
+
   function connectWebSocket() {
     if (!AppState.token) return;
+    if (AppState.ws && (AppState.ws.readyState === WebSocket.OPEN || AppState.ws.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
     const wsUrl = `${WS_URL}?token=${encodeURIComponent(AppState.token)}`;
     
     try {
-      AppState.ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(wsUrl);
+      AppState.ws = ws;
 
-      AppState.ws.onopen = () => {
+      ws.onopen = () => {
+        if (AppState.ws !== ws) return;
         AppState.wsConnected = true;
         console.log('[KYNX WEB] WebSocket Relay Connected.');
+        stopWsHeartbeat();
+        wsPingTimer = setInterval(() => {
+          if (AppState.ws && AppState.ws.readyState === WebSocket.OPEN) {
+            try {
+              AppState.ws.send(JSON.stringify({ type: 'ping', ts: Date.now() }));
+            } catch (_) {}
+          }
+        }, 25000);
       };
 
-      AppState.ws.onmessage = (event) => {
+      ws.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data);
           handleWebSocketMessage(payload);
@@ -669,21 +700,31 @@
         }
       };
 
-      AppState.ws.onclose = () => {
+      ws.onclose = () => {
+        if (AppState.ws !== ws) return;
         AppState.wsConnected = false;
+        stopWsHeartbeat();
         console.log('[KYNX WEB] WebSocket closed. Reconnecting in 3s...');
-        setTimeout(connectWebSocket, 3000);
+        scheduleWsReconnect(3000);
       };
 
-      AppState.ws.onerror = (err) => {
+      ws.onerror = (err) => {
         console.warn('[KYNX WEB] WS error:', err);
       };
     } catch (err) {
       console.error('[KYNX WEB] Could not open WS:', err);
+      scheduleWsReconnect(3000);
     }
   }
 
+  window.addEventListener('online', () => {
+    if (AppState.token && !AppState.wsConnected) {
+      connectWebSocket();
+    }
+  });
+
   function handleWebSocketMessage(msg) {
+    if (!msg || msg.type === 'pong' || msg.type === 'ping') return;
     if (msg.type === 'message' || msg.type === 'chat_message' || msg.message) {
       const message = msg.message || msg;
       receiveMessage(message);

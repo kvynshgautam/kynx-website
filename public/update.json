@@ -1,0 +1,11 @@
+{
+  "version_code": 53,
+  "version_name": "0.9.43",
+  "description": "KYNX v0.9.43 (Build 53): Instant Vercel CDN In-App Auto-Updater, Ear Proximity Screen-Off Sensor, Bluetooth Call Routing & Picker, Android Telecom VoIP Protection, Lock-Screen Call Wake-Up, Web Deck 25s Heartbeat Keepalive, Voice Notes & Full Responsive UI.",
+  "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
+  "sha256_checksum": "9a2ed9fdd157a1b606b7e222721e42f793dc2db77a36a4d8dfabee504e815816",
+  "is_mandatory": false,
+  "min_supported_version": 1,
+  "published_at": "2026-11-18T09:15:00+00:00",
+  "file_size_bytes": 65346850
+}
