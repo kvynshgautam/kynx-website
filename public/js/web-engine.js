@@ -775,12 +775,30 @@
     }
   }
 
+  let handlingUnauthorized = false;
+  function handleUnauthorized() {
+    if (handlingUnauthorized) return;
+    handlingUnauthorized = true;
+    if (conversationsPollTimer) { clearInterval(conversationsPollTimer); conversationsPollTimer = null; }
+    if (activeSyncTimer) { clearInterval(activeSyncTimer); activeSyncTimer = null; }
+    stopWsHeartbeat();
+    showHeadsUpCard('Session Expired', 'Please scan the QR code or sign in again.');
+    setTimeout(() => {
+      logout();
+    }, 1200);
+  }
+
   // Fetch Conversations from Cloud Backend
   async function loadConversations() {
+    if (!AppState.token) return;
     try {
       const res = await fetch(`${BACKEND_URL}/api/conversations`, {
         headers: { 'Authorization': `Bearer ${AppState.token}` }
       });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         AppState.conversations = Array.isArray(data) ? data : (data.conversations || []);
@@ -890,6 +908,10 @@
       const res = await fetch(`${BACKEND_URL}/api/conversations/${convId}/messages?limit=50`, {
         headers: { 'Authorization': `Bearer ${AppState.token}` }
       });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         const msgs = Array.isArray(data) ? data : (data.messages || []);
@@ -972,8 +994,22 @@
       payload.reply_to_sender = replySnapshot.sender;
     }
 
+    const convId = AppState.activeConversation.id;
+    await postMessagePayload(convId, payload, newMsg, tempId);
+  }
+
+  async function postMessagePayload(convId, payload, msgObj, tempId) {
+    const bubble = el.messagesCanvas.querySelector(`[data-client-msg-id="${tempId}"], [data-msg-id="${tempId}"]`);
+    const tickEl = bubble ? bubble.querySelector('.msg-ticks') : null;
+    if (tickEl) {
+      tickEl.textContent = '⏳';
+      tickEl.style.color = '';
+      tickEl.style.cursor = 'default';
+      tickEl.onclick = null;
+    }
+
     try {
-      const res = await fetch(`${BACKEND_URL}/api/conversations/${AppState.activeConversation.id}/messages`, {
+      const res = await fetch(`${BACKEND_URL}/api/conversations/${convId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -981,18 +1017,36 @@
         },
         body: JSON.stringify(payload)
       });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       if (res.ok) {
         const saved = await res.json();
         if (saved && saved.id) {
-          newMsg.id = saved.id;
-          const bubble = el.messagesCanvas.querySelector(`[data-msg-id="${tempId}"]`);
+          msgObj.id = saved.id;
           if (bubble) bubble.setAttribute('data-msg-id', saved.id);
         }
+        if (tickEl) {
+          tickEl.textContent = '✓';
+          tickEl.style.opacity = '0.75';
+        }
       } else {
-        console.warn('Failed to send HTTP message:', res.status);
+        throw new Error(`HTTP ${res.status}`);
       }
     } catch (err) {
       console.error('Failed to post message:', err);
+      if (tickEl) {
+        tickEl.textContent = '⚠️ Failed · Retry';
+        tickEl.style.color = '#ff526b';
+        tickEl.style.opacity = '1';
+        tickEl.style.cursor = 'pointer';
+        tickEl.title = 'Click to retry sending';
+        tickEl.onclick = (ev) => {
+          ev.stopPropagation();
+          postMessagePayload(convId, payload, msgObj, tempId);
+        };
+      }
     }
   }
 
@@ -1166,6 +1220,27 @@
   let voiceChunks = [];
   let voiceStream = null;
   let isRecordingVoice = false;
+
+  function cancelActiveVoiceRecording() {
+    if (!isRecordingVoice && !voiceRecorder && !voiceStream) return;
+    isRecordingVoice = false;
+    voiceChunks = [];
+    if (voiceRecorder) {
+      try {
+        voiceRecorder.onstop = null;
+        if (voiceRecorder.state !== 'inactive') voiceRecorder.stop();
+      } catch (_) {}
+      voiceRecorder = null;
+    }
+    if (voiceStream) {
+      voiceStream.getTracks().forEach(t => { try { t.stop(); } catch (_) {} });
+      voiceStream = null;
+    }
+    if (el.btnRecordVoice) {
+      el.btnRecordVoice.classList.remove('recording');
+      el.btnRecordVoice.title = 'Record Voice Note';
+    }
+  }
 
   async function toggleVoiceRecording() {
     if (!AppState.activeConversation || !AppState.token) {
@@ -1389,7 +1464,7 @@
       </div>
     `;
 
-    // Wire hover actions & reaction pills
+    // Wire hover actions & clickable reaction pills
     wrapper.querySelectorAll('.msg-act-btn').forEach(btn => {
       btn.addEventListener('click', (ev) => {
         ev.stopPropagation();
@@ -1404,6 +1479,18 @@
         }
       });
     });
+
+    const reactionsRow = wrapper.querySelector('.msg-reactions-row');
+    if (reactionsRow) {
+      reactionsRow.addEventListener('click', (ev) => {
+        const pill = ev.target.closest('.msg-reaction-pill');
+        if (!pill) return;
+        ev.stopPropagation();
+        const currentId = wrapper.getAttribute('data-msg-id');
+        const emoji = pill.getAttribute('data-react');
+        if (currentId && emoji) toggleMessageReaction(currentId, emoji);
+      });
+    }
 
     el.messagesCanvas.appendChild(wrapper);
     return true;
@@ -1840,6 +1927,8 @@
       return;
     }
 
+    cancelActiveVoiceRecording();
+
     const peerId = getPeerId(AppState.activeConversation);
     if (!peerId) {
       alert('Could not determine peer identity for this conversation.');
@@ -2021,6 +2110,7 @@
   async function acceptIncomingCall() {
     if (CallManager.state !== 'incoming' || !CallManager.pendingOfferSdp) return;
 
+    cancelActiveVoiceRecording();
     stopIncomingRingtone();
     clearTimeout(CallManager.timeoutTimer);
 
