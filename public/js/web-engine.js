@@ -1767,7 +1767,8 @@
   }
 
   function setReplyTarget(msgId, senderName, previewText) {
-    AppState.replyTo = { id: msgId, sender: senderName, text: (previewText || '').slice(0, 120) };
+    const safePreview = formatPowerPreview(previewText || '') || '';
+    AppState.replyTo = { id: msgId, sender: senderName, text: safePreview.slice(0, 120) };
     if (el.replyPreviewBar) {
       el.replyPreviewBar.style.display = 'flex';
       if (el.replyPreviewSender) el.replyPreviewSender.textContent = `Replying to ${senderName}`;
@@ -2030,7 +2031,7 @@
     const isViewOnce = Boolean(msg.is_view_once || msg.isViewOnce);
     const viewOnceOpened = Boolean(msg.view_once_opened || msg.viewOnceOpened);
 
-    const replyToText = msg.reply_to_text || msg.replyToText;
+    const replyToText = formatPowerPreview(msg.reply_to_text || msg.replyToText);
     const replyToSender = msg.reply_to_sender || msg.replyToSender || 'Message';
     const quotedHtml = replyToText
       ? `<div class="msg-quoted-reply"><div class="msg-quoted-sender">${escapeHtml(replyToSender)}</div><div class="msg-quoted-text">${escapeHtml(replyToText)}</div></div>`

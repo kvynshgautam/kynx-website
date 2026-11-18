@@ -1,11 +1,11 @@
 {
-  "version_code": 57,
-  "version_name": "0.9.47",
-  "description": "KYNX v0.9.47 (Build 57) Zero-Lag Turbo Patch: Eliminated WebSocket double-emission (50% less CPU/recomposition), moved video thumbnail & disk image decoding strictly off the UI thread (butter-smooth 120Hz scrolling), fixed Watch Together WebView audio/RAM teardown, removed 400ms Send lockout for instant texting, fixed fast chat-switch race & optimistic ID sync, and optimized Web Deck adaptive polling.",
+  "version_code": 58,
+  "version_name": "0.9.48",
+  "description": "KYNX v0.9.48 (Build 58) Privacy & Polish Update: Masked Burn-After-Reading secrets, Watch Together & Walkie-Talkie tags across lockscreen notifications, in-app banners, and quoted replies (Android + Web Deck); wired live debounced typing indicators from Android to Android/Web; and added active-call collision guard for Walkie-Talkie auto-play.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "7ca20d35bfa64db7b9b992bd4db70e5bc17cdca49c7d3c15cccfe71f39e9bcd4",
+  "sha256_checksum": "28c212494410d2e09abb5a8fc9b968dfd53efd9231ff727f9de31d8c286e0771",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-18T11:29:37+00:00",
-  "file_size_bytes": 65428782
+  "published_at": "2026-11-18T11:34:34+00:00",
+  "file_size_bytes": 65428778
 }
