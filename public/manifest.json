@@ -1,0 +1,19 @@
+{
+  "name": "KYNX Web Deck — Cyber Messenger",
+  "short_name": "KYNX",
+  "description": "Ultra-fast encrypted web messenger, HD WebRTC voice/video calls, screen sharing, and Ghost Shield engineered by KG.",
+  "start_url": "/web",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#06060C",
+  "theme_color": "#7950FF",
+  "icons": [
+    {
+      "src": "/assets/kynx-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

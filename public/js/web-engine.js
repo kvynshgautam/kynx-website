@@ -56,6 +56,7 @@
     userAvatar: document.getElementById('user-avatar'),
     userName: document.getElementById('user-name'),
     userHandle: document.getElementById('user-handle'),
+    btnInstallPwa: document.getElementById('btn-install-pwa'),
     btnLogout: document.getElementById('btn-logout'),
     btnToggleNotif: document.getElementById('btn-toggle-notif'),
     conversationsList: document.getElementById('conversations-list'),
@@ -63,6 +64,8 @@
     
     // Chat Canvas
     webApp: document.getElementById('web-app'),
+    deckMainChat: document.getElementById('deck-main-chat'),
+    chatDropOverlay: document.getElementById('chat-drop-overlay'),
     btnMobileBack: document.getElementById('btn-mobile-back'),
     emptyState: document.getElementById('empty-chat-state'),
     activeChatView: document.getElementById('active-chat-view'),
@@ -75,6 +78,8 @@
     replyPreviewSender: document.getElementById('reply-preview-sender'),
     replyPreviewText: document.getElementById('reply-preview-text'),
     btnCancelReply: document.getElementById('btn-cancel-reply'),
+    btnEmojiPicker: document.getElementById('btn-emoji-picker'),
+    emojiPickerPopover: document.getElementById('emoji-picker-popover'),
     btnRecordVoice: document.getElementById('btn-record-voice'),
     msgInput: document.getElementById('chat-input'),
     btnSend: document.getElementById('btn-send-msg'),
@@ -115,6 +120,7 @@
     iconMicOn: document.getElementById('icon-mic-on'),
     iconMicOff: document.getElementById('icon-mic-off'),
     btnCallToggleCam: document.getElementById('btn-call-toggle-cam'),
+    btnCallShareScreen: document.getElementById('btn-call-share-screen'),
     iconCamOn: document.getElementById('icon-cam-on'),
     iconCamOff: document.getElementById('icon-cam-off'),
     btnCallHangup: document.getElementById('btn-call-hangup'),
@@ -280,6 +286,89 @@
       });
     }
 
+    if (el.btnEmojiPicker) {
+      el.btnEmojiPicker.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleEmojiPicker();
+      });
+      document.addEventListener('click', (e) => {
+        if (el.emojiPickerPopover && el.emojiPickerPopover.style.display !== 'none' &&
+            !el.emojiPickerPopover.contains(e.target) && e.target !== el.btnEmojiPicker) {
+          el.emojiPickerPopover.style.display = 'none';
+        }
+      });
+    }
+
+    // Ctrl+V Instant Screenshot / Image / File Paste
+    document.addEventListener('paste', (e) => {
+      if (!AppState.activeConversation || !AppState.token) return;
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.kind === 'file') {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            uploadAndSendFile(file);
+            return;
+          }
+        }
+      }
+    });
+
+    // Drag & Drop Instant Media Teleport onto Chat Area
+    if (el.deckMainChat) {
+      let dragDepth = 0;
+      el.deckMainChat.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        if (!AppState.activeConversation) return;
+        dragDepth++;
+        if (el.chatDropOverlay) el.chatDropOverlay.style.display = 'flex';
+      });
+      el.deckMainChat.addEventListener('dragover', (e) => {
+        e.preventDefault();
+      });
+      el.deckMainChat.addEventListener('dragleave', () => {
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (dragDepth === 0 && el.chatDropOverlay) {
+          el.chatDropOverlay.style.display = 'none';
+        }
+      });
+      el.deckMainChat.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragDepth = 0;
+        if (el.chatDropOverlay) el.chatDropOverlay.style.display = 'none';
+        if (!AppState.activeConversation) return;
+        const files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files.length > 0) {
+          uploadAndSendFile(files[0]);
+        }
+      });
+    }
+
+    // Installable Desktop App (PWA) Registration & 1-Click Prompt
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+    let deferredPwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      if (el.btnInstallPwa) el.btnInstallPwa.style.display = 'inline-flex';
+    });
+    if (el.btnInstallPwa) {
+      el.btnInstallPwa.addEventListener('click', async () => {
+        if (!deferredPwaPrompt) return;
+        deferredPwaPrompt.prompt();
+        const choice = await deferredPwaPrompt.userChoice.catch(() => ({ outcome: 'dismissed' }));
+        if (choice.outcome === 'accepted') {
+          el.btnInstallPwa.style.display = 'none';
+          showHeadsUpCard('KYNX Desktop Installed 💻', 'Launch KYNX anytime from your taskbar or desktop!');
+        }
+        deferredPwaPrompt = null;
+      });
+    }
+
     el.fileInput.addEventListener('change', handleFileUpload);
 
     // Search filter
@@ -295,6 +384,7 @@
     if (el.btnDeclineCall) el.btnDeclineCall.addEventListener('click', declineIncomingCall);
     if (el.btnCallMuteMic) el.btnCallMuteMic.addEventListener('click', toggleCallMute);
     if (el.btnCallToggleCam) el.btnCallToggleCam.addEventListener('click', toggleCallVideo);
+    if (el.btnCallShareScreen) el.btnCallShareScreen.addEventListener('click', toggleScreenShare);
     if (el.btnCallHangup) el.btnCallHangup.addEventListener('click', () => endCall('Call ended'));
     if (el.btnCallMinimize) el.btnCallMinimize.addEventListener('click', toggleCallMinimize);
     if (el.btnMinExpand) el.btnMinExpand.addEventListener('click', toggleCallMinimize);
@@ -1440,12 +1530,14 @@
       : '';
 
     const reactionsHtml = formatReactionsHtml(msg.reactions);
+    const canEdit = isMine && !mediaUrl && !isViewOnce;
     const hoverBarHtml = (!isDeleted && msgId)
       ? `<div class="msg-hover-actions">
           <button type="button" class="msg-act-btn" data-act="reply" title="Reply">↩️</button>
           <button type="button" class="msg-act-btn" data-act="react" data-emoji="❤️" title="React ❤️">❤️</button>
           <button type="button" class="msg-act-btn" data-act="react" data-emoji="👍" title="React 👍">👍</button>
           <button type="button" class="msg-act-btn" data-act="react" data-emoji="😂" title="React 😂">😂</button>
+          ${canEdit ? '<button type="button" class="msg-act-btn" data-act="edit" title="Edit Message">✏️</button>' : ''}
           <button type="button" class="msg-act-btn" data-act="delete" title="${isMine ? 'Delete for Everyone' : 'Hide for Me'}">🗑️</button>
         </div>`
       : '';
@@ -1474,6 +1566,9 @@
           setReplyTarget(currentId, senderLabel, rawText || '[Media]');
         } else if (act === 'react') {
           toggleMessageReaction(currentId, btn.getAttribute('data-emoji'));
+        } else if (act === 'edit') {
+          const currentTxt = wrapper.querySelector('.msg-text-body')?.textContent || rawText;
+          editMessageFromWeb(currentId, currentTxt);
         } else if (act === 'delete') {
           deleteMessageFromWeb(currentId, isMine);
         }
@@ -1494,6 +1589,71 @@
 
     el.messagesCanvas.appendChild(wrapper);
     return true;
+  }
+
+  async function editMessageFromWeb(msgId, currentText) {
+    if (!msgId || !AppState.token) return;
+    const edited = prompt('Edit your message:', currentText || '');
+    if (edited === null) return;
+    const trimmed = edited.trim();
+    if (!trimmed || trimmed === (currentText || '').trim()) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/messages/${msgId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AppState.token}`
+        },
+        body: JSON.stringify({ text: trimmed })
+      });
+      if (res.status === 401) { handleUnauthorized(); return; }
+      if (res.ok) {
+        applyMessageEditedInUI(msgId, trimmed);
+        loadConversations();
+      } else {
+        showHeadsUpCard('Edit Failed', 'Could not update message.');
+      }
+    } catch (err) {
+      console.warn('[KYNX WEB] Edit error:', err);
+    }
+  }
+
+  const QUICK_EMOJIS = [
+    '😀','😂','🥹','😍','🥰','😎','🤩','🥳',
+    '😭','😡','🤯','🤔','🫡','😴','🫠','🤫',
+    '🔥','❤️','💜','💯','⚡','✨','🎉','🚀',
+    '👍','👎','👏','🙏','🤝','✌️','💪','👀',
+    '💀','🤡','👑','💎','🎧','📱','💻','☕'
+  ];
+
+  function toggleEmojiPicker() {
+    if (!el.emojiPickerPopover) return;
+    if (el.emojiPickerPopover.childElementCount === 0) {
+      QUICK_EMOJIS.forEach(em => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'emoji-grid-btn';
+        b.textContent = em;
+        b.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          insertEmojiAtCursor(em);
+        });
+        el.emojiPickerPopover.appendChild(b);
+      });
+    }
+    const isVisible = el.emojiPickerPopover.style.display === 'grid';
+    el.emojiPickerPopover.style.display = isVisible ? 'none' : 'grid';
+  }
+
+  function insertEmojiAtCursor(emoji) {
+    if (!el.msgInput) return;
+    const start = el.msgInput.selectionStart || el.msgInput.value.length;
+    const end = el.msgInput.selectionEnd || el.msgInput.value.length;
+    const val = el.msgInput.value;
+    el.msgInput.value = val.slice(0, start) + emoji + val.slice(end);
+    el.msgInput.focus();
+    const nextPos = start + emoji.length;
+    el.msgInput.setSelectionRange(nextPos, nextPos);
   }
 
   function scrollChatToBottom() {
@@ -1518,10 +1678,14 @@
     }
   }
 
-  // 2. Real Media / File Upload (Photos, Videos, Audio, Documents up to 50MB)
-  async function handleFileUpload(e) {
+  // 2. Real Media / File Upload (Picker + Ctrl+V Paste + Drag & Drop, up to 50MB)
+  function handleFileUpload(e) {
     const file = e.target.files[0];
     e.target.value = '';
+    if (file) uploadAndSendFile(file);
+  }
+
+  async function uploadAndSendFile(file) {
     if (!file) return;
     if (!AppState.activeConversation || !AppState.token) {
       showHeadsUpCard('Select a Chat', 'Please open a conversation before attaching a file.');
@@ -1532,7 +1696,8 @@
       return;
     }
 
-    showHeadsUpCard('Uploading Media', `Sending "${file.name}" (${(file.size / 1024 / 1024).toFixed(2)} MB)...`);
+    const displayName = file.name || `screenshot_${Date.now()}.png`;
+    showHeadsUpCard('Uploading Media', `Sending "${displayName}" (${(file.size / 1024 / 1024).toFixed(2)} MB)...`);
 
     try {
       const formData = new FormData();
@@ -2375,6 +2540,7 @@
     const oldServerLogId = CallManager.serverLogId;
     const isOutgoing = CallManager.isOutgoing;
 
+    stopScreenShare(false);
     CallManager.reset();
     renderCallOverlay();
 
@@ -2429,6 +2595,83 @@
     if (el.iconCamOn && el.iconCamOff) {
       el.iconCamOn.style.display = CallManager.isVideoDisabled ? 'none' : 'block';
       el.iconCamOff.style.display = CallManager.isVideoDisabled ? 'block' : 'none';
+    }
+  }
+
+  // Live WebRTC Screen Sharing (Zero-Lag replaceTrack)
+  let screenShareStream = null;
+
+  async function toggleScreenShare() {
+    if (screenShareStream) {
+      stopScreenShare(true);
+      return;
+    }
+    if (!CallManager.pc || CallManager.state === 'idle') {
+      showHeadsUpCard('No Active Call', 'Start a video call first to share your screen.');
+      return;
+    }
+    const videoSender = CallManager.pc.getSenders().find(s => s.track && s.track.kind === 'video');
+    if (!videoSender) {
+      showHeadsUpCard('Start a Video Call', 'Screen sharing requires a Video Call connection.');
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      alert('Your browser does not support screen sharing.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { cursor: 'always' },
+        audio: false
+      });
+      const screenTrack = stream.getVideoTracks()[0];
+      if (!screenTrack) return;
+
+      screenShareStream = stream;
+      await videoSender.replaceTrack(screenTrack);
+
+      if (el.localVideo) {
+        el.localVideo.srcObject = stream;
+        el.localVideo.play().catch(() => {});
+      }
+      if (el.btnCallShareScreen) {
+        el.btnCallShareScreen.classList.add('sharing');
+        el.btnCallShareScreen.title = 'Stop Screen Sharing';
+      }
+      showHeadsUpCard('Screen Sharing Live 🖥️', 'Your screen is now streaming to the call.');
+
+      screenTrack.onended = () => {
+        stopScreenShare(true);
+      };
+    } catch (err) {
+      if (err && err.name !== 'NotAllowedError') {
+        console.warn('[KYNX WebRTC] Screen share error:', err);
+      }
+    }
+  }
+
+  function stopScreenShare(restoreCamera = true) {
+    if (!screenShareStream) return;
+    const stream = screenShareStream;
+    screenShareStream = null;
+    stream.getTracks().forEach(t => { try { t.stop(); } catch (_) {} });
+
+    if (el.btnCallShareScreen) {
+      el.btnCallShareScreen.classList.remove('sharing');
+      el.btnCallShareScreen.title = 'Share Your Screen Live';
+    }
+
+    if (restoreCamera && CallManager.pc && CallManager.localStream) {
+      const camTrack = CallManager.localStream.getVideoTracks()[0];
+      const videoSender = CallManager.pc.getSenders().find(s => s.track && s.track.kind === 'video');
+      if (videoSender && camTrack) {
+        videoSender.replaceTrack(camTrack).catch(() => {});
+      }
+      if (el.localVideo) {
+        el.localVideo.srcObject = CallManager.localStream;
+        el.localVideo.play().catch(() => {});
+      }
+      showHeadsUpCard('Screen Sharing Stopped', 'Switched back to your camera.');
     }
   }
 

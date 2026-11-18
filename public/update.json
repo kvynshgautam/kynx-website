@@ -1,11 +1,11 @@
 {
-  "version_code": 54,
-  "version_name": "0.9.44",
-  "description": "KYNX v0.9.44 (Build 54): Zero Double-Ringtone / Clean Call Notification Cancel, Zero Thread Leaks (Android 15 targetSdk 35 compliant), Web Deck Duplicate-Message Race Fix, Group Chat Sender Names, WebRTC Unified Plan Audio Fallback & Strict Media URL Hardening.",
+  "version_code": 55,
+  "version_name": "0.9.45",
+  "description": "KYNX v0.9.45 (Build 55) Zero-Lag Flagship Upgrade: Native Android Picture-in-Picture (PiP) Video Calls, App-Wide Privacy Shield (Block Screenshots & Recents Blur), Installable Web Desktop App (PWA), Ctrl+V Screenshot Paste & Drag-Drop File Teleport, Live WebRTC Screen Sharing, Emoji Picker & Live Message Editing.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "e185793becf7a235bc29b1d12feea1cfb4d02d92b5658d3c091187c22d0682ee",
+  "sha256_checksum": "416fdbaf9d303f7ba031320829c7d2e5fb7e51ee846817b4d4e740f3d16ae13b",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-18T09:38:00+00:00",
-  "file_size_bytes": 65346846
+  "published_at": "2026-11-18T10:21:00+00:00",
+  "file_size_bytes": 65346858
 }
