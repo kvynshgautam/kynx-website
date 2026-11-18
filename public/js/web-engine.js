@@ -19,6 +19,8 @@
     ws: null,
     wsConnected: false,
     ghostShield: false,
+    activeTab: 'chats',
+    searchQuery: '',
     pairingId: null,
     pairingCode: null,
     pairingPollTimer: null
@@ -227,14 +229,25 @@
 
     // Clear Chat inside 3-dots menu
     if (el.menuBtnClearChat) {
-      el.menuBtnClearChat.addEventListener('click', () => {
+      el.menuBtnClearChat.addEventListener('click', async () => {
         if (el.chatMoreMenu) el.chatMoreMenu.style.display = 'none';
-        if (confirm('Clear current messages from screen?')) {
-          el.messagesCanvas.innerHTML = `
-            <div style="text-align: center; color: var(--text-sub); font-size: 12px; margin: 20px 0;">
-              🗑️ Chat view cleared
-            </div>`;
+        if (!AppState.activeConversation) return;
+        if (!confirm('Clear this chat permanently for you?')) return;
+        const convId = AppState.activeConversation.id;
+        try {
+          await fetch(`${BACKEND_URL}/api/conversations/${convId}?for_everyone=false`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${AppState.token}` }
+          });
+        } catch (err) {
+          console.warn('Clear chat API error:', err);
         }
+        AppState.messages[convId] = [];
+        el.messagesCanvas.innerHTML = `
+          <div style="text-align: center; color: var(--text-sub); font-size: 12px; margin: 20px 0;">
+            🗑️ Chat cleared
+          </div>`;
+        loadConversations();
       });
     }
 
@@ -249,7 +262,8 @@
 
     // Search filter
     el.searchInput.addEventListener('input', (e) => {
-      filterConversations(e.target.value.toLowerCase());
+      AppState.searchQuery = e.target.value.toLowerCase();
+      filterConversations(AppState.searchQuery);
     });
 
     // WebRTC Calling Buttons & Controls
@@ -271,10 +285,14 @@
         btn.classList.add('active');
         const tabName = btn.textContent.trim().toLowerCase();
         if (tabName.includes('chats')) {
+          AppState.activeTab = 'chats';
           renderConversations();
+          if (AppState.searchQuery) filterConversations(AppState.searchQuery);
         } else if (tabName.includes('calls')) {
+          AppState.activeTab = 'calls';
           loadAndRenderCalls();
         } else if (tabName.includes('contacts')) {
+          AppState.activeTab = 'contacts';
           loadAndRenderContacts();
         }
       });
@@ -648,6 +666,10 @@
       const message = msg.message || msg;
       receiveMessage(message);
     } else if (msg.type === 'typing') {
+      const convId = msg.conversation_id || msg.conversationId;
+      if (!AppState.activeConversation || (convId && String(convId) !== String(AppState.activeConversation.id))) {
+        return;
+      }
       const sender = msg.display_name || msg.username || msg.senderName;
       const isTyping = msg.is_typing !== undefined ? msg.is_typing : msg.isTyping;
       showPeerTyping(sender, isTyping);
@@ -663,6 +685,13 @@
       handleCallReject(msg);
     } else if (msg.type === 'call_hangup') {
       handleCallHangup(msg);
+    } else if (msg.type === 'call_answered_elsewhere') {
+      if (CallManager.state === 'incoming') {
+        stopIncomingRingtone();
+        CallManager.reset();
+        renderCallOverlay();
+        showHeadsUpCard('Call Handled on Phone', msg.action === 'call_answer' ? 'Answered on another device' : 'Declined on another device');
+      }
     }
   }
 
@@ -675,7 +704,20 @@
       if (res.ok) {
         const data = await res.json();
         AppState.conversations = Array.isArray(data) ? data : (data.conversations || []);
-        renderConversations();
+        if (AppState.activeTab === 'chats') {
+          renderConversations();
+          if (AppState.searchQuery) {
+            filterConversations(AppState.searchQuery);
+          }
+        }
+        // Refresh active peer's online indicator if open
+        if (AppState.activeConversation) {
+          const updated = AppState.conversations.find(c => String(c.id) === String(AppState.activeConversation.id));
+          if (updated && updated.peer) {
+            AppState.activeConversation = updated;
+            el.peerStatus.innerHTML = updated.peer.is_online ? `● online` : `<span style="color:var(--text-sub)">● offline</span>`;
+          }
+        }
       }
     } catch (err) {
       console.warn('Could not fetch conversations:', err);
@@ -730,7 +772,10 @@
   // Open Active Conversation
   async function openConversation(conv) {
     AppState.activeConversation = conv;
-    renderConversations();
+    if (AppState.activeTab === 'chats') {
+      renderConversations();
+      if (AppState.searchQuery) filterConversations(AppState.searchQuery);
+    }
 
     el.emptyState.style.display = 'none';
     el.activeChatView.style.display = 'flex';
@@ -739,7 +784,7 @@
     const title = peer.display_name || peer.username || conv.title || conv.displayName || 'Encrypted Peer';
     el.peerAvatar.textContent = title.substring(0, 2).toUpperCase();
     el.peerName.textContent = title;
-    el.peerStatus.innerHTML = `● online`;
+    el.peerStatus.innerHTML = peer.is_online ? `● online` : `<span style="color:var(--text-sub)">● offline</span>`;
 
     el.messagesCanvas.innerHTML = `
       <div style="text-align: center; color: var(--text-sub); font-size: 12px; margin: 20px 0;">
@@ -872,6 +917,14 @@
     }
   }
 
+  function resolveMediaUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) {
+      return url;
+    }
+    return `${BACKEND_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
   // Append Message Card to Canvas
   function appendMessageToUI(msg) {
     if (!msg) return false;
@@ -887,13 +940,63 @@
     if (msgId) wrapper.setAttribute('data-msg-id', msgId);
 
     const time = formatTime(msg.created_at || msg.createdAt || Date.now());
+    const rawText = msg.text || msg.content || '';
+    const mediaUrl = resolveMediaUrl(msg.media_url || msg.mediaUrl);
+    const mediaType = (msg.media_type || msg.mediaType || '').toLowerCase();
+    const isViewOnce = Boolean(msg.is_view_once || msg.isViewOnce);
+    const viewOnceOpened = Boolean(msg.view_once_opened || msg.viewOnceOpened);
+
+    let mediaHtml = '';
+    if (isViewOnce) {
+      mediaHtml = `
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:rgba(167,139,250,0.14);border:1px solid rgba(167,139,250,0.35);margin-bottom:6px;font-size:13px;">
+          <span>${viewOnceOpened ? '👁️‍🗨️ View-Once Opened' : '🔒 View-Once Media (Open on KYNX Phone App)'}</span>
+        </div>`;
+    } else if (mediaUrl) {
+      const safeUrl = escapeHtml(mediaUrl);
+      if (mediaType.includes('image') || /\.(png|jpe?g|gif|webp)$/i.test(mediaUrl)) {
+        mediaHtml = `
+          <a href="${safeUrl}" target="_blank" rel="noopener" style="display:block;margin-bottom:6px;">
+            <img src="${safeUrl}" alt="Photo" loading="lazy" style="max-width:260px;max-height:280px;border-radius:12px;display:block;object-fit:cover;border:1px solid rgba(255,255,255,0.12);" />
+          </a>`;
+      } else if (mediaType.includes('video') || /\.(mp4|webm|mov)$/i.test(mediaUrl)) {
+        mediaHtml = `
+          <video controls playsinline preload="metadata" src="${safeUrl}" style="max-width:280px;max-height:240px;border-radius:12px;display:block;margin-bottom:6px;background:#000;"></video>`;
+      } else if (mediaType.includes('audio') || /\.(m4a|mp3|ogg|wav|aac|opus)$/i.test(mediaUrl)) {
+        mediaHtml = `
+          <div style="margin-bottom:6px;">
+            <audio controls preload="metadata" src="${safeUrl}" style="max-width:250px;height:36px;"></audio>
+          </div>`;
+      } else {
+        mediaHtml = `
+          <a href="${safeUrl}" target="_blank" rel="noopener" download style="display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,0.08);color:inherit;text-decoration:none;margin-bottom:6px;font-size:13px;">
+            <span>📎</span>
+            <span>${escapeHtml(rawText || 'Download Attachment')}</span>
+          </a>`;
+      }
+    }
+
+    const isPlaceholderCaption = mediaUrl && /^\[(photo|image|video|audio|voice|file|attachment)\]/i.test(rawText.trim());
+    const textHtml = (!mediaUrl || (!isPlaceholderCaption && !mediaHtml.includes('📎')))
+      ? `<div class="msg-text-body">${escapeHtml(rawText)}</div>`
+      : '';
+
+    const delivery = (msg.delivery_status || msg.deliveryStatus || 'sent').toLowerCase();
+    const tickHtml = isMine
+      ? (delivery === 'read'
+          ? `<span class="msg-ticks" style="color:#38bdf8">✓✓</span>`
+          : delivery === 'delivered'
+            ? `<span class="msg-ticks">✓✓</span>`
+            : `<span class="msg-ticks" style="opacity:0.65">✓</span>`)
+      : '';
 
     wrapper.innerHTML = `
       <div class="msg-bubble-content">
-        ${escapeHtml(msg.text || msg.content || '')}
+        ${mediaHtml}
+        ${textHtml}
         <div class="msg-meta-row">
           <span>${time}</span>
-          ${isMine ? `<span class="msg-ticks">✓✓</span>` : ''}
+          ${tickHtml}
         </div>
       </div>
     `;
@@ -924,30 +1027,97 @@
     }
   }
 
-  // 2. AirDrop Local File Upload
-  function handleFileUpload(e) {
+  // 2. Real Media / File Upload (Photos, Videos, Audio, Documents up to 50MB)
+  async function handleFileUpload(e) {
     const file = e.target.files[0];
+    e.target.value = '';
     if (!file) return;
-    alert(`⚡ AirDrop Bridge: Preparing "${file.name}" (${(file.size / 1024 / 1024).toFixed(2)} MB) for direct WebRTC peer transfer!`);
+    if (!AppState.activeConversation || !AppState.token) {
+      showHeadsUpCard('Select a Chat', 'Please open a conversation before attaching a file.');
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      alert('File exceeds the 50 MB KYNX upload limit.');
+      return;
+    }
+
+    showHeadsUpCard('Uploading Media', `Sending "${file.name}" (${(file.size / 1024 / 1024).toFixed(2)} MB)...`);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const uploadRes = await fetch(`${BACKEND_URL}/api/media/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${AppState.token}` },
+        body: formData
+      });
+
+      if (!uploadRes.ok) {
+        const errData = await uploadRes.json().catch(() => ({}));
+        throw new Error(errData.detail || `Upload failed (${uploadRes.status})`);
+      }
+
+      const uploaded = await uploadRes.json();
+      const mime = (file.type || uploaded.content_type || 'application/octet-stream').toLowerCase();
+      let kind = 'document';
+      let caption = file.name;
+      if (mime.startsWith('image/')) { kind = 'image'; caption = '[Photo]'; }
+      else if (mime.startsWith('video/')) { kind = 'video'; caption = '[Video]'; }
+      else if (mime.startsWith('audio/')) { kind = 'audio'; caption = '[Audio]'; }
+
+      const tempId = 'kynx_media_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+      const convId = AppState.activeConversation.id;
+
+      const msgRes = await fetch(`${BACKEND_URL}/api/conversations/${convId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AppState.token}`
+        },
+        body: JSON.stringify({
+          conversation_id: convId,
+          text: caption,
+          client_msg_id: tempId,
+          media_url: uploaded.url,
+          media_type: kind
+        })
+      });
+
+      if (msgRes.ok) {
+        const saved = await msgRes.json();
+        if (!AppState.messages[convId]) AppState.messages[convId] = [];
+        AppState.messages[convId].push(saved);
+        appendMessageToUI(saved);
+        scrollChatToBottom();
+        loadConversations();
+      } else {
+        throw new Error(`Failed to send media message (${msgRes.status})`);
+      }
+    } catch (err) {
+      console.error('[KYNX WEB] File upload error:', err);
+      showHeadsUpCard('Upload Failed', err.message || 'Could not upload file.');
+    }
   }
 
-  // 4. Typing Indicator
+  // 4. Typing Indicator (Matches server.py typing_start / typing_stop protocol)
   let typingTimeout = null;
   function broadcastTyping() {
-    if (!AppState.ws || !AppState.wsConnected || !AppState.activeConversation) return;
+    if (!AppState.ws || AppState.ws.readyState !== WebSocket.OPEN || !AppState.activeConversation) return;
+    const convId = AppState.activeConversation.id;
     AppState.ws.send(JSON.stringify({
-      type: 'typing',
-      conversationId: AppState.activeConversation.id,
-      isTyping: true
+      type: 'typing_start',
+      conversation_id: convId
     }));
 
     clearTimeout(typingTimeout);
     typingTimeout = setTimeout(() => {
-      AppState.ws.send(JSON.stringify({
-        type: 'typing',
-        conversationId: AppState.activeConversation.id,
-        isTyping: false
-      }));
+      if (AppState.ws && AppState.ws.readyState === WebSocket.OPEN) {
+        AppState.ws.send(JSON.stringify({
+          type: 'typing_stop',
+          conversation_id: convId
+        }));
+      }
     }, 1500);
   }
 
@@ -992,6 +1162,7 @@
   const CallManager = {
     state: 'idle', // 'idle' | 'dialing' | 'ringing' | 'incoming' | 'connecting' | 'connected'
     callId: null,
+    serverLogId: null,
     peerId: null,
     peerName: 'Encrypted Peer',
     callType: 'voice', // 'voice' | 'video'
@@ -1011,6 +1182,7 @@
     reset() {
       this.state = 'idle';
       this.callId = null;
+      this.serverLogId = null;
       this.peerId = null;
       this.peerName = 'Encrypted Peer';
       this.callType = 'voice';
@@ -1360,7 +1532,7 @@
             status: 'initiated'
           })
         }).then(r => r.json()).then(data => {
-          if (data && data.id) CallManager.callId = data.id;
+          if (data && data.id) CallManager.serverLogId = data.id;
         }).catch(() => {});
       }
 
@@ -1688,7 +1860,7 @@
     if (el.remoteAudio) el.remoteAudio.srcObject = null;
 
     const duration = CallManager.connectedAt ? Math.floor((Date.now() - CallManager.connectedAt) / 1000) : 0;
-    const oldCallId = CallManager.callId;
+    const oldServerLogId = CallManager.serverLogId;
     const isOutgoing = CallManager.isOutgoing;
 
     CallManager.reset();
@@ -1698,8 +1870,8 @@
       showHeadsUpCard('Call Ended', reason);
     }
 
-    if (isOutgoing && oldCallId && AppState.token) {
-      fetch(`${BACKEND_URL}/api/calls/${oldCallId}`, {
+    if (isOutgoing && oldServerLogId && AppState.token) {
+      fetch(`${BACKEND_URL}/api/calls/${oldServerLogId}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${AppState.token}`,
