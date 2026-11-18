@@ -1,11 +1,11 @@
 {
-  "version_code": 56,
-  "version_name": "0.9.46",
-  "description": "KYNX v0.9.46 (Build 56) Signature Power Trio: Instant Walkie-Talkie Push-to-Talk (Online + Offline Bluetooth Mesh with live auto-play & radio chirp), Synced Watch / Listen Together YouTube Mini Room (Android + Web Deck real-time sync), and Burn-After-Reading Secret Text Messages (10s / 30s / 1m countdown & auto-erase).",
+  "version_code": 57,
+  "version_name": "0.9.47",
+  "description": "KYNX v0.9.47 (Build 57) Zero-Lag Turbo Patch: Eliminated WebSocket double-emission (50% less CPU/recomposition), moved video thumbnail & disk image decoding strictly off the UI thread (butter-smooth 120Hz scrolling), fixed Watch Together WebView audio/RAM teardown, removed 400ms Send lockout for instant texting, fixed fast chat-switch race & optimistic ID sync, and optimized Web Deck adaptive polling.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "6d95a9d6483905559ab4ae80657eb176bb7be3f6c7420eed846421f950dcb3fd",
+  "sha256_checksum": "7ca20d35bfa64db7b9b992bd4db70e5bc17cdca49c7d3c15cccfe71f39e9bcd4",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-18T11:13:43+00:00",
-  "file_size_bytes": 65428778
+  "published_at": "2026-11-18T11:29:37+00:00",
+  "file_size_bytes": 65428782
 }

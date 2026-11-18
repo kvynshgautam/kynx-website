@@ -1224,10 +1224,20 @@
     // Fetch Conversations
     loadConversations();
 
-    // Periodic refresh of conversations
+    // Smart adaptive conversation refresh (pauses while tab hidden; relaxes when WS is live)
     if (conversationsPollTimer) clearInterval(conversationsPollTimer);
-    conversationsPollTimer = setInterval(loadConversations, 8000);
+    conversationsPollTimer = setInterval(() => {
+      if (document.hidden) return;
+      loadConversations();
+    }, 20000);
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && AppState.token) {
+      loadConversations();
+      if (AppState.activeConversation) syncActiveConversation();
+    }
+  });
 
   // WebSocket Engine (25s Keepalive Ping + Deduplicated Auto-Reconnect)
   let wsPingTimer = null;
@@ -1484,9 +1494,16 @@
     // Fetch initial message history
     await syncActiveConversation();
 
-    // Start auto sync for active conversation (every 3s fallback)
+    // Adaptive fallback sync: WS delivers in <50ms, so only poll every 15s while WS is live (4s if WS drops)
     if (activeSyncTimer) clearInterval(activeSyncTimer);
-    activeSyncTimer = setInterval(syncActiveConversation, 3000);
+    let pollTick = 0;
+    activeSyncTimer = setInterval(() => {
+      if (document.hidden || !AppState.activeConversation) return;
+      pollTick++;
+      if (!AppState.wsConnected || pollTick % 4 === 0) {
+        syncActiveConversation();
+      }
+    }, 4000);
   }
 
   async function syncActiveConversation() {
