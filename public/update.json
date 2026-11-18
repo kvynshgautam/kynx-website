@@ -1,11 +1,11 @@
 {
-  "version_code": 53,
-  "version_name": "0.9.43",
-  "description": "KYNX v0.9.43 (Build 53): Instant Vercel CDN In-App Auto-Updater, Ear Proximity Screen-Off Sensor, Bluetooth Call Routing & Picker, Android Telecom VoIP Protection, Lock-Screen Call Wake-Up, Web Deck 25s Heartbeat Keepalive, Voice Notes & Full Responsive UI.",
+  "version_code": 54,
+  "version_name": "0.9.44",
+  "description": "KYNX v0.9.44 (Build 54): Zero Double-Ringtone / Clean Call Notification Cancel, Zero Thread Leaks (Android 15 targetSdk 35 compliant), Web Deck Duplicate-Message Race Fix, Group Chat Sender Names, WebRTC Unified Plan Audio Fallback & Strict Media URL Hardening.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "9a2ed9fdd157a1b606b7e222721e42f793dc2db77a36a4d8dfabee504e815816",
+  "sha256_checksum": "e185793becf7a235bc29b1d12feea1cfb4d02d92b5658d3c091187c22d0682ee",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-18T09:15:00+00:00",
-  "file_size_bytes": 65346850
+  "published_at": "2026-11-18T09:38:00+00:00",
+  "file_size_bytes": 65346846
 }

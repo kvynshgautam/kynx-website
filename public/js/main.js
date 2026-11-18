@@ -474,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnCopySha && shaTextElem) {
     btnCopySha.addEventListener('click', () => {
       playClickSound();
-      const fullHash = shaTextElem.textContent.trim() || "1816a40c0fb3af259281f463a6ab76517eb33e5e43eea5d41d951775d80b8841";
+      const fullHash = shaTextElem.textContent.trim() || "e185793becf7a235bc29b1d12feea1cfb4d02d92b5658d3c091187c22d0682ee";
       navigator.clipboard.writeText(fullHash).then(() => {
         btnCopySha.textContent = "Copied! ✓";
         setTimeout(() => {
@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cmd === 'status') {
       cmdText.textContent = 'kynx --status';
       out.innerHTML = `
-        [SYS] KYNX Core v0.9.32 Turbo [ONLINE]<br>
+        [SYS] KYNX Core v0.9.44 Turbo [ONLINE]<br>
         [ARCHITECT] KG (Lead Systems Engineer)<br>
         [PEER_LINK] Gaurav Gautam (Connected via Cloud + Mesh)<br>
         [LATENCY] 0.8ms | WebSockets: 100% | Bluetooth: ARMED<br>

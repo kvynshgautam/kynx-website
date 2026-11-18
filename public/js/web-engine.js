@@ -1025,11 +1025,20 @@
   }
 
   function resolveMediaUrl(url) {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) {
-      return url;
+    if (!url || typeof url !== 'string') return '';
+    const trimmed = url.trim();
+    if (!trimmed) return '';
+    // Strictly allow only safe HTTP(S) URLs or relative server paths (blocks javascript:/data: XSS)
+    if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
+      return trimmed;
     }
-    return `${BACKEND_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+    if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+      return `${BACKEND_URL}${trimmed}`;
+    }
+    if (/^[a-z0-9_\-\/\.]+$/i.test(trimmed)) {
+      return `${BACKEND_URL}/${trimmed}`;
+    }
+    return '';
   }
 
   function formatReactionsHtml(reactionsObj) {
@@ -1259,18 +1268,35 @@
   function appendMessageToUI(msg) {
     if (!msg) return false;
     const msgId = msg.id || msg.client_msg_id;
+    const clientMsgId = msg.client_msg_id || msg.clientMsgId || null;
+
     if (msgId && el.messagesCanvas.querySelector(`[data-msg-id="${msgId}"]`)) {
       return false; // Already in DOM
     }
+    // Race condition guard: if optimistic bubble exists via client_msg_id, upgrade its data-msg-id in place (zero duplicates!)
+    if (clientMsgId) {
+      const existingOptimistic = el.messagesCanvas.querySelector(`[data-client-msg-id="${clientMsgId}"], [data-msg-id="${clientMsgId}"]`);
+      if (existingOptimistic) {
+        if (msg.id) existingOptimistic.setAttribute('data-msg-id', msg.id);
+        return false;
+      }
+    }
+
     const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
     const sender = msg.sender_id || msg.senderId;
     const isMine = (myId && sender === myId) || msg.isMine;
+    const isGroupChat = Boolean(AppState.activeConversation && (AppState.activeConversation.is_group || AppState.activeConversation.isGroup));
     const peerName = (AppState.activeConversation && AppState.activeConversation.peer && (AppState.activeConversation.peer.display_name || AppState.activeConversation.peer.username)) || 'Peer';
     const senderLabel = isMine ? 'You' : (msg.sender_name || msg.senderName || peerName);
 
     const wrapper = document.createElement('div');
     wrapper.className = `msg-bubble-wrapper ${isMine ? 'mine' : 'peer'}`;
     if (msgId) wrapper.setAttribute('data-msg-id', msgId);
+    if (clientMsgId) wrapper.setAttribute('data-client-msg-id', clientMsgId);
+
+    const groupSenderHtml = (isGroupChat && !isMine)
+      ? `<div style="font-size:11px;font-weight:700;color:var(--accent-purple-light);margin-bottom:4px;">${escapeHtml(senderLabel)}</div>`
+      : '';
 
     const time = formatTime(msg.created_at || msg.createdAt || Date.now());
     const rawText = msg.text || msg.content || '';
@@ -1352,6 +1378,7 @@
     wrapper.innerHTML = `
       ${hoverBarHtml}
       <div class="msg-bubble-content">
+        ${groupSenderHtml}
         <div class="msg-body-slot">${bodyHtml}</div>
         <div class="msg-reactions-row" style="display:${reactionsHtml ? 'flex' : 'none'}">${reactionsHtml}</div>
         <div class="msg-meta-row">
@@ -1770,10 +1797,38 @@
     }
   }
 
+  function attachRemoteTrack(event) {
+    let stream = (event.streams && event.streams[0]) ? event.streams[0] : null;
+    if (!stream && event.track) {
+      if (!CallManager.remoteStream) {
+        CallManager.remoteStream = new MediaStream();
+      }
+      if (!CallManager.remoteStream.getTracks().includes(event.track)) {
+        CallManager.remoteStream.addTrack(event.track);
+      }
+      stream = CallManager.remoteStream;
+    } else if (stream) {
+      CallManager.remoteStream = stream;
+    }
+    if (!stream) return;
+    if (el.remoteVideo) {
+      el.remoteVideo.srcObject = stream;
+      el.remoteVideo.play().catch(e => console.warn('remoteVideo play err:', e));
+    }
+    if (el.remoteAudio) {
+      el.remoteAudio.srcObject = stream;
+      el.remoteAudio.play().catch(e => console.warn('remoteAudio play err:', e));
+    }
+  }
+
   // Initiate Outgoing Call
   async function initiateCall(type = 'voice') {
     if (!AppState.activeConversation) {
       alert('Please select a conversation to start a call.');
+      return;
+    }
+    if (AppState.activeConversation.is_group || AppState.activeConversation.isGroup) {
+      showHeadsUpCard('1-on-1 Calls Only', 'Group voice/video calls are coming soon! Select a direct chat to call.');
       return;
     }
     if (!AppState.ws || !AppState.wsConnected) {
@@ -1836,18 +1891,8 @@
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
       pc.ontrack = (event) => {
-        console.log('[KYNX WebRTC] ontrack received on caller:', event.streams);
-        if (event.streams && event.streams[0]) {
-          CallManager.remoteStream = event.streams[0];
-          if (el.remoteVideo) {
-            el.remoteVideo.srcObject = event.streams[0];
-            el.remoteVideo.play().catch(e => console.warn('remoteVideo play err:', e));
-          }
-          if (el.remoteAudio) {
-            el.remoteAudio.srcObject = event.streams[0];
-            el.remoteAudio.play().catch(e => console.warn('remoteAudio play err:', e));
-          }
-        }
+        console.log('[KYNX WebRTC] ontrack received on caller:', event.streams, event.track?.kind);
+        attachRemoteTrack(event);
       };
 
       pc.onicecandidate = (event) => {
@@ -2015,18 +2060,8 @@
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
       pc.ontrack = (event) => {
-        console.log('[KYNX WebRTC] ontrack received on callee:', event.streams);
-        if (event.streams && event.streams[0]) {
-          CallManager.remoteStream = event.streams[0];
-          if (el.remoteVideo) {
-            el.remoteVideo.srcObject = event.streams[0];
-            el.remoteVideo.play().catch(e => console.warn('remoteVideo play err:', e));
-          }
-          if (el.remoteAudio) {
-            el.remoteAudio.srcObject = event.streams[0];
-            el.remoteAudio.play().catch(e => console.warn('remoteAudio play err:', e));
-          }
-        }
+        console.log('[KYNX WebRTC] ontrack received on callee:', event.streams, event.track?.kind);
+        attachRemoteTrack(event);
       };
 
       pc.onicecandidate = (event) => {
@@ -2163,12 +2198,22 @@
 
   // Handle Reject from Peer
   function handleCallReject(msg) {
+    if (CallManager.state === 'idle') return;
+    const incomingId = msg.call_id || msg.callId;
+    if (incomingId && CallManager.callId && String(incomingId) !== String(CallManager.callId)) {
+      return;
+    }
     const reason = (msg.reason === 'busy') ? `${CallManager.peerName} is on another call` : `${CallManager.peerName} declined the call`;
     endCall(reason);
   }
 
   // Handle Hangup from Peer
   function handleCallHangup(msg) {
+    if (CallManager.state === 'idle') return;
+    const incomingId = msg.call_id || msg.callId;
+    if (incomingId && CallManager.callId && String(incomingId) !== String(CallManager.callId)) {
+      return;
+    }
     const reason = (msg.reason === 'unavailable') ? `${CallManager.peerName} is unavailable` : 'Call ended';
     endCall(reason);
   }
