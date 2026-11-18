@@ -191,6 +191,9 @@
         <!-- Chat Header -->
         <div class="chat-main-header">
           <div class="chat-peer-details">
+            <button class="mobile-back-btn" id="btn-mobile-back" title="Back to Chats">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+            </button>
             <div class="chat-peer-avatar" id="peer-avatar">GG</div>
             <div>
               <div class="chat-peer-name" id="peer-name">Gaurav Gautam</div>
@@ -241,10 +244,22 @@
         <!-- Typing Indicator Bar -->
         <div class="typing-indicator-bar" id="typing-indicator-bar"></div>
 
+        <!-- Reply Preview Bar (Shown when replying to a message) -->
+        <div class="reply-preview-bar" id="reply-preview-bar" style="display:none;">
+          <div class="reply-preview-info">
+            <span class="reply-preview-sender" id="reply-preview-sender">Replying to...</span>
+            <span class="reply-preview-text" id="reply-preview-text"></span>
+          </div>
+          <button class="reply-preview-close" id="btn-cancel-reply" title="Cancel Reply">✕</button>
+        </div>
+
         <!-- Input Footer Controls -->
         <div class="chat-footer-controls">
           <button class="input-tool-btn" id="btn-attach-media" title="Add Media / Send File">
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+          </button>
+          <button class="input-tool-btn" id="btn-record-voice" title="Record Voice Note">
+            <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
           </button>
           <textarea id="chat-input" class="chat-input-field" rows="1" placeholder="Type a message (Enter to send, Shift+Enter for new line)..."></textarea>
           <button class="send-msg-btn" id="btn-send-msg" title="Send Message">

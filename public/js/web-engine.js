@@ -21,6 +21,7 @@
     ghostShield: false,
     activeTab: 'chats',
     searchQuery: '',
+    replyTo: null,
     pairingId: null,
     pairingCode: null,
     pairingPollTimer: null
@@ -61,6 +62,8 @@
     searchInput: document.getElementById('sidebar-search'),
     
     // Chat Canvas
+    webApp: document.getElementById('web-app'),
+    btnMobileBack: document.getElementById('btn-mobile-back'),
     emptyState: document.getElementById('empty-chat-state'),
     activeChatView: document.getElementById('active-chat-view'),
     peerAvatar: document.getElementById('peer-avatar'),
@@ -68,6 +71,11 @@
     peerStatus: document.getElementById('peer-status'),
     messagesCanvas: document.getElementById('messages-canvas'),
     typingBar: document.getElementById('typing-indicator-bar'),
+    replyPreviewBar: document.getElementById('reply-preview-bar'),
+    replyPreviewSender: document.getElementById('reply-preview-sender'),
+    replyPreviewText: document.getElementById('reply-preview-text'),
+    btnCancelReply: document.getElementById('btn-cancel-reply'),
+    btnRecordVoice: document.getElementById('btn-record-voice'),
     msgInput: document.getElementById('chat-input'),
     btnSend: document.getElementById('btn-send-msg'),
     
@@ -255,6 +263,20 @@
     if (el.btnAttachMedia) {
       el.btnAttachMedia.addEventListener('click', () => {
         el.fileInput.click();
+      });
+    }
+
+    if (el.btnRecordVoice) {
+      el.btnRecordVoice.addEventListener('click', toggleVoiceRecording);
+    }
+
+    if (el.btnCancelReply) {
+      el.btnCancelReply.addEventListener('click', clearReplyTarget);
+    }
+
+    if (el.btnMobileBack) {
+      el.btnMobileBack.addEventListener('click', () => {
+        if (el.webApp) el.webApp.classList.remove('mobile-chat-open');
       });
     }
 
@@ -692,6 +714,23 @@
         renderCallOverlay();
         showHeadsUpCard('Call Handled on Phone', msg.action === 'call_answer' ? 'Answered on another device' : 'Declined on another device');
       }
+    } else if (msg.type === 'message_deleted') {
+      applyMessageDeletedInUI(msg.id || msg.message_id);
+      loadConversations();
+    } else if (msg.type === 'message_edited') {
+      applyMessageEditedInUI(msg.id || msg.message_id, msg.text || msg.content || '');
+      loadConversations();
+    } else if (msg.type === 'reaction_updated') {
+      applyMessageReactionsInUI(msg.message_id || msg.id, msg.reactions || {});
+    } else if (msg.type === 'conversation_deleted') {
+      const deletedId = msg.conversation_id || msg.conversationId;
+      if (deletedId && AppState.activeConversation && String(AppState.activeConversation.id) === String(deletedId)) {
+        AppState.activeConversation = null;
+        el.activeChatView.style.display = 'none';
+        el.emptyState.style.display = 'flex';
+        if (el.webApp) el.webApp.classList.remove('mobile-chat-open');
+      }
+      loadConversations();
     }
   }
 
@@ -759,19 +798,20 @@
         </div>
       `;
 
-      card.addEventListener('click', () => openConversation(conv));
+      card.addEventListener('click', () => openConversation(conv, true));
       el.conversationsList.appendChild(card);
     });
 
-    // Auto-select first conversation if none selected yet
-    if (!AppState.activeConversation && AppState.conversations.length > 0) {
-      openConversation(AppState.conversations[0]);
+    // Auto-select first conversation on desktop only (on mobile keep chat list visible)
+    if (!AppState.activeConversation && AppState.conversations.length > 0 && window.innerWidth > 820) {
+      openConversation(AppState.conversations[0], false);
     }
   }
 
   // Open Active Conversation
-  async function openConversation(conv) {
+  async function openConversation(conv, openMobilePanel = true) {
     AppState.activeConversation = conv;
+    clearReplyTarget();
     if (AppState.activeTab === 'chats') {
       renderConversations();
       if (AppState.searchQuery) filterConversations(AppState.searchQuery);
@@ -779,6 +819,9 @@
 
     el.emptyState.style.display = 'none';
     el.activeChatView.style.display = 'flex';
+    if (openMobilePanel && el.webApp) {
+      el.webApp.classList.add('mobile-chat-open');
+    }
 
     const peer = conv.peer || {};
     const title = peer.display_name || peer.username || conv.title || conv.displayName || 'Encrypted Peer';
@@ -822,6 +865,16 @@
             if (!isMine && (document.hidden || !document.hasFocus())) {
               triggerMessageNotification(m);
             }
+          } else {
+            // Sync live edits, deletions, and reactions on existing bubbles
+            if (m.is_deleted || m.isDeleted) {
+              applyMessageDeletedInUI(m.id);
+            } else if (m.is_edited || m.isEdited) {
+              applyMessageEditedInUI(m.id, m.text || m.content || '');
+            }
+            if (m.reactions) {
+              applyMessageReactionsInUI(m.id, m.reactions);
+            }
           }
           const rendered = appendMessageToUI(m);
           if (rendered) shouldScroll = true;
@@ -842,6 +895,9 @@
     if (!text || !AppState.activeConversation) return;
 
     el.msgInput.value = '';
+    const replySnapshot = AppState.replyTo ? { ...AppState.replyTo } : null;
+    clearReplyTarget();
+
     const tempId = 'kynx_msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : 'me';
     const newMsg = {
@@ -851,6 +907,9 @@
       text: text,
       sender_id: myId,
       created_at: new Date().toISOString(),
+      reply_to_id: replySnapshot ? replySnapshot.id : null,
+      reply_to_text: replySnapshot ? replySnapshot.text : null,
+      reply_to_sender: replySnapshot ? replySnapshot.sender : null,
       isMine: true
     };
 
@@ -861,6 +920,17 @@
     appendMessageToUI(newMsg);
     scrollChatToBottom();
 
+    const payload = {
+      conversation_id: AppState.activeConversation.id,
+      text: text,
+      client_msg_id: tempId
+    };
+    if (replySnapshot) {
+      payload.reply_to_id = replySnapshot.id;
+      payload.reply_to_text = replySnapshot.text;
+      payload.reply_to_sender = replySnapshot.sender;
+    }
+
     try {
       const res = await fetch(`${BACKEND_URL}/api/conversations/${AppState.activeConversation.id}/messages`, {
         method: 'POST',
@@ -868,11 +938,7 @@
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${AppState.token}`
         },
-        body: JSON.stringify({ 
-          conversation_id: AppState.activeConversation.id,
-          text: text,
-          client_msg_id: tempId
-        })
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         const saved = await res.json();
@@ -925,6 +991,229 @@
     return `${BACKEND_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   }
 
+  function formatReactionsHtml(reactionsObj) {
+    if (!reactionsObj || typeof reactionsObj !== 'object') return '';
+    let pills = '';
+    if (Array.isArray(reactionsObj)) {
+      const counts = {};
+      reactionsObj.forEach(r => {
+        const em = typeof r === 'string' ? r : (r.reaction || r.emoji);
+        if (em) counts[em] = (counts[em] || 0) + 1;
+      });
+      Object.entries(counts).forEach(([em, cnt]) => {
+        pills += `<span class="msg-reaction-pill" data-react="${escapeHtml(em)}">${escapeHtml(em)}${cnt > 1 ? ` ${cnt}` : ''}</span>`;
+      });
+    } else {
+      Object.entries(reactionsObj).forEach(([em, users]) => {
+        const cnt = Array.isArray(users) ? users.length : (typeof users === 'number' ? users : 1);
+        if (cnt > 0) {
+          pills += `<span class="msg-reaction-pill" data-react="${escapeHtml(em)}">${escapeHtml(em)}${cnt > 1 ? ` ${cnt}` : ''}</span>`;
+        }
+      });
+    }
+    return pills;
+  }
+
+  function setReplyTarget(msgId, senderName, previewText) {
+    AppState.replyTo = { id: msgId, sender: senderName, text: (previewText || '').slice(0, 120) };
+    if (el.replyPreviewBar) {
+      el.replyPreviewBar.style.display = 'flex';
+      if (el.replyPreviewSender) el.replyPreviewSender.textContent = `Replying to ${senderName}`;
+      if (el.replyPreviewText) el.replyPreviewText.textContent = AppState.replyTo.text;
+    }
+    if (el.msgInput) el.msgInput.focus();
+  }
+
+  function clearReplyTarget() {
+    AppState.replyTo = null;
+    if (el.replyPreviewBar) el.replyPreviewBar.style.display = 'none';
+  }
+
+  async function toggleMessageReaction(msgId, emoji) {
+    if (!msgId || !AppState.token) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/messages/${msgId}/reactions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AppState.token}`
+        },
+        body: JSON.stringify({ reaction: emoji })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        applyMessageReactionsInUI(msgId, data.reactions || {});
+      }
+    } catch (e) {
+      console.warn('[KYNX WEB] Reaction error:', e);
+    }
+  }
+
+  async function deleteMessageFromWeb(msgId, isMine) {
+    if (!msgId || !AppState.token) return;
+    const promptMsg = isMine ? 'Delete this message for everyone?' : 'Hide this message for you?';
+    if (!confirm(promptMsg)) return;
+    try {
+      if (isMine) {
+        const res = await fetch(`${BACKEND_URL}/api/messages/${msgId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${AppState.token}` }
+        });
+        if (res.ok) applyMessageDeletedInUI(msgId);
+      } else {
+        const res = await fetch(`${BACKEND_URL}/api/messages/${msgId}/hide`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${AppState.token}` }
+        });
+        if (res.ok) {
+          const elBubble = el.messagesCanvas.querySelector(`[data-msg-id="${msgId}"]`);
+          if (elBubble) elBubble.remove();
+        }
+      }
+    } catch (e) {
+      console.warn('[KYNX WEB] Delete error:', e);
+    }
+  }
+
+  function applyMessageDeletedInUI(msgId) {
+    if (!msgId) return;
+    const wrapper = el.messagesCanvas.querySelector(`[data-msg-id="${msgId}"]`);
+    if (!wrapper) return;
+    const body = wrapper.querySelector('.msg-body-slot');
+    if (body) body.innerHTML = `<div class="msg-deleted-text">🚫 This message was deleted</div>`;
+    const actions = wrapper.querySelector('.msg-hover-actions');
+    if (actions) actions.remove();
+  }
+
+  function applyMessageEditedInUI(msgId, newText) {
+    if (!msgId) return;
+    const wrapper = el.messagesCanvas.querySelector(`[data-msg-id="${msgId}"]`);
+    if (!wrapper) return;
+    const textBody = wrapper.querySelector('.msg-text-body');
+    if (textBody) textBody.textContent = newText;
+    const meta = wrapper.querySelector('.msg-meta-row');
+    if (meta && !meta.querySelector('.msg-edited-tag')) {
+      const tag = document.createElement('span');
+      tag.className = 'msg-edited-tag';
+      tag.textContent = '(edited)';
+      meta.prepend(tag);
+    }
+  }
+
+  function applyMessageReactionsInUI(msgId, reactionsObj) {
+    if (!msgId) return;
+    const wrapper = el.messagesCanvas.querySelector(`[data-msg-id="${msgId}"]`);
+    if (!wrapper) return;
+    const row = wrapper.querySelector('.msg-reactions-row');
+    if (!row) return;
+    const html = formatReactionsHtml(reactionsObj);
+    row.innerHTML = html;
+    row.style.display = html ? 'flex' : 'none';
+  }
+
+  // Voice Note Recorder (MediaRecorder API -> /api/media/upload)
+  let voiceRecorder = null;
+  let voiceChunks = [];
+  let voiceStream = null;
+  let isRecordingVoice = false;
+
+  async function toggleVoiceRecording() {
+    if (!AppState.activeConversation || !AppState.token) {
+      showHeadsUpCard('Select a Chat', 'Open a conversation before recording a voice note.');
+      return;
+    }
+    if (isRecordingVoice && voiceRecorder) {
+      try { voiceRecorder.stop(); } catch (_) {}
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Your browser does not support voice recording.');
+      return;
+    }
+    try {
+      voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+      voiceRecorder = mimeType ? new MediaRecorder(voiceStream, { mimeType }) : new MediaRecorder(voiceStream);
+      voiceChunks = [];
+      isRecordingVoice = true;
+      if (el.btnRecordVoice) {
+        el.btnRecordVoice.classList.add('recording');
+        el.btnRecordVoice.title = 'Click to Stop & Send Voice Note';
+      }
+      showHeadsUpCard('Recording Voice Note 🎙️', 'Tap the red microphone icon again to send.');
+
+      voiceRecorder.ondataavailable = (ev) => {
+        if (ev.data && ev.data.size > 0) voiceChunks.push(ev.data);
+      };
+
+      voiceRecorder.onstop = async () => {
+        isRecordingVoice = false;
+        if (el.btnRecordVoice) {
+          el.btnRecordVoice.classList.remove('recording');
+          el.btnRecordVoice.title = 'Record Voice Note';
+        }
+        if (voiceStream) {
+          voiceStream.getTracks().forEach(t => t.stop());
+          voiceStream = null;
+        }
+        if (voiceChunks.length === 0) return;
+
+        const blob = new Blob(voiceChunks, { type: voiceRecorder.mimeType || 'audio/webm' });
+        const ext = (blob.type || '').includes('ogg') ? 'ogg' : 'webm';
+        const file = new File([blob], `voice_${Date.now()}.${ext}`, { type: blob.type || 'audio/webm' });
+        voiceChunks = [];
+
+        try {
+          showHeadsUpCard('Sending Voice Note', 'Uploading audio...');
+          const formData = new FormData();
+          formData.append('file', file);
+          const upRes = await fetch(`${BACKEND_URL}/api/media/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${AppState.token}` },
+            body: formData
+          });
+          if (!upRes.ok) throw new Error('Audio upload failed');
+          const uploaded = await upRes.json();
+          const convId = AppState.activeConversation.id;
+          const tempId = 'kynx_voice_' + Date.now();
+          const msgRes = await fetch(`${BACKEND_URL}/api/conversations/${convId}/messages`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${AppState.token}`
+            },
+            body: JSON.stringify({
+              conversation_id: convId,
+              text: '[Voice Note]',
+              client_msg_id: tempId,
+              media_url: uploaded.url,
+              media_type: 'audio'
+            })
+          });
+          if (msgRes.ok) {
+            const saved = await msgRes.json();
+            if (!AppState.messages[convId]) AppState.messages[convId] = [];
+            AppState.messages[convId].push(saved);
+            appendMessageToUI(saved);
+            scrollChatToBottom();
+            loadConversations();
+          }
+        } catch (err) {
+          console.error('[KYNX WEB] Voice note error:', err);
+          showHeadsUpCard('Voice Note Failed', err.message || 'Could not send voice note.');
+        }
+      };
+
+      voiceRecorder.start();
+    } catch (err) {
+      isRecordingVoice = false;
+      console.error('[KYNX WEB] Microphone access error:', err);
+      alert('Microphone permission is required to record voice notes.');
+    }
+  }
+
   // Append Message Card to Canvas
   function appendMessageToUI(msg) {
     if (!msg) return false;
@@ -935,51 +1224,69 @@
     const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
     const sender = msg.sender_id || msg.senderId;
     const isMine = (myId && sender === myId) || msg.isMine;
+    const peerName = (AppState.activeConversation && AppState.activeConversation.peer && (AppState.activeConversation.peer.display_name || AppState.activeConversation.peer.username)) || 'Peer';
+    const senderLabel = isMine ? 'You' : (msg.sender_name || msg.senderName || peerName);
+
     const wrapper = document.createElement('div');
     wrapper.className = `msg-bubble-wrapper ${isMine ? 'mine' : 'peer'}`;
     if (msgId) wrapper.setAttribute('data-msg-id', msgId);
 
     const time = formatTime(msg.created_at || msg.createdAt || Date.now());
     const rawText = msg.text || msg.content || '';
+    const isDeleted = Boolean(msg.is_deleted || msg.isDeleted);
+    const isEdited = Boolean(msg.is_edited || msg.isEdited);
     const mediaUrl = resolveMediaUrl(msg.media_url || msg.mediaUrl);
     const mediaType = (msg.media_type || msg.mediaType || '').toLowerCase();
     const isViewOnce = Boolean(msg.is_view_once || msg.isViewOnce);
     const viewOnceOpened = Boolean(msg.view_once_opened || msg.viewOnceOpened);
 
-    let mediaHtml = '';
-    if (isViewOnce) {
-      mediaHtml = `
-        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:rgba(167,139,250,0.14);border:1px solid rgba(167,139,250,0.35);margin-bottom:6px;font-size:13px;">
-          <span>${viewOnceOpened ? '👁️‍🗨️ View-Once Opened' : '🔒 View-Once Media (Open on KYNX Phone App)'}</span>
-        </div>`;
-    } else if (mediaUrl) {
-      const safeUrl = escapeHtml(mediaUrl);
-      if (mediaType.includes('image') || /\.(png|jpe?g|gif|webp)$/i.test(mediaUrl)) {
-        mediaHtml = `
-          <a href="${safeUrl}" target="_blank" rel="noopener" style="display:block;margin-bottom:6px;">
-            <img src="${safeUrl}" alt="Photo" loading="lazy" style="max-width:260px;max-height:280px;border-radius:12px;display:block;object-fit:cover;border:1px solid rgba(255,255,255,0.12);" />
-          </a>`;
-      } else if (mediaType.includes('video') || /\.(mp4|webm|mov)$/i.test(mediaUrl)) {
-        mediaHtml = `
-          <video controls playsinline preload="metadata" src="${safeUrl}" style="max-width:280px;max-height:240px;border-radius:12px;display:block;margin-bottom:6px;background:#000;"></video>`;
-      } else if (mediaType.includes('audio') || /\.(m4a|mp3|ogg|wav|aac|opus)$/i.test(mediaUrl)) {
-        mediaHtml = `
-          <div style="margin-bottom:6px;">
-            <audio controls preload="metadata" src="${safeUrl}" style="max-width:250px;height:36px;"></audio>
-          </div>`;
-      } else {
-        mediaHtml = `
-          <a href="${safeUrl}" target="_blank" rel="noopener" download style="display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,0.08);color:inherit;text-decoration:none;margin-bottom:6px;font-size:13px;">
-            <span>📎</span>
-            <span>${escapeHtml(rawText || 'Download Attachment')}</span>
-          </a>`;
-      }
-    }
-
-    const isPlaceholderCaption = mediaUrl && /^\[(photo|image|video|audio|voice|file|attachment)\]/i.test(rawText.trim());
-    const textHtml = (!mediaUrl || (!isPlaceholderCaption && !mediaHtml.includes('📎')))
-      ? `<div class="msg-text-body">${escapeHtml(rawText)}</div>`
+    const replyToText = msg.reply_to_text || msg.replyToText;
+    const replyToSender = msg.reply_to_sender || msg.replyToSender || 'Message';
+    const quotedHtml = replyToText
+      ? `<div class="msg-quoted-reply"><div class="msg-quoted-sender">${escapeHtml(replyToSender)}</div><div class="msg-quoted-text">${escapeHtml(replyToText)}</div></div>`
       : '';
+
+    let bodyHtml = '';
+    if (isDeleted) {
+      bodyHtml = `<div class="msg-deleted-text">🚫 This message was deleted</div>`;
+    } else {
+      let mediaHtml = '';
+      if (isViewOnce) {
+        mediaHtml = `
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:rgba(167,139,250,0.14);border:1px solid rgba(167,139,250,0.35);margin-bottom:6px;font-size:13px;">
+            <span>${viewOnceOpened ? '👁️‍🗨️ View-Once Opened' : '🔒 View-Once Media (Open on KYNX Phone App)'}</span>
+          </div>`;
+      } else if (mediaUrl) {
+        const safeUrl = escapeHtml(mediaUrl);
+        if (mediaType.includes('image') || /\.(png|jpe?g|gif|webp)$/i.test(mediaUrl)) {
+          mediaHtml = `
+            <a href="${safeUrl}" target="_blank" rel="noopener" style="display:block;margin-bottom:6px;">
+              <img src="${safeUrl}" alt="Photo" loading="lazy" style="max-width:260px;max-height:280px;border-radius:12px;display:block;object-fit:cover;border:1px solid rgba(255,255,255,0.12);" />
+            </a>`;
+        } else if (mediaType.includes('video') || /\.(mp4|webm|mov)$/i.test(mediaUrl)) {
+          mediaHtml = `
+            <video controls playsinline preload="metadata" src="${safeUrl}" style="max-width:280px;max-height:240px;border-radius:12px;display:block;margin-bottom:6px;background:#000;"></video>`;
+        } else if (mediaType.includes('audio') || /\.(m4a|mp3|ogg|wav|aac|opus)$/i.test(mediaUrl)) {
+          mediaHtml = `
+            <div style="margin-bottom:6px;">
+              <audio controls preload="metadata" src="${safeUrl}" style="max-width:250px;height:36px;"></audio>
+            </div>`;
+        } else {
+          mediaHtml = `
+            <a href="${safeUrl}" target="_blank" rel="noopener" download style="display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,0.08);color:inherit;text-decoration:none;margin-bottom:6px;font-size:13px;">
+              <span>📎</span>
+              <span>${escapeHtml(rawText || 'Download Attachment')}</span>
+            </a>`;
+        }
+      }
+
+      const isPlaceholderCaption = mediaUrl && /^\[(photo|image|video|audio|voice|voice note|file|attachment)\]/i.test(rawText.trim());
+      const textHtml = (!mediaUrl || (!isPlaceholderCaption && !mediaHtml.includes('📎')))
+        ? `<div class="msg-text-body">${escapeHtml(rawText)}</div>`
+        : '';
+
+      bodyHtml = `${quotedHtml}${mediaHtml}${textHtml}`;
+    }
 
     const delivery = (msg.delivery_status || msg.deliveryStatus || 'sent').toLowerCase();
     const tickHtml = isMine
@@ -990,16 +1297,45 @@
             : `<span class="msg-ticks" style="opacity:0.65">✓</span>`)
       : '';
 
+    const reactionsHtml = formatReactionsHtml(msg.reactions);
+    const hoverBarHtml = (!isDeleted && msgId)
+      ? `<div class="msg-hover-actions">
+          <button type="button" class="msg-act-btn" data-act="reply" title="Reply">↩️</button>
+          <button type="button" class="msg-act-btn" data-act="react" data-emoji="❤️" title="React ❤️">❤️</button>
+          <button type="button" class="msg-act-btn" data-act="react" data-emoji="👍" title="React 👍">👍</button>
+          <button type="button" class="msg-act-btn" data-act="react" data-emoji="😂" title="React 😂">😂</button>
+          <button type="button" class="msg-act-btn" data-act="delete" title="${isMine ? 'Delete for Everyone' : 'Hide for Me'}">🗑️</button>
+        </div>`
+      : '';
+
     wrapper.innerHTML = `
+      ${hoverBarHtml}
       <div class="msg-bubble-content">
-        ${mediaHtml}
-        ${textHtml}
+        <div class="msg-body-slot">${bodyHtml}</div>
+        <div class="msg-reactions-row" style="display:${reactionsHtml ? 'flex' : 'none'}">${reactionsHtml}</div>
         <div class="msg-meta-row">
+          ${isEdited ? '<span class="msg-edited-tag">(edited)</span>' : ''}
           <span>${time}</span>
           ${tickHtml}
         </div>
       </div>
     `;
+
+    // Wire hover actions & reaction pills
+    wrapper.querySelectorAll('.msg-act-btn').forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const currentId = wrapper.getAttribute('data-msg-id');
+        const act = btn.getAttribute('data-act');
+        if (act === 'reply') {
+          setReplyTarget(currentId, senderLabel, rawText || '[Media]');
+        } else if (act === 'react') {
+          toggleMessageReaction(currentId, btn.getAttribute('data-emoji'));
+        } else if (act === 'delete') {
+          deleteMessageFromWeb(currentId, isMine);
+        }
+      });
+    });
 
     el.messagesCanvas.appendChild(wrapper);
     return true;
