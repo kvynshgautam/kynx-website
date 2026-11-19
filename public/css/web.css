@@ -2095,3 +2095,198 @@ body {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.78);
 }
+
+/* ==========================================================================
+   FRIEND & CONTACT REQUESTS (KYNX WEB DECK)
+   ========================================================================== */
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-purple);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 99px;
+  margin-left: 6px;
+  box-shadow: 0 0 10px var(--accent-purple-glow);
+  animation: pulseBadge 2s infinite;
+}
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(121, 80, 255, 0.4); }
+  50% { transform: scale(1.1); box-shadow: 0 0 16px rgba(121, 80, 255, 0.8); }
+}
+
+.contacts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px 20px;
+}
+.contacts-section-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 6px 4px;
+}
+.contacts-section-header.highlight {
+  color: var(--accent-purple-light);
+}
+
+.request-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(121, 80, 255, 0.28);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.request-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--accent-purple);
+}
+.request-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(121, 80, 255, 0.55);
+}
+.request-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.request-user-meta {
+  flex: 1;
+  min-width: 0;
+}
+.request-user-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.request-user-handle {
+  font-size: 11.5px;
+  color: var(--accent-purple-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.request-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+.btn-request-accept {
+  flex: 1.2;
+  background: linear-gradient(135deg, #7950FF, #5527D7);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 0 12px rgba(121, 80, 255, 0.35);
+  transition: all 0.15s ease;
+}
+.btn-request-accept:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 18px rgba(121, 80, 255, 0.65);
+}
+.btn-request-decline {
+  flex: 1;
+  background: rgba(255, 82, 107, 0.12);
+  color: #FF526B;
+  border: 1px solid rgba(255, 82, 107, 0.3);
+  border-radius: 9px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.btn-request-decline:hover {
+  background: rgba(255, 82, 107, 0.25);
+}
+.btn-request-cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-request-cancel:hover {
+  background: rgba(255, 82, 107, 0.15);
+  color: #FF526B;
+}
+
+.contact-search-box {
+  display: flex;
+  gap: 8px;
+  padding: 4px 2px 10px;
+}
+.contact-search-input {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-standard);
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.2s ease;
+}
+.contact-search-input:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 10px var(--accent-purple-glow);
+}
+.contact-search-btn {
+  background: var(--bg-card);
+  border: 1px solid rgba(121, 80, 255, 0.4);
+  color: var(--accent-purple-light);
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.contact-search-btn:hover {
+  background: rgba(121, 80, 255, 0.18);
+  color: #fff;
+}
+

@@ -61,6 +61,7 @@
     btnToggleNotif: document.getElementById('btn-toggle-notif'),
     conversationsList: document.getElementById('conversations-list'),
     searchInput: document.getElementById('sidebar-search'),
+    contactsBadge: document.getElementById('contacts-badge'),
     
     // Chat Canvas
     webApp: document.getElementById('web-app'),
@@ -1221,20 +1222,23 @@
     // Connect WebSocket
     connectWebSocket();
 
-    // Fetch Conversations
+    // Fetch Conversations & Friend Requests
     loadConversations();
+    checkPendingRequestsBadge();
 
     // Smart adaptive conversation refresh (pauses while tab hidden; relaxes when WS is live)
     if (conversationsPollTimer) clearInterval(conversationsPollTimer);
     conversationsPollTimer = setInterval(() => {
       if (document.hidden) return;
       loadConversations();
+      checkPendingRequestsBadge();
     }, 20000);
   }
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && AppState.token) {
       loadConversations();
+      checkPendingRequestsBadge();
       if (AppState.activeConversation) syncActiveConversation();
     }
   });
@@ -1364,6 +1368,31 @@
         if (el.webApp) el.webApp.classList.remove('mobile-chat-open');
       }
       loadConversations();
+    } else if (msg.type === 'friend_request_received') {
+      playNotificationSound();
+      checkPendingRequestsBadge();
+      const sender = msg.sender || {};
+      const senderName = sender.display_name || sender.username || 'A KYNX User';
+      showFriendRequestHeadsUp(msg.request_id, senderName, sender.username);
+      if (AppState.activeTab === 'contacts') {
+        loadAndRenderContacts();
+      }
+    } else if (msg.type === 'friend_request_accepted') {
+      playNotificationSound();
+      checkPendingRequestsBadge();
+      const friend = msg.friend || {};
+      const friendName = friend.display_name || friend.username || 'A friend';
+      showHeadsUpCard('Friend Request Accepted', `${friendName} is now in your circle!`);
+      loadConversations();
+      if (AppState.activeTab === 'contacts') {
+        loadAndRenderContacts();
+      }
+    } else if (msg.type === 'friend_removed') {
+      checkPendingRequestsBadge();
+      loadConversations();
+      if (AppState.activeTab === 'contacts') {
+        loadAndRenderContacts();
+      }
     }
   }
 
@@ -3426,7 +3455,191 @@
     }
   }
 
-  // Load and Render Contacts Tab in Sidebar
+  // ==========================================================================
+  // FRIEND & CONTACT REQUESTS ENGINE (KYNX Web Deck)
+  // ==========================================================================
+
+  async function checkPendingRequestsBadge() {
+    if (!AppState.token) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/friends/requests`, {
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const incoming = Array.isArray(data.incoming) ? data.incoming : [];
+      AppState.pendingRequestsCount = incoming.length;
+      if (el.contactsBadge) {
+        if (incoming.length > 0) {
+          el.contactsBadge.style.display = 'inline-flex';
+          el.contactsBadge.textContent = incoming.length;
+        } else {
+          el.contactsBadge.style.display = 'none';
+        }
+      }
+    } catch (e) {
+      // quiet fail
+    }
+  }
+
+  async function acceptFriendRequest(requestId, senderName) {
+    if (!AppState.token) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/friends/requests/${requestId}/accept`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (!res.ok) {
+        alert('Could not accept friend request. It may have expired or already been handled.');
+        return;
+      }
+      playNotificationSound();
+      showHeadsUpCard('Friend Request Accepted', `You and ${senderName || 'peer'} are now connected!`);
+      await checkPendingRequestsBadge();
+      await loadConversations();
+      if (AppState.activeTab === 'contacts') {
+        await loadAndRenderContacts();
+      }
+    } catch (e) {
+      console.warn('Error accepting friend request:', e);
+    }
+  }
+
+  async function rejectFriendRequest(requestId) {
+    if (!AppState.token) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/friends/requests/${requestId}/reject`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (!res.ok) return;
+      await checkPendingRequestsBadge();
+      if (AppState.activeTab === 'contacts') {
+        await loadAndRenderContacts();
+      }
+    } catch (e) {
+      console.warn('Error rejecting friend request:', e);
+    }
+  }
+
+  async function cancelSentFriendRequest(requestId) {
+    if (!AppState.token) return;
+    try {
+      await fetch(`${BACKEND_URL}/api/friends/requests/${requestId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (AppState.activeTab === 'contacts') {
+        await loadAndRenderContacts();
+      }
+    } catch (e) {
+      console.warn('Error canceling sent request:', e);
+    }
+  }
+
+  async function sendFriendRequest(targetUserId, btn) {
+    if (!AppState.token) return;
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+    }
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/friends/request`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${AppState.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_id: targetUserId })
+      });
+      if (res.ok) {
+        if (btn) {
+          btn.textContent = '✓ Sent';
+          btn.style.background = 'rgba(32, 201, 151, 0.2)';
+          btn.style.color = '#20C997';
+          btn.style.borderColor = '#20C997';
+        }
+        showHeadsUpCard('Friend Request Sent', 'Waiting for peer to accept.');
+        if (AppState.activeTab === 'contacts') {
+          setTimeout(loadAndRenderContacts, 600);
+        }
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.detail || 'Could not send request.');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '+ Add Friend';
+        }
+      }
+    } catch (e) {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '+ Add Friend';
+      }
+    }
+  }
+
+  function showFriendRequestHeadsUp(requestId, senderName, senderUsername) {
+    const container = document.getElementById('kynx-heads-up-container');
+    if (!container) return;
+
+    const card = document.createElement('div');
+    card.className = 'kynx-heads-up-card';
+    const initials = (senderName || 'KYNX').substring(0, 2).toUpperCase();
+
+    card.innerHTML = `
+      <div class="heads-up-avatar" style="background:linear-gradient(135deg, #7950FF, #5527D7); color:#fff">${escapeHtml(initials)}</div>
+      <div class="heads-up-body">
+        <div class="heads-up-top">
+          <span class="heads-up-name">Friend Request</span>
+          <span class="heads-up-time">Just now</span>
+        </div>
+        <div class="heads-up-text"><strong>${escapeHtml(senderName)}</strong> (@${escapeHtml(senderUsername || '')}) wants to connect.</div>
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="btn-heads-up-accept" style="background:#7950FF; color:#fff; border:none; border-radius:6px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">✓ Accept</button>
+          <button class="btn-heads-up-decline" style="background:rgba(255,255,255,0.1); color:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11.5px; cursor:pointer;">Decline</button>
+        </div>
+      </div>
+      <button class="heads-up-close" title="Dismiss">✕</button>
+    `;
+
+    const btnAccept = card.querySelector('.btn-heads-up-accept');
+    if (btnAccept) {
+      btnAccept.addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.remove();
+        acceptFriendRequest(requestId, senderName);
+      });
+    }
+
+    const btnDecline = card.querySelector('.btn-heads-up-decline');
+    if (btnDecline) {
+      btnDecline.addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.remove();
+        rejectFriendRequest(requestId);
+      });
+    }
+
+    const btnClose = card.querySelector('.heads-up-close');
+    if (btnClose) {
+      btnClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.classList.add('hiding');
+        setTimeout(() => card.remove(), 200);
+      });
+    }
+
+    container.appendChild(card);
+    setTimeout(() => {
+      if (card.parentNode) {
+        card.classList.add('hiding');
+        setTimeout(() => card.remove(), 200);
+      }
+    }, 18000);
+  }
+
+  // Load and Render Contacts & Friend Requests in Sidebar
   async function loadAndRenderContacts() {
     if (!AppState.token) return;
     el.conversationsList.innerHTML = `
@@ -3434,77 +3647,329 @@
         <div class="typing-dots" style="margin-bottom: 12px; justify-content: center;">
           <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
         </div>
-        Loading Contacts...
+        Loading Contacts & Requests...
       </div>`;
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/contacts`, {
-        headers: { 'Authorization': `Bearer ${AppState.token}` }
-      });
-      if (!res.ok) throw new Error('Failed to fetch contacts');
-      const contacts = await res.json();
+      const [contactsRes, requestsRes] = await Promise.all([
+        fetch(`${BACKEND_URL}/api/contacts`, {
+          headers: { 'Authorization': `Bearer ${AppState.token}` }
+        }),
+        fetch(`${BACKEND_URL}/api/friends/requests`, {
+          headers: { 'Authorization': `Bearer ${AppState.token}` }
+        })
+      ]);
 
-      el.conversationsList.innerHTML = '';
-      if (!Array.isArray(contacts) || contacts.length === 0) {
-        el.conversationsList.innerHTML = `
-          <div style="padding: 36px 20px; text-align: center; color: var(--text-sub); font-size: 13px;">
-            👥 No contacts yet.<br>Add friends in the KYNX mobile app!
-          </div>`;
-        return;
+      const contacts = contactsRes.ok ? await contactsRes.json() : [];
+      const requestsData = requestsRes.ok ? await requestsRes.json() : { incoming: [], sent: [] };
+      const incoming = Array.isArray(requestsData.incoming) ? requestsData.incoming : [];
+      const sent = Array.isArray(requestsData.sent) ? requestsData.sent : [];
+
+      AppState.pendingRequestsCount = incoming.length;
+      if (el.contactsBadge) {
+        if (incoming.length > 0) {
+          el.contactsBadge.style.display = 'inline-flex';
+          el.contactsBadge.textContent = incoming.length;
+        } else {
+          el.contactsBadge.style.display = 'none';
+        }
       }
 
-      contacts.forEach(contact => {
-        const title = contact.display_name || contact.username || 'Contact';
-        const initials = title.substring(0, 2).toUpperCase();
-        const card = document.createElement('div');
-        card.className = 'chat-item-card';
-        card.innerHTML = `
-          <div class="item-avatar">${initials}</div>
-          <div class="item-info">
-            <div class="item-top">
-              <span class="item-title">${escapeHtml(title)}</span>
-              <span class="item-time">@${escapeHtml(contact.username || '')}</span>
-            </div>
-            <div class="item-bottom">
-              <span class="item-preview">${escapeHtml(contact.status_message || 'Online on KYNX')}</span>
-            </div>
-          </div>
-        `;
+      el.conversationsList.innerHTML = '';
+      const container = document.createElement('div');
+      container.className = 'contacts-container';
 
-        card.addEventListener('click', async () => {
-          // Open or create conversation
-          const existing = AppState.conversations.find(c => getPeerId(c) === contact.id);
-          if (existing) {
-            openConversation(existing);
-          } else {
-            try {
-              const createRes = await fetch(`${BACKEND_URL}/api/conversations`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${AppState.token}`,
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ recipient_id: contact.id })
-              });
-              if (createRes.ok) {
-                const newConv = await createRes.json();
-                AppState.conversations.unshift(newConv);
-                openConversation(newConv);
-              }
-            } catch (err) {
-              console.warn('Error opening conversation with contact:', err);
-            }
+      // 1. Search / Add Friend Bar
+      const searchBox = document.createElement('div');
+      searchBox.className = 'contact-search-box';
+      searchBox.innerHTML = `
+        <input type="text" id="contact-search-input" class="contact-search-input" placeholder="Search @username to add (+)..." />
+        <button id="contact-search-btn" class="contact-search-btn">Search</button>
+      `;
+      container.appendChild(searchBox);
+
+      const searchResultsBox = document.createElement('div');
+      searchResultsBox.id = 'contact-search-results';
+      searchResultsBox.style.display = 'none';
+      searchResultsBox.style.marginBottom = '10px';
+      container.appendChild(searchResultsBox);
+
+      // Search Handler
+      const searchInput = searchBox.querySelector('#contact-search-input');
+      const searchBtn = searchBox.querySelector('#contact-search-btn');
+      let searchTimeout = null;
+
+      async function executeUserSearch() {
+        const q = searchInput.value.trim();
+        if (q.length < 2) {
+          searchResultsBox.style.display = 'none';
+          searchResultsBox.innerHTML = '';
+          return;
+        }
+        searchResultsBox.style.display = 'block';
+        searchResultsBox.innerHTML = `
+          <div style="padding: 12px; text-align: center; color: var(--text-sub); font-size: 12px;">
+            Searching users...
+          </div>`;
+        try {
+          const sRes = await fetch(`${BACKEND_URL}/api/users/search?q=${encodeURIComponent(q)}`, {
+            headers: { 'Authorization': `Bearer ${AppState.token}` }
+          });
+          if (!sRes.ok) throw new Error('Search failed');
+          const users = await sRes.json();
+          searchResultsBox.innerHTML = '';
+          if (!Array.isArray(users) || users.length === 0) {
+            searchResultsBox.innerHTML = `
+              <div style="padding: 10px; text-align: center; color: var(--text-muted); font-size: 12px; background: var(--bg-card); border-radius: 10px;">
+                No users found for "${escapeHtml(q)}"
+              </div>`;
+            return;
           }
-        });
 
-        el.conversationsList.appendChild(card);
+          const header = document.createElement('div');
+          header.className = 'contacts-section-header highlight';
+          header.textContent = `SEARCH RESULTS (${users.length})`;
+          searchResultsBox.appendChild(header);
+
+          users.forEach(u => {
+            if (u.id === AppState.user?.id) return; // skip self
+            const card = document.createElement('div');
+            card.className = 'chat-item-card';
+            card.style.cursor = 'default';
+            const name = u.display_name || u.username;
+            const initials = name.substring(0, 2).toUpperCase();
+            
+            let actionBtnHtml = '';
+            if (u.relationship_status === 'none') {
+              actionBtnHtml = `<button class="btn-request-accept" style="padding:5px 12px; font-size:11.5px; flex:none;">+ Add Friend</button>`;
+            } else if (u.relationship_status === 'pending_sent') {
+              actionBtnHtml = `<span style="font-size:11px; color:var(--accent-amber); font-weight:600;">Pending Request</span>`;
+            } else if (u.relationship_status === 'pending_received') {
+              actionBtnHtml = `<button class="btn-request-accept" style="padding:5px 12px; font-size:11.5px; flex:none;">Accept</button>`;
+            } else if (u.relationship_status === 'friends') {
+              actionBtnHtml = `<button class="btn-request-accept" style="padding:5px 12px; font-size:11.5px; flex:none; background:rgba(121,80,255,0.2); border:1px solid var(--accent-purple);">Message</button>`;
+            }
+
+            card.innerHTML = `
+              <div class="item-avatar">${initials}</div>
+              <div class="item-info" style="flex:1">
+                <div class="item-top">
+                  <span class="item-title">${escapeHtml(name)}</span>
+                  <span class="item-time">@${escapeHtml(u.username)}</span>
+                </div>
+                <div class="item-bottom">
+                  <span class="item-preview">${escapeHtml(u.status_message || 'KYNX User')}</span>
+                </div>
+              </div>
+              <div class="search-action-wrap">${actionBtnHtml}</div>
+            `;
+
+            const btn = card.querySelector('button');
+            if (btn) {
+              btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (u.relationship_status === 'none') {
+                  await sendFriendRequest(u.id, btn);
+                } else if (u.relationship_status === 'pending_received') {
+                  const req = incoming.find(r => r.sender_id === u.id);
+                  if (req) {
+                    await acceptFriendRequest(req.request_id, name);
+                  }
+                } else if (u.relationship_status === 'friends') {
+                  const existing = AppState.conversations.find(c => getPeerId(c) === u.id);
+                  if (existing) openConversation(existing);
+                }
+              });
+            }
+
+            searchResultsBox.appendChild(card);
+          });
+        } catch (err) {
+          searchResultsBox.innerHTML = `
+            <div style="padding: 10px; color: var(--accent-red); font-size: 12px; text-align: center;">
+              Search failed. Try again.
+            </div>`;
+        }
+      }
+
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(executeUserSearch, 350);
+      });
+      searchBtn.addEventListener('click', executeUserSearch);
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          executeUserSearch();
+        }
       });
 
+      // 2. Incoming Requests Section
+      if (incoming.length > 0) {
+        const incHeader = document.createElement('div');
+        incHeader.className = 'contacts-section-header highlight';
+        incHeader.innerHTML = `
+          <span>⚡ INCOMING REQUESTS (${incoming.length})</span>
+          <span style="font-size:10px; color:var(--accent-purple-light); font-weight:normal">Awaiting your approval</span>
+        `;
+        container.appendChild(incHeader);
+
+        incoming.forEach(req => {
+          const reqCard = document.createElement('div');
+          reqCard.className = 'request-card';
+          const name = req.display_name || req.username || 'User';
+          const initials = name.substring(0, 2).toUpperCase();
+
+          reqCard.innerHTML = `
+            <div class="request-user-info">
+              <div class="item-avatar">${initials}</div>
+              <div class="request-user-meta">
+                <div class="request-user-name">${escapeHtml(name)}</div>
+                <div class="request-user-handle">@${escapeHtml(req.username || '')} • Sent you a friend request</div>
+              </div>
+            </div>
+            <div class="request-actions">
+              <button class="btn-request-accept">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                Accept
+              </button>
+              <button class="btn-request-decline">✕ Decline</button>
+            </div>
+          `;
+
+          const btnAccept = reqCard.querySelector('.btn-request-accept');
+          btnAccept.addEventListener('click', async () => {
+            btnAccept.disabled = true;
+            btnAccept.textContent = 'Accepting...';
+            await acceptFriendRequest(req.request_id, name);
+          });
+
+          const btnDecline = reqCard.querySelector('.btn-request-decline');
+          btnDecline.addEventListener('click', async () => {
+            btnDecline.disabled = true;
+            btnDecline.textContent = 'Declining...';
+            await rejectFriendRequest(req.request_id);
+          });
+
+          container.appendChild(reqCard);
+        });
+      }
+
+      // 3. Sent Requests Section
+      if (sent.length > 0) {
+        const sentHeader = document.createElement('div');
+        sentHeader.className = 'contacts-section-header';
+        sentHeader.textContent = `📤 SENT REQUESTS (${sent.length})`;
+        container.appendChild(sentHeader);
+
+        sent.forEach(s => {
+          const sentCard = document.createElement('div');
+          sentCard.className = 'chat-item-card';
+          sentCard.style.cursor = 'default';
+          const name = s.display_name || s.username || 'User';
+          const initials = name.substring(0, 2).toUpperCase();
+
+          sentCard.innerHTML = `
+            <div class="item-avatar">${initials}</div>
+            <div class="item-info" style="flex:1">
+              <div class="item-top">
+                <span class="item-title">${escapeHtml(name)}</span>
+                <span class="item-time">Pending</span>
+              </div>
+              <div class="item-bottom">
+                <span class="item-preview">Waiting for @${escapeHtml(s.username || '')} to accept</span>
+              </div>
+            </div>
+            <button class="btn-request-cancel">Cancel</button>
+          `;
+
+          const cancelBtn = sentCard.querySelector('.btn-request-cancel');
+          cancelBtn.addEventListener('click', async () => {
+            cancelBtn.disabled = true;
+            cancelBtn.textContent = 'Canceling...';
+            await cancelSentFriendRequest(s.request_id);
+          });
+
+          container.appendChild(sentCard);
+        });
+      }
+
+      // 4. Contacts Circle Section
+      const contactsHeader = document.createElement('div');
+      contactsHeader.className = 'contacts-section-header';
+      contactsHeader.textContent = `👥 MY CIRCLE (${Array.isArray(contacts) ? contacts.length : 0})`;
+      container.appendChild(contactsHeader);
+
+      if (!Array.isArray(contacts) || contacts.length === 0) {
+        if (incoming.length === 0 && sent.length === 0) {
+          const empty = document.createElement('div');
+          empty.style.padding = '36px 20px';
+          empty.style.textAlign = 'center';
+          empty.style.color = 'var(--text-sub)';
+          empty.style.fontSize = '13px';
+          empty.innerHTML = `
+            👥 No contacts in your circle yet.<br>
+            <span style="font-size:11.5px; color:var(--text-dim); margin-top:6px; display:block">
+              Use the search bar above to search @username and send friend requests!
+            </span>
+          `;
+          container.appendChild(empty);
+        }
+      } else {
+        contacts.forEach(contact => {
+          const title = contact.display_name || contact.username || 'Contact';
+          const initials = title.substring(0, 2).toUpperCase();
+          const card = document.createElement('div');
+          card.className = 'chat-item-card';
+          card.innerHTML = `
+            <div class="item-avatar">${initials}</div>
+            <div class="item-info">
+              <div class="item-top">
+                <span class="item-title">${escapeHtml(title)}</span>
+                <span class="item-time">@${escapeHtml(contact.username || '')}</span>
+              </div>
+              <div class="item-bottom">
+                <span class="item-preview">${escapeHtml(contact.status_message || 'Connected on KYNX')}</span>
+              </div>
+            </div>
+          `;
+
+          card.addEventListener('click', async () => {
+            const existing = AppState.conversations.find(c => getPeerId(c) === contact.id);
+            if (existing) {
+              openConversation(existing);
+            } else {
+              try {
+                const createRes = await fetch(`${BACKEND_URL}/api/conversations`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${AppState.token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ recipient_id: contact.id })
+                });
+                if (createRes.ok) {
+                  const newConv = await createRes.json();
+                  AppState.conversations.unshift(newConv);
+                  openConversation(newConv);
+                }
+              } catch (err) {
+                console.warn('Error opening conversation with contact:', err);
+              }
+            }
+          });
+
+          container.appendChild(card);
+        });
+      }
+
+      el.conversationsList.appendChild(container);
+
     } catch (e) {
-      console.warn('Could not load contacts:', e);
+      console.warn('Could not load contacts and requests:', e);
       el.conversationsList.innerHTML = `
         <div style="padding: 24px; text-align: center; color: var(--accent-red); font-size: 13px;">
-          Failed to load contacts.
+          Failed to load contacts and requests.
         </div>`;
     }
   }
