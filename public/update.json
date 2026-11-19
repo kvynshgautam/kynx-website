@@ -1,11 +1,11 @@
 {
-  "version_code": 59,
-  "version_name": "0.9.49",
-  "description": "KYNX v0.9.49 (Build 59) Mesh Networking Update: True Multi-Hop End-to-End Encrypted (E2EE) Mesh Grid. Communicate across unlimited hops (e.g. User 1 to User 100 via nodes 2-99) without internet or SIM. Intermediate nodes act as zero-knowledge relays and cannot decrypt or read content. Includes Public Campfire mesh broadcast room and live Multi-Hop Directory.",
+  "version_code": 60,
+  "version_name": "0.9.50",
+  "description": "KYNX v0.9.50 (Build 60) Polish & Web Deck Update: Fixed mesh screen auto-hijack UX flow for seamless multi-node navigation; added offline Room DB ACK delivery status persistence; and launched Web Deck incoming friend request approval with live badge counter and user search.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "7c44e0ed885b8f132faf89803ef196604e8ce99c8d5cae3a032d4d071fb3609f",
+  "sha256_checksum": "713f44647952c4c5dd55e0d24f1aec8343a25af77fd259b6d2d415b5be9a5f7f",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-19T06:17:00+00:00",
+  "published_at": "2026-11-19T07:19:00+00:00",
   "file_size_bytes": 65477930
 }
