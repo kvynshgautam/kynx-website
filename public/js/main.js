@@ -692,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     meshVideo.addEventListener('timeupdate', () => {
       const cur = meshVideo.currentTime;
-      const dur = meshVideo.duration || 14;
+      const dur = meshVideo.duration || 36;
       const pct = (cur / dur) * 100;
       if (videoProgress) videoProgress.style.width = `${pct}%`;
 
@@ -705,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Update active chapter pill based on playback time
       videoChapters.forEach(pill => {
         const seekTime = parseFloat(pill.getAttribute('data-seek') || '0');
-        pill.classList.toggle('active', cur >= seekTime && cur < seekTime + 3.5);
+        pill.classList.toggle('active', cur >= seekTime && cur < seekTime + 9.0);
       });
     });
 

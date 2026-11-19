@@ -231,7 +231,7 @@
                 loop: true,
                 muted: true,
                 playsInline: true,
-                poster: '/assets/mesh_demo_guide.webp'
+                poster: '/assets/mesh_demo_guide_poster.jpg'
               },
                 h('source', { src: '/assets/mesh_demo_guide.mp4', type: 'video/mp4' })
               )
