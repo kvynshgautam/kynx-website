@@ -364,11 +364,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Storyboard Step Jump Helper (Smooth scroll sync across mobile, tablet & desktop)
+  // Storyboard Step Jump Helper (Smooth scroll sync on desktop, instant smooth switch on mobile)
   function jumpToStoryboardStep(targetStep) {
     const bounded = Math.max(0, Math.min(4, targetStep));
     setStoryboardStep(bounded);
-    if (typeof ScrollTrigger !== 'undefined' && storyboardSection) {
+    if (window.innerWidth > 992 && typeof ScrollTrigger !== 'undefined' && storyboardSection) {
       const st = ScrollTrigger.getById('storyboard') || ScrollTrigger.getAll().find(s => s.trigger === storyboardSection);
       if (st) {
         const targetScroll = st.start + (bounded / 4) * (st.end - st.start) + 2;
@@ -433,17 +433,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   }
 
-  // GSAP ScrollTrigger for Pinned Storyboard - Universal (Desktop & Mobile)
-  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && storyboardSection) {
-    const isMobile = window.innerWidth <= 992;
+  // Mobile Smart Auto-Tour: Gently advances chapters every 5s when visible; pauses on any user tap
+  let mobileTourTimer = null;
+  let userInteracted = false;
+
+  function stopMobileTour() {
+    userInteracted = true;
+    if (mobileTourTimer) {
+      clearInterval(mobileTourTimer);
+      mobileTourTimer = null;
+    }
+  }
+
+  sbPills.forEach(p => p.addEventListener('click', stopMobileTour));
+  if (sbMobilePrev) sbMobilePrev.addEventListener('click', stopMobileTour);
+  if (sbMobileNext) sbMobileNext.addEventListener('click', stopMobileTour);
+  if (sbPhone) sbPhone.addEventListener('touchstart', stopMobileTour, { passive: true });
+
+  if (window.innerWidth <= 992 && 'IntersectionObserver' in window && storyboardSection) {
+    const tourObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !userInteracted && !mobileTourTimer) {
+          mobileTourTimer = setInterval(() => {
+            if (userInteracted) {
+              clearInterval(mobileTourTimer);
+              return;
+            }
+            const nextStep = (currentActiveStep + 1) % 5;
+            setStoryboardStep(nextStep);
+          }, 5000);
+        } else if (!entry.isIntersecting && mobileTourTimer) {
+          clearInterval(mobileTourTimer);
+          mobileTourTimer = null;
+        }
+      });
+    }, { threshold: 0.35 });
+
+    tourObserver.observe(storyboardSection);
+  }
+
+  // GSAP ScrollTrigger for Pinned Storyboard - Desktop Only (> 992px)
+  // On mobile & tablet, pinning is disabled for full-size proud phone, touch swipe & steppers
+  if (window.innerWidth > 992 && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && storyboardSection) {
     ScrollTrigger.create({
       id: 'storyboard',
       trigger: storyboardSection,
       start: 'top top',
-      end: isMobile ? '+=1800' : '+=2400',
+      end: '+=2400',
       pin: true,
-      anticipatePin: 1,
-      scrub: isMobile ? 0.3 : 0.5,
+      scrub: 0.5,
       onUpdate: (self) => {
         const progress = self.progress;
         let step = 0;

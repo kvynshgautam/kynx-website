@@ -3000,41 +3000,40 @@ footer {
     border-radius: 36px;
   }
 
-  /* Storyboard Section: Fluid Mobile Pinned Architecture Stage */
+  /* ========================================================
+     STORYBOARD SECTION: PROUD FLAGSHIP MOBILE ARCHITECTURE THEATRE
+     Natural Unpinned Cinematic Flow, Big Normal Phone & Quick Steppers
+     ======================================================== */
   .storyboard-section {
-    padding: 0;
+    padding: 60px 0 !important;
     position: relative;
-    overflow: hidden;
+    background: #040407;
   }
   .storyboard-pinned-container {
-    height: 100vh !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    min-height: 560px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-    padding: 10px 0 !important;
-    overflow: hidden !important;
-    box-sizing: border-box !important;
+    position: relative !important;
+    top: auto !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    display: block !important;
   }
   .storyboard-pinned-container > .container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     width: 100%;
-    max-width: 100%;
-    height: 100%;
-    padding: 0 10px;
+    max-width: 600px;
+    padding: 0 16px;
     box-sizing: border-box;
+    margin: 0 auto;
   }
   .storyboard-header-tag {
-    margin-bottom: 6px !important;
-    font-size: 10px !important;
-    padding: 3px 8px !important;
-    letter-spacing: 0.5px;
+    margin-bottom: 16px !important;
+    font-size: 11px !important;
+    padding: 6px 14px !important;
+    letter-spacing: 1px;
+    text-align: center;
   }
   .storyboard-nav-pills {
     display: flex !important;
@@ -3042,9 +3041,9 @@ footer {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     scrollbar-width: none !important;
-    gap: 6px !important;
-    padding: 2px 4px 6px 4px !important;
-    margin-bottom: 6px !important;
+    gap: 8px !important;
+    padding: 4px 6px 12px 6px !important;
+    margin-bottom: 18px !important;
     justify-content: flex-start !important;
     max-width: 100% !important;
     width: 100% !important;
@@ -3054,77 +3053,28 @@ footer {
   }
   .sb-pill {
     flex: 0 0 auto !important;
-    padding: 5px 10px !important;
-    font-size: 10px !important;
+    padding: 9px 16px !important;
+    font-size: 12px !important;
     border-radius: 99px !important;
-    gap: 4px !important;
+    gap: 6px !important;
+    font-weight: 700 !important;
   }
   .storyboard-layout {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 24px !important;
     width: 100% !important;
-    max-width: 360px !important;
+    max-width: 540px !important;
     margin: 0 auto !important;
   }
-  .storyboard-phone-stage {
-    order: 1 !important;
-    width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    margin: 0 auto 4px auto !important;
-    perspective: none !important;
-  }
-  .sb-phone-mockup {
-    width: 235px !important;
-    height: 330px !important;
-    transform: none !important;
-    margin: 0 auto !important;
-    border-radius: 26px !important;
-    border-width: 3px !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(139, 92, 246, 0.25) !important;
-  }
-  .sb-phone-screen {
-    border-radius: 22px !important;
-  }
-  .phone-header {
-    padding: 5px 10px !important;
-    gap: 8px !important;
-  }
-  .phone-avatar {
-    width: 26px !important;
-    height: 26px !important;
-    font-size: 10px !important;
-  }
-  .phone-user-name {
-    font-size: 11px !important;
-  }
-  .phone-user-status {
-    font-size: 9px !important;
-  }
-  .screen-chapter {
-    padding: 6px 8px !important;
-  }
-  .sb-radar-box {
-    height: 105px !important;
-    margin-bottom: 4px !important;
-    border-radius: 12px !important;
-  }
-  .sb-radar-sweep {
-    width: 125px !important;
-    height: 125px !important;
-  }
-  .sb-radar-ring.ring-1 { width: 45px !important; height: 45px !important; }
-  .sb-radar-ring.ring-2 { width: 85px !important; height: 85px !important; }
-  .sb-radar-ring.ring-3 { width: 125px !important; height: 125px !important; }
 
-  /* Compact Chapter Narrative below phone */
+  /* Narrative on Mobile: Big, bold & readable */
   .storyboard-narrative {
-    order: 2 !important;
+    order: 1 !important;
     min-height: auto !important;
     width: 100% !important;
-    max-width: 350px !important;
+    max-width: 100% !important;
     margin: 0 auto !important;
     text-align: center !important;
   }
@@ -3136,93 +3086,158 @@ footer {
   }
   .chapter-step.active {
     display: block !important;
-    animation: fadeInQuick 0.2s ease-out !important;
+    animation: fadeInQuick 0.25s ease-out !important;
   }
   @keyframes fadeInQuick {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
   .chapter-num {
-    font-size: 9px !important;
-    margin-bottom: 2px !important;
+    font-size: 11px !important;
+    margin-bottom: 6px !important;
     color: #10b981 !important;
-    letter-spacing: 1px !important;
+    letter-spacing: 1.5px !important;
+    font-family: var(--font-mono) !important;
+    font-weight: 700 !important;
   }
   .chapter-title {
-    font-size: 15px !important;
+    font-size: clamp(22px, 5.5vw, 28px) !important;
     line-height: 1.25 !important;
-    margin-bottom: 3px !important;
+    margin-bottom: 10px !important;
+    font-weight: 800 !important;
   }
   .chapter-desc {
-    font-size: 11px !important;
-    line-height: 1.35 !important;
-    margin-bottom: 5px !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
+    font-size: 13.5px !important;
+    line-height: 1.55 !important;
+    margin-bottom: 16px !important;
+    display: block !important;
     color: #94a3b8 !important;
+    max-width: 480px;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
   .hud-telemetry-box {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-around !important;
-    gap: 4px !important;
-    padding: 4px 6px !important;
-    margin-bottom: 4px !important;
-    border-radius: 10px !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    padding: 12px 14px !important;
+    margin-bottom: 16px !important;
+    border-radius: 14px !important;
     background: rgba(18, 20, 32, 0.8) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    max-width: 480px;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
   .hud-item {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 1px !important;
+    gap: 3px !important;
   }
   .hud-key {
-    font-size: 7.5px !important;
-    letter-spacing: 0.5px !important;
+    font-size: 8.5px !important;
+    letter-spacing: 0.8px !important;
+    color: var(--text-dim) !important;
+    font-weight: 700 !important;
   }
   .hud-val {
-    font-size: 8.5px !important;
-    font-weight: 700 !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
   }
   .chapter-quick-action {
     display: none !important;
   }
 
-  /* Mobile Controls */
+  /* Mobile Stepper Controls */
   .sb-mobile-controls {
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
+    gap: 16px !important;
     width: 100% !important;
-    max-width: 270px !important;
-    margin: 4px auto 0 auto !important;
+    max-width: 340px !important;
+    margin: 8px auto 0 auto !important;
   }
   .sb-mobile-btn {
-    background: rgba(139, 92, 246, 0.15) !important;
-    border: 1px solid rgba(139, 92, 246, 0.4) !important;
+    background: rgba(139, 92, 246, 0.18) !important;
+    border: 1.5px solid rgba(139, 92, 246, 0.45) !important;
     color: #c4b5fd !important;
-    padding: 4px 12px !important;
+    padding: 8px 18px !important;
     border-radius: 99px !important;
-    font-size: 11px !important;
+    font-size: 13px !important;
     font-weight: 700 !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15);
   }
   .sb-mobile-btn:active {
-    transform: scale(0.94) !important;
-    background: rgba(139, 92, 246, 0.3) !important;
+    transform: scale(0.95) !important;
+    background: rgba(139, 92, 246, 0.35) !important;
   }
   .sb-mobile-step-pill {
-    font-size: 11px !important;
+    font-size: 13px !important;
     font-family: var(--font-mono) !important;
     color: #34d399 !important;
-    font-weight: 700 !important;
-    letter-spacing: 1px !important;
+    font-weight: 800 !important;
+    letter-spacing: 1.5px !important;
+    padding: 6px 14px !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    border-radius: 10px !important;
   }
+
+  /* Phone Stage on Mobile: NORMAL SIZE FLAGSHIP */
+  .storyboard-phone-stage {
+    order: 2 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    margin: 8px auto 0 auto !important;
+    perspective: none !important;
+  }
+  .sb-phone-mockup {
+    width: min(315px, 88vw) !important;
+    height: 550px !important;
+    transform: none !important;
+    margin: 0 auto !important;
+    border-radius: 38px !important;
+    border: 3.5px solid #282d44 !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(139, 92, 246, 0.25) !important;
+  }
+  .sb-phone-screen {
+    border-radius: 32px !important;
+  }
+  .phone-header {
+    padding: 10px 14px !important;
+    gap: 10px !important;
+  }
+  .phone-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 12px !important;
+  }
+  .phone-user-name {
+    font-size: 13px !important;
+  }
+  .phone-user-status {
+    font-size: 10px !important;
+  }
+  .screen-chapter {
+    padding: 14px !important;
+  }
+  .sb-radar-box {
+    height: 140px !important;
+    margin-bottom: 8px !important;
+    border-radius: 16px !important;
+  }
+  .sb-radar-sweep {
+    width: 175px !important;
+    height: 175px !important;
+  }
+  .sb-radar-ring.ring-1 { width: 50px !important; height: 50px !important; }
+  .sb-radar-ring.ring-2 { width: 100px !important; height: 100px !important; }
+  .sb-radar-ring.ring-3 { width: 150px !important; height: 150px !important; }
 
   /* Cyber Lab Responsive */
   .kynx-lab-card {
