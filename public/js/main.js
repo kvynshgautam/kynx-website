@@ -497,11 +497,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cmd === 'status') {
       cmdText.textContent = 'kynx --status';
       out.innerHTML = `
-        [SYS] KYNX Core v0.9.52 Mesh Grid [ONLINE]<br>
+        [SYS] KYNX Core v0.9.53 Build 63 [ONLINE]<br>
         [ARCHITECT] KG (Lead Systems Engineer)<br>
-        [PEER_LINK] Gaurav Gautam (Connected via Cloud + Mesh)<br>
-        [LATENCY] 0.8ms | WebSockets: 100% | Bluetooth: ARMED<br>
-        [SECURITY] Hardware FLAG_SECURE + E2EE Active
+        [GRID_STATUS] Multi-Hop Mesh (7-Hop E2EE) + WebSockets [ARMED]<br>
+        [WEB_DECK] Bidirectional Session Sync Active [MONITORED]<br>
+        [MEMORY] 16 KB Page Aligned (Android 15+) | Skia 120 FPS<br>
+        [SECURITY] Zero-Knowledge Relay + Hardware FLAG_SECURE
       `;
     } else if (cmd === 'benchmark') {
       cmdText.textContent = 'kynx --benchmark';
@@ -517,10 +518,11 @@ document.addEventListener('DOMContentLoaded', () => {
       cmdText.textContent = 'kynx --mesh';
       playScanSound();
       out.innerHTML = `
-        [RFCOMM] Bluetooth Low Energy P2P Discovery Active...<br>
-        [PEER FOUND] Device: Gaurav's Phone (RSSI -42 dBm)<br>
-        [CHANNEL] Secure RFCOMM Socket Opened on Port 7<br>
-        [ROUTING] Offline Mesh Relay: Active (0 Internet Required)
+        [MESH ENGINE] Offline Multi-Hop P2P Grid Active...<br>
+        [ROUTE] Hop 0 (You) ➔ Node 2B ➔ User 100 (Est. ~90m)<br>
+        [CRYPTO] ECDH secp256r1 + AES-256-GCM AEAD Sealed<br>
+        [RELAY] Zero-Knowledge Blind Forwarding (0 Data Stored)<br>
+        [STATUS] 0 Cellular / 0 Internet Required ✓
       `;
     }
   };

@@ -28,7 +28,8 @@
     </a>
     <ul class="nav-links">
       <li><a href="#features" class="nav-link">Features</a></li>
-      <li><a href="#storyboard" class="nav-link">Live Showcase</a></li>
+      <li><a href="#storyboard" class="nav-link">Showcase</a></li>
+      <li><a href="#interactive-lab" class="nav-link" style="color:var(--accent-cyan); font-weight:700">⚡ Cyber Lab</a></li>
       <li><a href="#performance" class="nav-link">Performance</a></li>
       <li><a href="#creator" class="nav-link">About KG</a></li>
       <li><a href="#download" class="nav-link">Download</a></li>
@@ -335,6 +336,16 @@
     </div>
   </section>
 
+  <!-- ========================================================
+       INTERACTIVE CYBER LAB (REACT 18 POWERED)
+       Multi-Hop Mesh Grid Simulator, Web Deck Sync & Crypto Matrix
+       ======================================================== -->
+  <section class="section-padding" id="interactive-lab" style="padding-top:30px; padding-bottom:60px">
+    <div class="container">
+      <div id="kynx-react-lab-root"></div>
+    </div>
+  </section>
+
   <!-- Performance Stats Section -->
   <section class="section-padding" id="performance" style="background:#040508">
     <div class="container">
@@ -368,19 +379,73 @@
   <!-- Flagship Features Section -->
   <section class="section-padding" id="features">
     <div class="container">
-      <span class="section-tag">FLAGSHIP UPGRADES</span>
+      <span class="section-tag">BUILD 63 FLAGSHIP ARCHITECTURE</span>
       <h2 class="section-heading">Built Different. By Design.</h2>
-      <p class="section-sub">Explore the breakthrough capabilities introduced in the latest Build 42 release.</p>
+      <p class="section-sub">Explore the breakthrough capabilities engineered in the latest Build 63 (v0.9.53) release.</p>
 
       <div class="features-grid">
-        <!-- Feature 1: View Once -->
+        <!-- Feature 1: Multi-Hop Zero-Knowledge Mesh Grid (Featured Span 2) -->
+        <div class="feature-card span-2">
+          <div class="feature-icon-wrapper" style="color:#10b981; background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.3)">
+            📡
+          </div>
+          <h3 class="feature-title">True Multi-Hop Zero-Knowledge Mesh Grid</h3>
+          <p class="feature-desc">
+            Offline communication without cell towers, Wi-Fi, or Internet. Messages hop across up to 7 relay devices dynamically with end-to-end ECDH secp256r1 + AES-256-GCM AEAD encryption. Intermediate relay nodes forward blind encrypted packets with zero knowledge of plaintext or sender identity, powered by loop-free LRU packet bounding and self-healing route pruning.
+          </p>
+          <div style="display:flex; gap:16px; margin-top:14px; flex-wrap:wrap">
+            <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
+              ⚡ <strong>Multi-Hop Reach:</strong> Up to 7 Hops (~200m+ mesh coverage)
+            </div>
+            <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
+              🛡️ <strong>Zero-Knowledge:</strong> Relays can never decrypt payloads
+            </div>
+            <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
+              🔄 <strong>Self-Healing:</strong> Dynamic link pruning & auto-rerouting
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 2: Web Deck 2.0 & Real-Time Bidirectional Logout Sync -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper" style="color:#06b6d4; background:rgba(6,182,212,0.12); border-color:rgba(6,182,212,0.3)">
+            💻
+          </div>
+          <h3 class="feature-title">Web Deck 2.0 & Real-Time Logout Sync</h3>
+          <p class="feature-desc">
+            Pair your desktop browser with Android in seconds via secure QR or 6-digit PIN. Engineered with instant bidirectional session synchronization: logging out from the Web Deck immediately signals your phone via WebSocket, and active web sessions can be remotely revoked from Android Settings with a single tap.
+          </p>
+          <div class="interactive-demo-box">
+            <a href="/web" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px; border-radius:10px; background:rgba(6,182,212,0.15); border:1px solid rgba(6,182,212,0.3); color:#06b6d4; font-weight:700; text-decoration:none; font-size:13px">
+              <span>Launch KYNX Web Deck ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Feature 3: Cyber Profile & Dynamic Contact Circles -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper" style="color:#a78bfa; background:rgba(139,92,246,0.12); border-color:rgba(139,92,246,0.3)">
+            👤
+          </div>
+          <h3 class="feature-title">Cyber Profiles & Dynamic Circles</h3>
+          <p class="feature-desc">
+            Express yourself with customizable avatar initials, bios, and cyber status badges. Manage your circle with one-tap contact inspection, friend requests, real-time unfriend sync, and hardware-backed blocking with instant SQLite state cascade.
+          </p>
+          <div class="interactive-demo-box">
+            <div style="background:#090a13; padding:8px 12px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px; color:#cbd5e1">
+              ✨ Dynamic Bios • Instant Unfriend • Block Cascade
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 4: View-Once Hardware Privacy Engine -->
         <div class="feature-card">
           <div class="feature-icon-wrapper" style="color:#e879f9; background:rgba(232,121,249,0.12); border-color:rgba(232,121,249,0.3)">
             ①
           </div>
-          <h3 class="feature-title">View-Once Media Engine</h3>
+          <h3 class="feature-title">Hardware View-Once Media Engine</h3>
           <p class="feature-desc">
-            Self-destructing media that leaves zero trace. Hardware FLAG_SECURE prevents screenshots and screen recording. Closing the viewer permanently deletes cached bytes from device and server disk.
+            Self-destructing media that leaves zero trace. Android's native FLAG_SECURE strictly blocks screenshots, screen recording, and external casting. Closing the viewer immediately purges raw cached media bytes from memory and disk.
           </p>
           <div class="interactive-demo-box">
             <div class="vo-interactive-button" onclick="document.getElementById('vo-sim-btn').click()">
@@ -390,30 +455,14 @@
           </div>
         </div>
 
-        <!-- Feature 2: 120fps Gestures -->
+        <!-- Feature 5: Android 15+ 16 KB Page Alignment & 120 FPS Skia -->
         <div class="feature-card">
-          <div class="feature-icon-wrapper" style="color:#06b6d4; background:rgba(6,182,212,0.12); border-color:rgba(6,182,212,0.3)">
-            👆
+          <div class="feature-icon-wrapper" style="color:#fbbf24; background:rgba(251,191,36,0.12); border-color:rgba(251,191,36,0.3)">
+            ⚡
           </div>
-          <h3 class="feature-title">Native 120fps Gestures</h3>
+          <h3 class="feature-title">16 KB Page Alignment & 120 FPS Skia</h3>
           <p class="feature-desc">
-            Right-swipe any message bubble to trigger reply quoting with spring physics and tactile haptic bump. Double-tap any message to instantly react with ❤️ without opening sluggish menus.
-          </p>
-          <div class="interactive-demo-box">
-            <button id="btn-trigger-swipe" style="width:100%; padding:10px; border-radius:10px; background:rgba(6,182,212,0.15); border:1px solid rgba(6,182,212,0.3); color:#06b6d4; font-weight:700; cursor:pointer">
-              Simulate Swipe-to-Reply
-            </button>
-          </div>
-        </div>
-
-        <!-- Feature 3: Cyber Wallpapers -->
-        <div class="feature-card">
-          <div class="feature-icon-wrapper" style="color:#a78bfa; background:rgba(139,92,246,0.12); border-color:rgba(139,92,246,0.3)">
-            🎨
-          </div>
-          <h3 class="feature-title">5 Procedural GPU Wallpapers</h3>
-          <p class="feature-desc">
-            Zero asset bloat. Procedural GPU gradient shaders calculated directly in Skia hardware per conversation. Switch themes in real-time below:
+            100% compliant with Google's Android 15+ 16 KB memory page size requirements (max-page-size=16384). Zero native crashes, ultra-efficient RAM footprint, and locked 120 FPS Compose rendering with tactile Spring Physics.
           </p>
           <div class="wallpaper-chips">
             <span class="wp-chip active" data-wp="obsidian" style="background:#08090e">Obsidian</span>
@@ -421,39 +470,6 @@
             <span class="wp-chip" data-wp="nebula" style="background:#040e1e">Nebula</span>
             <span class="wp-chip" data-wp="emerald" style="background:#04140d">Emerald</span>
             <span class="wp-chip" data-wp="crimson" style="background:#160510">Crimson</span>
-          </div>
-        </div>
-
-        <!-- Feature 4: Stealth Actions -->
-        <div class="feature-card">
-          <div class="feature-icon-wrapper" style="color:#fbbf24; background:rgba(251,191,36,0.12); border-color:rgba(251,191,36,0.3)">
-            🔕
-          </div>
-          <h3 class="feature-title">Long-Press Stealth Delivery</h3>
-          <p class="feature-desc">
-            Long-press the Send button to reveal options: <strong>🔕 Send Silently</strong> (delivers without buzzer/sound on receiver) or <strong>⏰ Schedule Message</strong> with quick presets.
-          </p>
-        </div>
-
-        <!-- Feature 5: Offline P2P Mesh -->
-        <div class="feature-card span-2">
-          <div class="feature-icon-wrapper" style="color:#10b981; background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.3)">
-            📡
-          </div>
-          <h3 class="feature-title">Hybrid Dual-Engine: Cloud & Offline Bluetooth</h3>
-          <p class="feature-desc">
-            When online, messages route through real-time low-latency WebSockets. When in basements, flights, or disasters without cellular signal, KYNX seamlessly switches to direct Bluetooth RFCOMM peer-to-peer mesh. Messages never drop.
-          </p>
-          <div style="display:flex; gap:16px; margin-top:14px; flex-wrap:wrap">
-            <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
-              🌐 <strong>WebSocket Relay:</strong> &lt; 40ms cloud latency
-            </div>
-            <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
-              ⚡ <strong>Bluetooth Mesh:</strong> 0 Internet required
-            </div>
-            <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
-              📦 <strong>Local SQLite Outbox:</strong> Zero message loss
-            </div>
           </div>
         </div>
       </div>
@@ -507,11 +523,12 @@
             <div class="terminal-interactive-box">
               <div style="color:#a78bfa">kg@kynx-os:~$ <span id="term-cmd-text">kynx --status</span><span style="animation:pulseDot 1s infinite">_</span></div>
               <div class="term-cmd-output" id="term-output">
-                [SYS] KYNX Core v0.9.32 Turbo [ONLINE]<br>
+                [SYS] KYNX Core v0.9.53 Build 63 [ONLINE]<br>
                 [ARCHITECT] KG (Lead Systems Engineer)<br>
-                [PEER_LINK] Gaurav Gautam (Connected via Cloud + Mesh)<br>
-                [LATENCY] 0.8ms | WebSockets: 100% | Bluetooth: ARMED<br>
-                [SECURITY] Hardware FLAG_SECURE + E2EE Active
+                [GRID_STATUS] Multi-Hop Mesh (7-Hop E2EE) + WebSockets [ARMED]<br>
+                [WEB_DECK] Bidirectional Session Sync Active [MONITORED]<br>
+                [MEMORY] 16 KB Page Aligned (Android 15+) | Skia 120 FPS<br>
+                [SECURITY] Zero-Knowledge Relay + Hardware FLAG_SECURE
               </div>
               <div class="term-btn-row">
                 <button class="term-btn" onclick="runTermCommand('status')">kynx --status</button>
@@ -612,6 +629,11 @@
       </div>
     </div>
   </footer>
+
+  <!-- React 18 Core & Interactive Lab Engine -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="/js/kynx-interactive-hub.js"></script>
 
   <!-- Animation & Interaction Scripts -->
   <script src="/js/vendor/lenis.min.js"></script>
