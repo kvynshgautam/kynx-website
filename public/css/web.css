@@ -2318,7 +2318,8 @@ body {
   border-radius: 22px;
   width: 100%;
   max-width: 440px;
-  overflow: hidden;
+  max-height: 92vh;
+  overflow-y: auto;
 }
 .modal-top-bar {
   display: flex;
