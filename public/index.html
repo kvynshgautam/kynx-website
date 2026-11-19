@@ -153,77 +153,138 @@
 
   <!-- ========================================================
        PINNED SCROLL STORYBOARD SECTION (THE FEATURE THEATRE)
+       Flagship Build 63 Showcase: Mesh, Instant Media, View-Once, 120Hz & Skia
        ======================================================== -->
   <section class="storyboard-section" id="storyboard">
     <div class="storyboard-pinned-container">
       <div class="container">
+        
+        <!-- Storyboard Header Badge -->
+        <div class="storyboard-header-tag">
+          <span class="sb-live-glow-dot"></span>
+          <span>THE ARCHITECTURE THEATRE // 5 CORE HARDWARE PILLARS</span>
+        </div>
+
         <div class="storyboard-layout">
-          <!-- Left: Narrative Chapters that change on scroll -->
+          <!-- Left: Narrative Chapters that change on scroll or click -->
           <div class="storyboard-narrative">
             <div class="storyboard-nav-pills">
-              <span class="sb-pill active" data-step="0">01. TURBO MEDIA</span>
-              <span class="sb-pill" data-step="1">02. VIEW-ONCE</span>
-              <span class="sb-pill" data-step="2">03. 120HZ GESTURES</span>
-              <span class="sb-pill" data-step="3">04. GPU SHADERS</span>
+              <button type="button" class="sb-pill active" data-step="0">
+                <span class="sb-pill-num">01</span>
+                <span class="sb-pill-icon">📡</span>
+                <span class="sb-pill-txt">MESH GRID</span>
+              </button>
+              <button type="button" class="sb-pill" data-step="1">
+                <span class="sb-pill-num">02</span>
+                <span class="sb-pill-icon">⚡</span>
+                <span class="sb-pill-txt">INSTANT MEDIA</span>
+              </button>
+              <button type="button" class="sb-pill" data-step="2">
+                <span class="sb-pill-num">03</span>
+                <span class="sb-pill-icon">🛡️</span>
+                <span class="sb-pill-txt">VIEW-ONCE</span>
+              </button>
+              <button type="button" class="sb-pill" data-step="3">
+                <span class="sb-pill-num">04</span>
+                <span class="sb-pill-icon">👆</span>
+                <span class="sb-pill-txt">120HZ GESTURES</span>
+              </button>
+              <button type="button" class="sb-pill" data-step="4">
+                <span class="sb-pill-num">05</span>
+                <span class="sb-pill-icon">🎨</span>
+                <span class="sb-pill-txt">GPU SHADERS</span>
+              </button>
             </div>
 
-            <!-- Chapter 1 -->
+            <!-- Chapter 0: Multi-Hop Zero-Knowledge Mesh Grid -->
             <div class="chapter-step active" id="chapter-0">
-              <div class="chapter-num">CHAPTER 01 // ACCELERATION</div>
+              <div class="chapter-num">CHAPTER 01 // OFFLINE MESH GRID</div>
+              <h2 class="chapter-title">True Multi-Hop Zero-Knowledge Mesh</h2>
+              <p class="chapter-desc">
+                Zero cellular towers. Zero Wi-Fi. Zero Internet. Messages propagate peer-to-peer across up to 7 hops with end-to-end ECDH secp256r1 + AES-256-GCM AEAD encryption. Intermediate nodes forward blind packets with zero knowledge of plaintext or sender identity.
+              </p>
+              <div class="hud-telemetry-box">
+                <div class="hud-item">
+                  <span class="hud-key">MESH RADIUS REACH</span>
+                  <span class="hud-val" style="color:#10b981">200m+ DYNAMIC P2P GRID</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-key">RELAY ENCRYPTION</span>
+                  <span class="hud-val">ZERO-KNOWLEDGE BLIND FORWARD</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-key">STORM &amp; LOOP DEFENSE</span>
+                  <span class="hud-val">1,500-ENTRY BOUNDED LRU</span>
+                </div>
+              </div>
+              <div class="chapter-quick-action">
+                <span class="action-hint">💡 Try the "Ping Mesh Relay" button on the phone stage →</span>
+              </div>
+            </div>
+
+            <!-- Chapter 1: Zero-Lag Instant Media Engine -->
+            <div class="chapter-step" id="chapter-1">
+              <div class="chapter-num">CHAPTER 02 // ACCELERATION</div>
               <h2 class="chapter-title">Zero-Lag Instant Media Engine</h2>
               <p class="chapter-desc">
-                No loading spinners. No buffer pauses. High-resolution photos, audio notes, and attachments render frame-0 directly from RAM with multi-tier flash persistence.
+                No loading spinners. No buffer pauses. High-resolution raw photos, 48 kHz voice waveforms, and attachments render frame-0 directly from RAM with multi-tier flash persistence and direct Skia hardware decoding.
               </p>
               <div class="hud-telemetry-box">
                 <div class="hud-item">
                   <span class="hud-key">FRAME-0 DECODE LATENCY</span>
-                  <span class="hud-val">0.2 ms</span>
+                  <span class="hud-val" style="color:#06b6d4">0.18 ms DIRECT RAM</span>
                 </div>
                 <div class="hud-item">
                   <span class="hud-key">RAM LRU ALLOCATION</span>
-                  <span class="hud-val">128 MB POOL</span>
+                  <span class="hud-val">128 MB DEDICATED POOL</span>
                 </div>
                 <div class="hud-item">
-                  <span class="hud-key">DISK LOOKUP THROUGHPUT</span>
-                  <span class="hud-val">120 MB/s DIRECT</span>
+                  <span class="hud-key">VOICE WAVEFORM SAMPLING</span>
+                  <span class="hud-val">48 kHz ZERO-BUFFER OPUS</span>
                 </div>
+              </div>
+              <div class="chapter-quick-action">
+                <span class="action-hint">💡 Play the live audio note waveform on the phone stage →</span>
               </div>
             </div>
 
-            <!-- Chapter 2 -->
-            <div class="chapter-step" id="chapter-1">
-              <div class="chapter-num">CHAPTER 02 // PRIVACY FORTRESS</div>
+            <!-- Chapter 2: Hardware View-Once Privacy Fortress -->
+            <div class="chapter-step" id="chapter-2">
+              <div class="chapter-num">CHAPTER 03 // PRIVACY FORTRESS</div>
               <h2 class="chapter-title">Hardware View-Once Protection</h2>
               <p class="chapter-desc">
-                Military-grade ephemeral delivery. When a View-Once image is opened, Android's hardware <code style="color:#e879f9">FLAG_SECURE</code> blocks screenshots, screen recording, and casting. Once closed, cached bytes are permanently purged.
+                Military-grade ephemeral delivery. When a View-Once image is opened, Android's native hardware <code style="color:#e879f9">FLAG_SECURE</code> strictly blocks screenshots, screen recording, and external casting. Once closed, raw cached bytes are permanently purged.
               </p>
               <div class="hud-telemetry-box">
                 <div class="hud-item">
-                  <span class="hud-key">HARDWARE SCREENSHOT DEFENSE</span>
+                  <span class="hud-key">HARDWARE SCREEN DEFENSE</span>
                   <span class="hud-val" style="color:#d946ef">FLAG_SECURE ACTIVE</span>
                 </div>
                 <div class="hud-item">
                   <span class="hud-key">STORAGE FOOTPRINT POST-OPEN</span>
-                  <span class="hud-val" style="color:#10b981">0 BYTES (PURGED)</span>
+                  <span class="hud-val" style="color:#10b981">0 BYTES (SECURE SHRED)</span>
                 </div>
                 <div class="hud-item">
                   <span class="hud-key">REAL-TIME WEBSOCKET ACK</span>
                   <span class="hud-val">&lt; 18 ms SYNCHRONIZED</span>
                 </div>
               </div>
+              <div class="chapter-quick-action">
+                <span class="action-hint">💡 Tap "View &amp; Self-Destruct" to witness instant byte shredding →</span>
+              </div>
             </div>
 
-            <!-- Chapter 3 -->
-            <div class="chapter-step" id="chapter-2">
-              <div class="chapter-num">CHAPTER 03 // TACTILE PHYSICS</div>
+            <!-- Chapter 3: 120 FPS Gesture Mechanics -->
+            <div class="chapter-step" id="chapter-3">
+              <div class="chapter-num">CHAPTER 04 // TACTILE PHYSICS</div>
               <h2 class="chapter-title">120 FPS Gesture Mechanics</h2>
               <p class="chapter-desc">
-                Engineered with Spring Physics and tactile haptic feedback. Flick right to instantly reply with a quote context. Double-tap any message to pop a ❤️ heart reaction without navigating sluggish menus.
+                Engineered with Spring Physics and tactile haptic feedback. Flick right to instantly reply with a quote context. Double-tap any message to pop an animated burst of ❤️ heart reactions without navigating sluggish menus.
               </p>
               <div class="hud-telemetry-box">
                 <div class="hud-item">
                   <span class="hud-key">GESTURE ENGINE RESPONSE</span>
-                  <span class="hud-val">120 FPS NATIVE</span>
+                  <span class="hud-val">120 FPS NATIVE SKIA</span>
                 </div>
                 <div class="hud-item">
                   <span class="hud-key">HAPTIC BUMP LATENCY</span>
@@ -234,11 +295,14 @@
                   <span class="hud-val">0.78 (CRITICAL BOUNCE)</span>
                 </div>
               </div>
+              <div class="chapter-quick-action">
+                <span class="action-hint">💡 Swipe the message or double-tap for hearts on the phone stage →</span>
+              </div>
             </div>
 
-            <!-- Chapter 4 -->
-            <div class="chapter-step" id="chapter-3">
-              <div class="chapter-num">CHAPTER 04 // PROCEDURAL ART</div>
+            <!-- Chapter 4: 5 Cyber GPU Gradient Shaders -->
+            <div class="chapter-step" id="chapter-4">
+              <div class="chapter-num">CHAPTER 05 // PROCEDURAL ART</div>
               <h2 class="chapter-title">5 Cyber GPU Gradient Shaders</h2>
               <p class="chapter-desc">
                 Zero bloated PNG or JPEG assets. Gorgeous procedural GPU wallpapers calculated dynamically in Skia hardware per chat room: Obsidian, Electric Violet, Cyber Nebula, Emerald Matrix, and Crimson Eclipse.
@@ -257,77 +321,240 @@
                   <span class="hud-val">PER-CONVERSATION SQLITE</span>
                 </div>
               </div>
+              <div class="chapter-quick-action">
+                <span class="action-hint">💡 Tap any shader swatch on the phone stage to transform themes live →</span>
+              </div>
             </div>
           </div>
 
-          <!-- Right: The Interactive 3D Storyboard Phone Stage -->
+          <!-- Right: The Titanium Cyber Phone Stage -->
           <div class="storyboard-phone-stage">
             <div class="sb-phone-mockup" id="storyboard-phone">
-              <div class="phone-notch"></div>
+              <!-- Dynamic Island Notch -->
+              <div class="phone-notch">
+                <span id="sb-dynamic-notch" class="notch-dynamic-pill">📡 MESH ARMED</span>
+              </div>
+              
               <div class="phone-header">
                 <div class="phone-avatar">GG</div>
-                <div>
+                <div style="flex:1">
                   <div class="phone-user-name">Gaurav Gautam</div>
                   <div class="phone-user-status" id="sb-phone-status">● Live Demo • 120 FPS</div>
+                </div>
+                <div class="phone-header-icons">
+                  <span title="Encrypted Connection">🔒</span>
+                  <span title="Mesh Mode">📡</span>
                 </div>
               </div>
 
               <div class="sb-phone-screen" id="sb-screen">
-                <!-- Chapter 1 Screen: Media Scanner with Laser -->
-                <div class="screen-chapter-1" id="screen-step-0">
-                  <div class="chat-bubble-mine" style="align-self:flex-start">
-                    Sending raw 4K shot with instant decode 📸
+                
+                <!-- Screen 0: Offline Mesh Grid & Interactive Radar Simulator -->
+                <div class="screen-chapter screen-chapter-0" id="screen-step-0">
+                  <div class="sb-screen-banner banner-mesh">
+                    <span class="sb-pulse-dot-green"></span>
+                    <span>OFFLINE P2P MESH // 0 CELLULAR REQUIRED</span>
                   </div>
+
+                  <!-- Animated Holographic Radar -->
+                  <div class="sb-radar-box">
+                    <div class="sb-radar-sweep"></div>
+                    <div class="sb-radar-ring ring-1"></div>
+                    <div class="sb-radar-ring ring-2"></div>
+                    <div class="sb-radar-ring ring-3"></div>
+                    
+                    <!-- Nodes Map -->
+                    <div class="sb-radar-node node-origin" title="You (Origin)">
+                      <span class="node-dot"></span>
+                      <small>You</small>
+                    </div>
+                    <div class="sb-radar-node node-relay" id="sb-radar-relay-node" title="Hop 1: Blind Relay">
+                      <span class="node-dot"></span>
+                      <small>Hop 1</small>
+                    </div>
+                    <div class="sb-radar-node node-dest" id="sb-radar-dest-node" title="Gaurav (Target)">
+                      <span class="node-dot"></span>
+                      <small>Gaurav</small>
+                    </div>
+
+                    <!-- Traveling Packet Indicator -->
+                    <div class="sb-radar-packet" id="sb-radar-packet"></div>
+                  </div>
+
+                  <!-- Hop Route Telemetry Bar -->
+                  <div class="sb-hop-route-bar">
+                    <div class="hop-chip">SRC: You</div>
+                    <div class="hop-arrow">➔</div>
+                    <div class="hop-chip relay">Relay: Node 2</div>
+                    <div class="hop-arrow">➔</div>
+                    <div class="hop-chip dest">DEST: Gaurav</div>
+                  </div>
+
+                  <!-- Chat Bubble Sent Over Mesh -->
+                  <div class="chat-bubble-mine" style="margin-top:auto">
+                    Sending raw intel over 2-hop offline mesh... 📡
+                    <div style="font-size:9.5px; color:#34d399; margin-top:3px; display:flex; justify-content:space-between">
+                      <span>✓✓ ECDH Sealed</span>
+                      <span>RSSI -44 dBm</span>
+                    </div>
+                  </div>
+
+                  <!-- Ping Mesh Relay Button -->
+                  <button type="button" class="sb-action-btn" id="sb-ping-mesh-btn">
+                    <span>⚡ Ping Mesh Relay (Send Packet)</span>
+                  </button>
+                  <div class="sb-action-feedback" id="sb-mesh-feedback"></div>
+                </div>
+
+                <!-- Screen 1: Instant Media & Audio Waveform Engine -->
+                <div class="screen-chapter screen-chapter-1" id="screen-step-1" style="display:none">
+                  <div class="sb-screen-banner banner-media">
+                    <span class="sb-pulse-dot-cyan"></span>
+                    <span>0ms DIRECT RAM DECODE // 128MB LRU</span>
+                  </div>
+
+                  <div class="chat-bubble-peer" style="align-self:flex-start">
+                    Hey KG, send 4K shot + voice note! 📸
+                  </div>
+
+                  <!-- 4K High-Res Instant Card -->
                   <div class="media-scanner-card">
                     <div class="scanline"></div>
-                    <div style="text-align:center">
-                      <span style="font-size:48px; display:block; margin-bottom:8px">🏎️</span>
-                      <strong style="font-size:13px; color:white">Speed_Engine_4K.raw</strong>
+                    <div class="media-preview-content">
+                      <div class="media-icon-badge">⚡ 4K DIRECT</div>
+                      <div class="media-meta-title">Cyber_Engine_Raw.dng</div>
+                      <div class="media-meta-specs">3840×2160 • 48 MB • 0.18ms Decode</div>
                     </div>
-                    <div class="media-speed-pill">⚡ 0ms DECODE</div>
+                    <div class="media-speed-pill">⚡ 0ms FROM RAM</div>
                   </div>
-                  <div class="chat-bubble-peer" style="margin-top:14px">
-                    Bhai bina delay ke dikh rhi h! Zero buffering! 🔥
+
+                  <!-- Live Interactive Audio Note Card -->
+                  <div class="sb-audio-player-card" id="sb-audio-card">
+                    <button type="button" class="audio-play-btn" id="sb-audio-play-btn">▶</button>
+                    <div class="audio-track-info">
+                      <div class="audio-track-header">
+                        <strong>Voice Note (KG)</strong>
+                        <span>0:14 / 0:38</span>
+                      </div>
+                      <!-- 14 dancing equalizer bars -->
+                      <div class="audio-waveform-bars" id="sb-waveform-bars">
+                        <span></span><span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="chat-bubble-mine" style="margin-top:auto">
+                    Bhai 0ms decode hai! No spinners, pure Skia! ⚡
                   </div>
                 </div>
 
-                <!-- Chapter 2 Screen: View Once Shield & Auto Purge -->
-                <div class="screen-chapter-2" id="screen-step-1">
-                  <div class="vo-shield-circle">🛡️</div>
-                  <div class="vo-security-badge">HARDWARE FLAG_SECURE ACTIVE</div>
-                  <h4 style="font-size:16px; margin-bottom:6px">Screenshot Blocked</h4>
-                  <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin-bottom:16px">
-                    Media self-destructs upon closing. Cached bytes will auto-purge from disk.
-                  </p>
-                  <div style="background:rgba(0,0,0,0.5); padding:8px 14px; border-radius:10px; border:1px solid #10b981; font-family:var(--font-mono); font-size:11px; color:#10b981">
-                    STATUS: PURGED (0 BYTES LEFT)
+                <!-- Screen 2: Hardware View-Once Shield & Ephemeral Shredder -->
+                <div class="screen-chapter screen-chapter-2" id="screen-step-2" style="display:none">
+                  <div class="sb-screen-banner banner-secure">
+                    <span class="sb-pulse-dot-purple"></span>
+                    <span>HARDWARE FLAG_SECURE ENFORCED</span>
+                  </div>
+
+                  <div class="vo-shield-container">
+                    <div class="vo-shield-circle">🛡️</div>
+                    <div class="vo-security-badge">HARDWARE FLAG_SECURE ACTIVE</div>
+                    <h4 style="font-size:15px; margin-bottom:4px; font-weight:800">Screenshots Blocked</h4>
+                    <p style="font-size:11.5px; color:#94a3b8; line-height:1.45; margin-bottom:12px">
+                      Protected by Android Display Manager. Closing or switching apps will permanently shred raw memory bytes.
+                    </p>
+
+                    <!-- Interactive Confidential File Box -->
+                    <div class="vo-locked-vault" id="sb-vo-vault">
+                      <div class="vault-grid-fx"></div>
+                      <div class="vault-content" id="sb-vault-content">
+                        <span style="font-size:32px">🔒</span>
+                        <strong style="font-size:12px; color:white; display:block">CONFIDENTIAL_PASSPHRASE.raw</strong>
+                        <span class="vault-timer-pill" id="sb-vault-timer">⏱️ 00:05s EPHEMERAL</span>
+                      </div>
+                    </div>
+
+                    <button type="button" class="sb-action-btn btn-vo-trigger" id="sb-vo-shred-btn">
+                      <span>Tap to View &amp; Shred 💥</span>
+                    </button>
+                    <div class="sb-action-feedback" id="sb-vo-feedback"></div>
                   </div>
                 </div>
 
-                <!-- Chapter 3 Screen: Swipe to Reply & Heart React -->
-                <div class="screen-chapter-3" id="screen-step-2">
+                <!-- Screen 3: 120 FPS Gesture Mechanics & Spring Physics -->
+                <div class="screen-chapter screen-chapter-3" id="screen-step-3" style="display:none">
+                  <div class="sb-screen-banner banner-gestures">
+                    <span class="sb-pulse-dot-cyan"></span>
+                    <span>120 FPS NATIVE SKIA SPRING PHYSICS</span>
+                  </div>
+
                   <div class="chat-bubble-mine">
                     KYNX gesture physics kaisa lga?
                   </div>
-                  <div class="sb-swipe-target" id="sb-swipe-target">
-                    Swipe me right to reply or double-tap for ❤️
+
+                  <!-- Interactive Swipe Target -->
+                  <div class="sb-swipe-target" id="sb-swipe-target" title="Click or Swipe right to reply, double click for ❤️">
+                    <div class="swipe-hint-pill">👉 Flick right to quote reply</div>
+                    <span>Double-tap this bubble for ❤️ react!</span>
                     <div class="sb-heart-burst" id="sb-heart-burst">
-                      <span>❤️</span> <strong style="color:#a78bfa">1</strong>
+                      <span>❤️</span> <strong style="color:#a78bfa" id="sb-heart-count">1</strong>
                     </div>
                   </div>
+
+                  <!-- Reply Context Banner -->
                   <div class="sb-reply-banner" id="sb-reply-banner">
                     <strong style="color:#8b5cf6">Replying to Gaurav Gautam:</strong>
-                    <div style="color:#94a3b8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Swipe me right to reply...</div>
+                    <div style="color:#94a3b8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Double-tap this bubble for ❤️ react!</div>
+                  </div>
+
+                  <div class="chat-bubble-peer" style="margin-top:auto">
+                    Smooth 120Hz physics! Zero jank! 🔥
+                  </div>
+
+                  <button type="button" class="sb-action-btn" id="sb-trigger-swipe-btn">
+                    <span>Simulate Swipe-to-Reply (120Hz)</span>
+                  </button>
+                </div>
+
+                <!-- Screen 4: 5 Procedural GPU Shader Wallpapers -->
+                <div class="screen-chapter screen-chapter-4" id="screen-step-4" style="display:none">
+                  <div class="sb-screen-banner banner-shaders">
+                    <span class="sb-pulse-dot-green"></span>
+                    <span>PROCEDURAL GPU SHADER // 0.00 KB BLOAT</span>
+                  </div>
+
+                  <div class="chat-bubble-mine" style="margin-top:20px">
+                    Procedural Skia GL shader rendering in hardware! 🎨
+                  </div>
+
+                  <div class="chat-bubble-peer">
+                    Zero PNG bloat, dynamic mathematical gradients! 🔥
+                  </div>
+
+                  <!-- Interactive In-Phone Shader Theme Switcher -->
+                  <div class="sb-shader-picker-card">
+                    <div class="shader-picker-header">
+                      <span>ACTIVE GPU SHADER:</span>
+                      <strong id="active-shader-label" style="color:var(--accent-purple-light)">Obsidian Velvet (#08090E)</strong>
+                    </div>
+                    <div class="sb-shader-dots">
+                      <button type="button" class="sb-shader-dot active" data-shader="0" title="Obsidian Velvet" style="background:#08090e"></button>
+                      <button type="button" class="sb-shader-dot" data-shader="1" title="Electric Violet" style="background:#0e0720"></button>
+                      <button type="button" class="sb-shader-dot" data-shader="2" title="Cyber Nebula" style="background:#040e1e"></button>
+                      <button type="button" class="sb-shader-dot" data-shader="3" title="Emerald Matrix" style="background:#04140d"></button>
+                      <button type="button" class="sb-shader-dot" data-shader="4" title="Crimson Eclipse" style="background:#160510"></button>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Chapter 4 Screen: GPU Shader Wallpapers -->
-                <div class="screen-chapter-4" id="screen-step-3">
-                  <div class="wallpaper-indicator-box">
-                    <span style="font-size:11px; font-family:var(--font-mono); color:var(--accent-purple-light); display:block; margin-bottom:4px">ACTIVE GPU SHADER</span>
-                    <strong id="active-shader-label" style="font-size:15px; color:white">Obsidian Velvet</strong>
-                  </div>
-                </div>
+              </div>
+
+              <!-- Phone Screen Bottom Chat Input Mockup -->
+              <div class="sb-phone-bottom-input">
+                <span class="input-icon">📎</span>
+                <span class="input-placeholder">Encrypted chat stream...</span>
+                <span class="input-send">⚡</span>
               </div>
             </div>
           </div>

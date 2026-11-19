@@ -122,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sbPhone = document.getElementById('storyboard-phone');
   const sbScreen = document.getElementById('sb-screen');
   const sbStatus = document.getElementById('sb-phone-status');
+  const sbDynamicNotch = document.getElementById('sb-dynamic-notch');
   const sbPills = document.querySelectorAll('.sb-pill');
   const chapterSteps = document.querySelectorAll('.chapter-step');
 
@@ -130,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('screen-step-1'),
     document.getElementById('screen-step-2'),
     document.getElementById('screen-step-3'),
+    document.getElementById('screen-step-4'),
   ];
 
   const shaderNames = [
@@ -151,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentActiveStep = 0;
 
   function setStoryboardStep(stepIndex) {
-    if (stepIndex === currentActiveStep) return;
+    if (stepIndex === currentActiveStep && screenSteps[stepIndex] && screenSteps[stepIndex].style.display === 'flex') return;
     currentActiveStep = stepIndex;
     playClickSound();
 
@@ -168,40 +170,140 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Update Phone Screen
     screenSteps.forEach((scr, idx) => {
       if (scr) {
-        scr.style.display = (idx === stepIndex) ? (idx === 1 ? 'flex' : (idx === 2 ? 'flex' : 'flex')) : 'none';
+        scr.style.display = (idx === stepIndex) ? 'flex' : 'none';
       }
     });
 
-    // 4. Update 3D Phone Perspective & Status
+    // 4. Update 3D Phone Perspective, Status & Dynamic Notch
     if (sbPhone) {
       if (stepIndex === 0) {
-        sbPhone.style.transform = 'perspective(1200px) rotateY(-5deg) rotateX(4deg)';
-        if (sbStatus) sbStatus.textContent = '● Live Demo • 120 FPS';
+        sbPhone.style.transform = 'perspective(1200px) rotateY(-6deg) rotateX(4deg)';
+        if (sbStatus) sbStatus.textContent = '● Offline Mesh • 0 Internet';
+        if (sbDynamicNotch) sbDynamicNotch.textContent = '📡 MESH ARMED';
       } else if (stepIndex === 1) {
         sbPhone.style.transform = 'perspective(1200px) rotateY(6deg) rotateX(3deg)';
-        if (sbStatus) sbStatus.textContent = '● Protected • FLAG_SECURE';
-        playPurgeSound();
+        if (sbStatus) sbStatus.textContent = '● Instant Media • 120 FPS';
+        if (sbDynamicNotch) sbDynamicNotch.textContent = '⚡ DECODE: 0.18ms';
       } else if (stepIndex === 2) {
-        sbPhone.style.transform = 'perspective(1200px) rotateY(-3deg) rotateX(-2deg)';
-        if (sbStatus) sbStatus.textContent = '● Physics Engine • 120Hz';
-        // Auto trigger swipe in demo
-        triggerSbSwipe();
+        sbPhone.style.transform = 'perspective(1200px) rotateY(-4deg) rotateX(-2deg)';
+        if (sbStatus) sbStatus.textContent = '● Protected • FLAG_SECURE';
+        if (sbDynamicNotch) sbDynamicNotch.textContent = '🛡️ FLAG_SECURE';
+        playPurgeSound();
       } else if (stepIndex === 3) {
-        sbPhone.style.transform = 'perspective(1200px) rotateY(0deg) rotateX(0deg) scale(1.03)';
-        if (sbStatus) sbStatus.textContent = '● Skia GPU • 5 Shaders';
+        sbPhone.style.transform = 'perspective(1200px) rotateY(4deg) rotateX(2deg)';
+        if (sbStatus) sbStatus.textContent = '● Physics Engine • 120Hz';
+        if (sbDynamicNotch) sbDynamicNotch.textContent = '👆 GESTURE: 120 FPS';
+      } else if (stepIndex === 4) {
+        sbPhone.style.transform = 'perspective(1200px) rotateY(0deg) rotateX(0deg) scale(1.02)';
+        if (sbStatus) sbStatus.textContent = '● Skia GL • 5 Shaders';
+        if (sbDynamicNotch) sbDynamicNotch.textContent = '🎨 SKIA GL: SHADER';
       }
     }
   }
 
-  // Interactive Storyboard Swipe in Chapter 3
+  // Chapter 0: Interactive Mesh Ping
+  const btnPingMesh = document.getElementById('sb-ping-mesh-btn');
+  const radarPacket = document.getElementById('sb-radar-packet');
+  const meshFeedback = document.getElementById('sb-mesh-feedback');
+
+  if (btnPingMesh && radarPacket) {
+    btnPingMesh.addEventListener('click', () => {
+      playScanSound();
+      radarPacket.style.display = 'block';
+      radarPacket.style.transition = 'none';
+      radarPacket.style.top = '55px';
+      radarPacket.style.left = '20px';
+      radarPacket.style.opacity = '1';
+
+      if (meshFeedback) meshFeedback.textContent = '[1/2] Packet hopping to Node 2 (Blind Relay)...';
+
+      setTimeout(() => {
+        radarPacket.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+        radarPacket.style.top = '25px';
+        radarPacket.style.left = '125px';
+      }, 50);
+
+      setTimeout(() => {
+        if (meshFeedback) meshFeedback.textContent = '[2/2] Hop 2: Arrived at Gaurav! Decrypting with PubKey...';
+        radarPacket.style.top = '65px';
+        radarPacket.style.left = '235px';
+      }, 500);
+
+      setTimeout(() => {
+        if (meshFeedback) meshFeedback.textContent = '✓ Delivered! (2 Hops | RSSI -44 dBm | 0 Cellular Needed)';
+        playHeartSound();
+      }, 950);
+    });
+  }
+
+  // Chapter 1: Interactive Audio Player Simulation
+  const btnAudioPlay = document.getElementById('sb-audio-play-btn');
+  const waveformBars = document.getElementById('sb-waveform-bars');
+  let isAudioPlaying = false;
+
+  if (btnAudioPlay && waveformBars) {
+    btnAudioPlay.addEventListener('click', () => {
+      isAudioPlaying = !isAudioPlaying;
+      playClickSound();
+      if (isAudioPlaying) {
+        btnAudioPlay.textContent = '⏸';
+        waveformBars.classList.add('playing');
+      } else {
+        btnAudioPlay.textContent = '▶';
+        waveformBars.classList.remove('playing');
+      }
+    });
+  }
+
+  // Chapter 2: Interactive View-Once Shred Simulation
+  const btnVoShred = document.getElementById('sb-vo-shred-btn');
+  const vaultContent = document.getElementById('sb-vault-content');
+  const vaultTimer = document.getElementById('sb-vault-timer');
+  const voFeedback = document.getElementById('sb-vo-feedback');
+  let voCountdownInterval = null;
+
+  if (btnVoShred && vaultContent) {
+    btnVoShred.addEventListener('click', () => {
+      playClickSound();
+      btnVoShred.disabled = true;
+      let seconds = 3;
+      if (voCountdownInterval) clearInterval(voCountdownInterval);
+
+      if (voFeedback) voFeedback.textContent = '⚠️ Memory shred sequence initialized...';
+      if (vaultTimer) vaultTimer.textContent = `⏱️ 00:0${seconds}s AUTO-PURGE`;
+
+      voCountdownInterval = setInterval(() => {
+        seconds--;
+        if (seconds > 0) {
+          if (vaultTimer) vaultTimer.textContent = `⏱️ 00:0${seconds}s AUTO-PURGE`;
+        } else {
+          clearInterval(voCountdownInterval);
+          playPurgeSound();
+          vaultContent.innerHTML = `
+            <span style="font-size:30px">🗑️</span>
+            <strong style="font-size:12px; color:#10b981; display:block">MEMORY PURGED DIRECTLY</strong>
+            <span style="font-size:10px; color:#94a3b8; font-family:var(--font-mono)">0 Bytes remaining on disk</span>
+          `;
+          if (voFeedback) voFeedback.textContent = '✓ Raw cached bytes permanently shredded from RAM & Storage.';
+          btnVoShred.innerHTML = '<span>Purge Complete ✓</span>';
+        }
+      }, 700);
+    });
+  }
+
+  // Chapter 3: Interactive Storyboard Swipe & Reactions
   const sbSwipeTarget = document.getElementById('sb-swipe-target');
   const sbReplyBanner = document.getElementById('sb-reply-banner');
   const sbHeartBurst = document.getElementById('sb-heart-burst');
+  const sbHeartCount = document.getElementById('sb-heart-count');
+  const sbTriggerSwipeBtn = document.getElementById('sb-trigger-swipe-btn');
+  let heartCount = 1;
 
   function triggerSbSwipe() {
     if (!sbSwipeTarget) return;
+    playClickSound();
     sbSwipeTarget.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
-    sbSwipeTarget.style.transform = 'translateX(50px)';
+    sbSwipeTarget.style.transform = 'translateX(55px)';
 
     setTimeout(() => {
       sbSwipeTarget.style.transform = 'translateX(0px)';
@@ -212,47 +314,84 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (sbSwipeTarget) {
-    sbSwipeTarget.addEventListener('click', triggerSbSwipe);
+    let lastTap = 0;
+    sbSwipeTarget.addEventListener('click', () => {
+      const now = Date.now();
+      if (now - lastTap < 350) {
+        // Double tap for heart
+        playHeartSound();
+        heartCount++;
+        if (sbHeartCount) sbHeartCount.textContent = heartCount;
+        if (sbHeartBurst) sbHeartBurst.style.display = 'inline-flex';
+      } else {
+        triggerSbSwipe();
+      }
+      lastTap = now;
+    });
   }
+
+  if (sbTriggerSwipeBtn) {
+    sbTriggerSwipeBtn.addEventListener('click', triggerSbSwipe);
+  }
+
+  // Chapter 4: In-Phone Shader Picker Dots
+  const shaderDots = document.querySelectorAll('.sb-shader-dot');
+  const activeShaderLabel = document.getElementById('active-shader-label');
+
+  shaderDots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      playClickSound();
+      const sIdx = parseInt(dot.getAttribute('data-shader') || '0', 10);
+      shaderDots.forEach((d, idx) => d.classList.toggle('active', idx === sIdx));
+      if (sbScreen && shaderGradients[sIdx]) {
+        sbScreen.style.background = shaderGradients[sIdx];
+      }
+      if (activeShaderLabel && shaderNames[sIdx]) {
+        activeShaderLabel.textContent = shaderNames[sIdx];
+      }
+    });
+  });
 
   // GSAP ScrollTrigger for Pinned Storyboard
   if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && storyboardSection) {
     ScrollTrigger.create({
       trigger: storyboardSection,
       start: 'top top',
-      end: '+=2400',
+      end: '+=3000',
       pin: true,
       scrub: 0.5,
       onUpdate: (self) => {
         const progress = self.progress;
         let step = 0;
-        if (progress < 0.25) step = 0;
-        else if (progress < 0.5) step = 1;
-        else if (progress < 0.75) step = 2;
-        else step = 3;
+        if (progress < 0.20) step = 0;
+        else if (progress < 0.40) step = 1;
+        else if (progress < 0.60) step = 2;
+        else if (progress < 0.80) step = 3;
+        else step = 4;
 
         setStoryboardStep(step);
 
-        // Dynamically rotate phone and shift GPU shaders during step 4
-        if (step === 3 && sbScreen) {
-          const subProgress = (progress - 0.75) / 0.25;
+        // Dynamically shift GPU shaders during step 4
+        if (step === 4 && sbScreen) {
+          const subProgress = Math.max(0, Math.min(1, (progress - 0.80) / 0.20));
           const shaderIdx = Math.min(Math.floor(subProgress * shaderGradients.length), shaderGradients.length - 1);
           sbScreen.style.background = shaderGradients[shaderIdx];
-          const label = document.getElementById('active-shader-label');
-          if (label) label.textContent = shaderNames[shaderIdx];
+          if (activeShaderLabel) activeShaderLabel.textContent = shaderNames[shaderIdx];
+          shaderDots.forEach((d, idx) => d.classList.toggle('active', idx === shaderIdx));
         }
       }
     });
 
-    // Pill click smooth scrolling
+    // Pill click smooth scrolling & direct step activation
     sbPills.forEach((pill) => {
       pill.addEventListener('click', () => {
         const targetStep = parseInt(pill.getAttribute('data-step') || '0', 10);
+        setStoryboardStep(targetStep);
         if (lenis) {
           const st = ScrollTrigger.getById('storyboard') || ScrollTrigger.getAll().find(s => s.trigger === storyboardSection);
           if (st) {
-            const targetScroll = st.start + (targetStep / 3) * (st.end - st.start);
-            lenis.scrollTo(targetScroll, { duration: 1.2 });
+            const targetScroll = st.start + (targetStep / 4) * (st.end - st.start);
+            lenis.scrollTo(targetScroll, { duration: 1.0 });
           }
         }
       });
