@@ -218,10 +218,10 @@
                 const isPacketHere = packetPosition === idx;
                 const isSelected = selectedNode === idx;
                 let nodeStatusClass = '';
-                if (node.isOrigin) nodeStatusClass = 'node-origin';
-                else if (node.isTarget) nodeStatusClass = 'node-target';
-                else if (node.isBypass) nodeStatusClass = 'node-bypass';
-                else nodeStatusClass = 'node-relay';
+                if (node.isOrigin) nodeStatusClass = 'hub-node-origin';
+                else if (node.isTarget) nodeStatusClass = 'hub-node-target';
+                else if (node.isBypass) nodeStatusClass = 'hub-node-bypass';
+                else nodeStatusClass = 'hub-node-relay';
 
                 return h('div', {
                   key: node.id,
