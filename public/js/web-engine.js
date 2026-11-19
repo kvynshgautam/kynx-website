@@ -113,6 +113,7 @@
     profileEditNameInput: document.getElementById('profile-edit-name-input'),
     profileEditBioInput: document.getElementById('profile-edit-bio-input'),
     btnSaveSelfProfile: document.getElementById('btn-save-self-profile'),
+    btnSelfProfileLogout: document.getElementById('btn-self-profile-logout'),
     profilePeerActions: document.getElementById('profile-peer-actions'),
     btnProfileMessage: document.getElementById('btn-profile-message'),
     btnProfileVoiceCall: document.getElementById('btn-profile-voice-call'),
@@ -607,8 +608,13 @@
       el.btnRefreshPair.addEventListener('click', startPairingFlow);
     }
 
-    // Logout
-    el.btnLogout.addEventListener('click', logout);
+    // Logout (Sidebar Header & Profile Modal)
+    if (el.btnLogout) {
+      el.btnLogout.addEventListener('click', () => logout(true));
+    }
+    if (el.btnSelfProfileLogout) {
+      el.btnSelfProfileLogout.addEventListener('click', () => logout(true));
+    }
 
     // Notification permission & test chime toggle
     if (el.btnToggleNotif) {
@@ -1318,16 +1324,71 @@
     }
   }
 
-  function logout() {
-    localStorage.removeItem('kynx_web_token');
-    localStorage.removeItem('kynx_web_user');
+  async function logout(promptConfirm = true) {
+    if (promptConfirm && !confirm('Disconnect and log out from KYNX Web Deck?')) {
+      return;
+    }
+
+    const currentToken = AppState.token;
+    const currentWs = AppState.ws;
+
+    // 1. Notify Backend via WS & REST
+    if (currentWs && currentWs.readyState === WebSocket.OPEN) {
+      try {
+        currentWs.send(JSON.stringify({ type: 'web_deck_logout', ts: Date.now() }));
+      } catch (_) {}
+    }
+    if (currentToken) {
+      try {
+        fetch(`${BACKEND_URL}/api/auth/pair/logout`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${currentToken}` }
+        }).catch(() => {});
+      } catch (_) {}
+    }
+
+    // 2. Clear all local storage & session state
+    try {
+      localStorage.removeItem('kynx_web_token');
+      localStorage.removeItem('kynx_web_user');
+      sessionStorage.clear();
+    } catch (_) {}
+
+    // 3. Reset AppState
     AppState.token = null;
     AppState.user = null;
-    if (AppState.ws) {
-      AppState.ws.close();
-      AppState.ws = null;
+    AppState.conversations = [];
+    AppState.activeConversation = null;
+
+    // 4. Clear all polling timers & call state
+    if (conversationsPollTimer) { clearInterval(conversationsPollTimer); conversationsPollTimer = null; }
+    if (activeSyncTimer) { clearInterval(activeSyncTimer); activeSyncTimer = null; }
+    stopWsHeartbeat();
+    if (typeof CallManager !== 'undefined' && CallManager && typeof CallManager.reset === 'function') {
+      CallManager.reset();
     }
-    location.reload();
+
+    // 5. Close WebSocket gracefully
+    if (currentWs) {
+      try {
+        currentWs.close(1000, 'User Logout');
+      } catch (_) {}
+      AppState.ws = null;
+      AppState.wsConnected = false;
+    }
+
+    // 6. Reset UI seamlessly without harsh crash
+    if (el.profileModal) el.profileModal.style.display = 'none';
+    if (el.webApp) {
+      el.webApp.classList.remove('mobile-chat-open');
+    }
+    if (el.activeChatView) el.activeChatView.style.display = 'none';
+    if (el.emptyState) el.emptyState.style.display = 'flex';
+    if (el.conversationsList) el.conversationsList.innerHTML = '';
+
+    showAuth();
+    showHeadsUpCard('Session Disconnected', 'Logged out from KYNX Web Deck.');
+    startPairingFlow();
   }
 
   // ==========================================================================
@@ -1551,6 +1612,9 @@
       if (AppState.activeTab === 'contacts') {
         loadAndRenderContacts();
       }
+    } else if (msg.type === 'web_deck_terminated') {
+      showHeadsUpCard('Session Terminated', 'Disconnected from KYNX Mobile App.');
+      logout(false);
     }
   }
 

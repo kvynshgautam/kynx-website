@@ -1,11 +1,11 @@
 {
-  "version_code": 62,
-  "version_name": "0.9.52",
-  "description": "KYNX v0.9.52 (Build 62) Deep Parity & Mesh Route-Pruning Patch: Instant disconnected peer route-pruning (removeRoutesViaEndpoint); full Web Deck parity with Contact Profile Modal, Unfriend removal & Block/Unblock; zero deprecation warnings; locked 120 FPS.",
+  "version_code": 63,
+  "version_name": "0.9.53",
+  "description": "KYNX v0.9.53 (Build 63) Web Deck Real-Time Session Sync Patch: Instant bidirectional Web Deck logout & disconnect sync; live unlinked state update on Android app; direct disconnect in Web Deck Profile modal; zero bloat, locked 120 FPS.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "d8e83389271982274c15d41b334032a1c913e5c6c1e017ae5fab0974c23fa3ef",
+  "sha256_checksum": "2ef7bb58aaee8b837f50d1b0d0be7f9030e843fd8a55684bfbc7c2bb3d57f7f5",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-19T08:32:00+00:00",
-  "file_size_bytes": 65477930
+  "published_at": "2026-11-19T09:00:00+00:00",
+  "file_size_bytes": 65477934
 }

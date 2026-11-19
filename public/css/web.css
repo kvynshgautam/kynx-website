@@ -398,6 +398,7 @@ body {
 .header-action-group {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 .header-icon-btn {
   width: 34px;
@@ -411,6 +412,7 @@ body {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 .header-icon-btn:hover {
   background: var(--bg-card-hover);
