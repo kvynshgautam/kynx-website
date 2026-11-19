@@ -666,4 +666,69 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // ==========================================
+  // 12. Cyber Video Player Controller for Mesh Guide
+  // ==========================================
+  const meshVideo = document.getElementById('mesh-guide-video');
+  const btnToggleVideo = document.getElementById('btn-toggle-mesh-video');
+  const videoProgress = document.getElementById('mesh-video-progress');
+  const videoScrub = document.getElementById('mesh-video-scrub');
+  const videoTimecode = document.getElementById('mesh-video-timecode');
+  const videoChapters = document.querySelectorAll('.video-chap-pill');
+
+  if (meshVideo) {
+    if (btnToggleVideo) {
+      btnToggleVideo.addEventListener('click', () => {
+        playClickSound();
+        if (meshVideo.paused) {
+          meshVideo.play();
+          btnToggleVideo.textContent = '⏸';
+        } else {
+          meshVideo.pause();
+          btnToggleVideo.textContent = '▶';
+        }
+      });
+    }
+
+    meshVideo.addEventListener('timeupdate', () => {
+      const cur = meshVideo.currentTime;
+      const dur = meshVideo.duration || 14;
+      const pct = (cur / dur) * 100;
+      if (videoProgress) videoProgress.style.width = `${pct}%`;
+
+      if (videoTimecode) {
+        const curSec = Math.floor(cur);
+        const durSec = Math.floor(dur);
+        videoTimecode.textContent = `00:${curSec < 10 ? '0' : ''}${curSec} / 00:${durSec < 10 ? '0' : ''}${durSec}`;
+      }
+
+      // Update active chapter pill based on playback time
+      videoChapters.forEach(pill => {
+        const seekTime = parseFloat(pill.getAttribute('data-seek') || '0');
+        pill.classList.toggle('active', cur >= seekTime && cur < seekTime + 3.5);
+      });
+    });
+
+    if (videoScrub) {
+      videoScrub.addEventListener('click', (e) => {
+        const rect = videoScrub.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const dur = meshVideo.duration || 14;
+        meshVideo.currentTime = (clickX / rect.width) * dur;
+      });
+    }
+
+    videoChapters.forEach(pill => {
+      pill.addEventListener('click', () => {
+        playClickSound();
+        const seekTime = parseFloat(pill.getAttribute('data-seek') || '0');
+        meshVideo.currentTime = seekTime;
+        if (meshVideo.paused) {
+          meshVideo.play();
+          if (btnToggleVideo) btnToggleVideo.textContent = '⏸';
+        }
+      });
+    });
+  }
+
 });

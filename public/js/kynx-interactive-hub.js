@@ -32,6 +32,7 @@
       const [isTransmitting, setIsTransmitting] = useState(false);
       const [selectedNode, setSelectedNode] = useState(0);
       const [nodeDropout, setNodeDropout] = useState(false);
+      const [showVideoGuide, setShowVideoGuide] = useState(false);
       const [logs, setLogs] = useState([
         { id: 1, ts: '14:20:00', text: 'KYNX Mesh Grid Initialized. P2P Cluster strategy online.', type: 'info' },
         { id: 2, ts: '14:20:02', text: 'Nodes exchanged ECDH secp256r1 keys via ANNOUNCE beacons.', type: 'success' }
@@ -206,7 +207,34 @@
               h('button', {
                 className: `btn-cyber-lab ${nodeDropout ? 'active-warning' : 'outline'}`,
                 onClick: toggleDropout
-              }, nodeDropout ? '🔄 Restore Dropped Node' : '💥 Simulate Node Dropout')
+              }, nodeDropout ? '🔄 Restore Dropped Node' : '💥 Simulate Node Dropout'),
+              h('button', {
+                className: 'btn-cyber-lab outline',
+                style: { borderColor: 'rgba(16, 185, 129, 0.45)', color: '#34d399' },
+                onClick: () => setShowVideoGuide(prev => !prev)
+              }, showVideoGuide ? '✕ Hide Video' : '🎬 Watch Video Guide')
+            )
+          ),
+
+          // Optional Inline Video Guide Player
+          showVideoGuide && h('div', { className: 'mesh-video-container', style: { marginBottom: '24px' } },
+            h('div', { className: 'mesh-video-header' },
+              h('div', { className: 'video-status-dot' }),
+              h('span', { className: 'video-title-tag' }, 'KYNX OFFLINE MESH // VIDEO WALKTHROUGH & STEP-BY-STEP GUIDE'),
+              h('span', { className: 'video-quality-tag' }, '1080P HD • 0 CELLULAR')
+            ),
+            h('div', { className: 'mesh-video-wrapper' },
+              h('video', {
+                className: 'mesh-cyber-video',
+                controls: true,
+                autoPlay: true,
+                loop: true,
+                muted: true,
+                playsInline: true,
+                poster: '/assets/mesh_demo_guide.webp'
+              },
+                h('source', { src: '/assets/mesh_demo_guide.mp4', type: 'video/mp4' })
+              )
             )
           ),
 

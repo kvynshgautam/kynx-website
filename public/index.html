@@ -620,7 +620,36 @@
           <p class="feature-desc">
             Offline communication without cell towers, Wi-Fi, or Internet. Messages hop across up to 7 relay devices dynamically with end-to-end ECDH secp256r1 + AES-256-GCM AEAD encryption. Intermediate relay nodes forward blind encrypted packets with zero knowledge of plaintext or sender identity, powered by loop-free LRU packet bounding and self-healing route pruning.
           </p>
-          <div style="display:flex; gap:16px; margin-top:14px; flex-wrap:wrap">
+
+          <!-- Embedded Cyber Video Player for Mesh Grid Walkthrough -->
+          <div class="mesh-video-container">
+            <div class="mesh-video-header">
+              <div class="video-status-dot"></div>
+              <span class="video-title-tag">KYNX OFFLINE MESH // VIDEO WALKTHROUGH &amp; STEP-BY-STEP GUIDE</span>
+              <span class="video-quality-tag">1080P HD • 0 CELLULAR</span>
+            </div>
+            <div class="mesh-video-wrapper">
+              <video id="mesh-guide-video" class="mesh-cyber-video" autoplay loop muted playsinline poster="/assets/mesh_demo_guide.webp">
+                <source src="/assets/mesh_demo_guide.mp4" type="video/mp4">
+                <img src="/assets/mesh_demo_guide.webp" alt="KYNX Mesh Grid Step-by-Step Guide">
+              </video>
+              <div class="video-overlay-controls">
+                <button type="button" class="btn-video-toggle" id="btn-toggle-mesh-video" title="Pause / Play Video">⏸</button>
+                <div class="video-scrub-bar" id="mesh-video-scrub">
+                  <div class="video-scrub-progress" id="mesh-video-progress"></div>
+                </div>
+                <span class="video-timecode" id="mesh-video-timecode">00:00 / 00:14</span>
+              </div>
+            </div>
+            <div class="video-chapters-row">
+              <div class="video-chap-pill active" data-seek="0">01. Dead Zone / Airplane Mode</div>
+              <div class="video-chap-pill" data-seek="3.5">02. Zero-Touch Auto-Peering</div>
+              <div class="video-chap-pill" data-seek="7.0">03. Multi-Hop Blind Relay</div>
+              <div class="video-chap-pill" data-seek="10.5">04. Delivered (✓✓) &amp; Campfire</div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:16px; margin-top:16px; flex-wrap:wrap">
             <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
               ⚡ <strong>Multi-Hop Reach:</strong> Up to 7 Hops (~200m+ mesh coverage)
             </div>
@@ -628,7 +657,7 @@
               🛡️ <strong>Zero-Knowledge:</strong> Relays can never decrypt payloads
             </div>
             <div style="background:#090a13; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); font-size:12px">
-              🔄 <strong>Self-Healing:</strong> Dynamic link pruning & auto-rerouting
+              🔄 <strong>Self-Healing:</strong> Dynamic link pruning &amp; auto-rerouting
             </div>
           </div>
         </div>
