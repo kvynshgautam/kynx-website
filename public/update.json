@@ -1,11 +1,11 @@
 {
-  "version_code": 58,
-  "version_name": "0.9.48",
-  "description": "KYNX v0.9.48 (Build 58) Privacy & Polish Update: Masked Burn-After-Reading secrets, Watch Together & Walkie-Talkie tags across lockscreen notifications, in-app banners, and quoted replies (Android + Web Deck); wired live debounced typing indicators from Android to Android/Web; and added active-call collision guard for Walkie-Talkie auto-play.",
+  "version_code": 59,
+  "version_name": "0.9.49",
+  "description": "KYNX v0.9.49 (Build 59) Mesh Networking Update: True Multi-Hop End-to-End Encrypted (E2EE) Mesh Grid. Communicate across unlimited hops (e.g. User 1 to User 100 via nodes 2-99) without internet or SIM. Intermediate nodes act as zero-knowledge relays and cannot decrypt or read content. Includes Public Campfire mesh broadcast room and live Multi-Hop Directory.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "28c212494410d2e09abb5a8fc9b968dfd53efd9231ff727f9de31d8c286e0771",
+  "sha256_checksum": "7c44e0ed885b8f132faf89803ef196604e8ce99c8d5cae3a032d4d071fb3609f",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-18T11:34:34+00:00",
-  "file_size_bytes": 65428778
+  "published_at": "2026-11-19T06:17:00+00:00",
+  "file_size_bytes": 65477930
 }
