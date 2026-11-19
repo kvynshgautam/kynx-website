@@ -176,25 +176,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Update 3D Phone Perspective, Status & Dynamic Notch
     if (sbPhone) {
+      const isDesktop = window.innerWidth > 992;
       if (stepIndex === 0) {
-        sbPhone.style.transform = 'perspective(1200px) rotateY(-6deg) rotateX(4deg)';
+        sbPhone.style.transform = isDesktop ? 'perspective(1200px) rotateY(-6deg) rotateX(4deg)' : 'none';
         if (sbStatus) sbStatus.textContent = '● Offline Mesh • 0 Internet';
         if (sbDynamicNotch) sbDynamicNotch.textContent = '📡 MESH ARMED';
       } else if (stepIndex === 1) {
-        sbPhone.style.transform = 'perspective(1200px) rotateY(6deg) rotateX(3deg)';
+        sbPhone.style.transform = isDesktop ? 'perspective(1200px) rotateY(6deg) rotateX(3deg)' : 'none';
         if (sbStatus) sbStatus.textContent = '● Instant Media • 120 FPS';
         if (sbDynamicNotch) sbDynamicNotch.textContent = '⚡ DECODE: 0.18ms';
       } else if (stepIndex === 2) {
-        sbPhone.style.transform = 'perspective(1200px) rotateY(-4deg) rotateX(-2deg)';
+        sbPhone.style.transform = isDesktop ? 'perspective(1200px) rotateY(-4deg) rotateX(-2deg)' : 'none';
         if (sbStatus) sbStatus.textContent = '● Protected • FLAG_SECURE';
         if (sbDynamicNotch) sbDynamicNotch.textContent = '🛡️ FLAG_SECURE';
         playPurgeSound();
       } else if (stepIndex === 3) {
-        sbPhone.style.transform = 'perspective(1200px) rotateY(4deg) rotateX(2deg)';
+        sbPhone.style.transform = isDesktop ? 'perspective(1200px) rotateY(4deg) rotateX(2deg)' : 'none';
         if (sbStatus) sbStatus.textContent = '● Physics Engine • 120Hz';
         if (sbDynamicNotch) sbDynamicNotch.textContent = '👆 GESTURE: 120 FPS';
       } else if (stepIndex === 4) {
-        sbPhone.style.transform = 'perspective(1200px) rotateY(0deg) rotateX(0deg) scale(1.02)';
+        sbPhone.style.transform = isDesktop ? 'perspective(1200px) rotateY(0deg) rotateX(0deg) scale(1.02)' : 'none';
         if (sbStatus) sbStatus.textContent = '● Skia GL • 5 Shaders';
         if (sbDynamicNotch) sbDynamicNotch.textContent = '🎨 SKIA GL: SHADER';
       }
@@ -352,12 +353,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // GSAP ScrollTrigger for Pinned Storyboard
-  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && storyboardSection) {
+  // Storyboard Pills Direct Step Activation (Works unconditionally on mobile, tablet & desktop)
+  sbPills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const targetStep = parseInt(pill.getAttribute('data-step') || '0', 10);
+      setStoryboardStep(targetStep);
+      if (window.innerWidth > 992 && lenis && typeof ScrollTrigger !== 'undefined') {
+        const st = ScrollTrigger.getById('storyboard') || ScrollTrigger.getAll().find(s => s.trigger === storyboardSection);
+        if (st) {
+          const targetScroll = st.start + (targetStep / 4) * (st.end - st.start);
+          lenis.scrollTo(targetScroll, { duration: 0.8 });
+        }
+      }
+    });
+  });
+
+  // GSAP ScrollTrigger for Pinned Storyboard - Desktop Only (> 992px)
+  // On mobile & tablet, pinning is disabled so touch scroll is fast, fluid and natural
+  if (window.innerWidth > 992 && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && storyboardSection) {
     ScrollTrigger.create({
+      id: 'storyboard',
       trigger: storyboardSection,
       start: 'top top',
-      end: '+=3000',
+      end: '+=2400',
       pin: true,
       scrub: 0.5,
       onUpdate: (self) => {
@@ -380,21 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
           shaderDots.forEach((d, idx) => d.classList.toggle('active', idx === shaderIdx));
         }
       }
-    });
-
-    // Pill click smooth scrolling & direct step activation
-    sbPills.forEach((pill) => {
-      pill.addEventListener('click', () => {
-        const targetStep = parseInt(pill.getAttribute('data-step') || '0', 10);
-        setStoryboardStep(targetStep);
-        if (lenis) {
-          const st = ScrollTrigger.getById('storyboard') || ScrollTrigger.getAll().find(s => s.trigger === storyboardSection);
-          if (st) {
-            const targetScroll = st.start + (targetStep / 4) * (st.end - st.start);
-            lenis.scrollTo(targetScroll, { duration: 1.0 });
-          }
-        }
-      });
     });
   }
 
