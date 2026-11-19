@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   let currentActiveStep = 0;
+  const sbMobileStepIndicator = document.getElementById('sb-mobile-step-indicator');
 
   function setStoryboardStep(stepIndex) {
     if (stepIndex === currentActiveStep && screenSteps[stepIndex] && screenSteps[stepIndex].style.display === 'flex') return;
@@ -161,6 +162,11 @@ document.addEventListener('DOMContentLoaded', () => {
     sbPills.forEach((p, idx) => {
       p.classList.toggle('active', idx === stepIndex);
     });
+
+    // Auto-scroll active pill into view on mobile
+    if (window.innerWidth <= 992 && sbPills[stepIndex]) {
+      sbPills[stepIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
 
     // 2. Update Narrative Chapters
     chapterSteps.forEach((chap, idx) => {
@@ -174,7 +180,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 4. Update 3D Phone Perspective, Status & Dynamic Notch
+    // 4. Update Mobile Step Indicator (01 / 05)
+    if (sbMobileStepIndicator) {
+      sbMobileStepIndicator.textContent = `0${stepIndex + 1} / 05`;
+    }
+
+    // 5. Update 3D Phone Perspective, Status & Dynamic Notch
     if (sbPhone) {
       const isDesktop = window.innerWidth > 992;
       if (stepIndex === 0) {
@@ -353,31 +364,86 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Storyboard Pills Direct Step Activation (Works unconditionally on mobile, tablet & desktop)
+  // Storyboard Step Jump Helper (Smooth scroll sync across mobile, tablet & desktop)
+  function jumpToStoryboardStep(targetStep) {
+    const bounded = Math.max(0, Math.min(4, targetStep));
+    setStoryboardStep(bounded);
+    if (typeof ScrollTrigger !== 'undefined' && storyboardSection) {
+      const st = ScrollTrigger.getById('storyboard') || ScrollTrigger.getAll().find(s => s.trigger === storyboardSection);
+      if (st) {
+        const targetScroll = st.start + (bounded / 4) * (st.end - st.start) + 2;
+        if (typeof lenis !== 'undefined' && lenis) {
+          lenis.scrollTo(targetScroll, { duration: 0.6 });
+        } else {
+          window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+        }
+      }
+    }
+  }
+
+  // Storyboard Pills Direct Step Activation
   sbPills.forEach((pill) => {
     pill.addEventListener('click', () => {
       const targetStep = parseInt(pill.getAttribute('data-step') || '0', 10);
-      setStoryboardStep(targetStep);
-      if (window.innerWidth > 992 && lenis && typeof ScrollTrigger !== 'undefined') {
-        const st = ScrollTrigger.getById('storyboard') || ScrollTrigger.getAll().find(s => s.trigger === storyboardSection);
-        if (st) {
-          const targetScroll = st.start + (targetStep / 4) * (st.end - st.start);
-          lenis.scrollTo(targetScroll, { duration: 0.8 });
-        }
-      }
+      jumpToStoryboardStep(targetStep);
     });
   });
 
-  // GSAP ScrollTrigger for Pinned Storyboard - Desktop Only (> 992px)
-  // On mobile & tablet, pinning is disabled so touch scroll is fast, fluid and natural
-  if (window.innerWidth > 992 && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && storyboardSection) {
+  // Mobile Storyboard Prev / Next Controls
+  const sbMobilePrev = document.getElementById('sb-mobile-prev');
+  const sbMobileNext = document.getElementById('sb-mobile-next');
+  if (sbMobilePrev) {
+    sbMobilePrev.addEventListener('click', () => {
+      jumpToStoryboardStep(currentActiveStep - 1);
+    });
+  }
+  if (sbMobileNext) {
+    sbMobileNext.addEventListener('click', () => {
+      jumpToStoryboardStep(currentActiveStep + 1);
+    });
+  }
+
+  // Touch Swipe Gesture on Phone Mockup (Left/Right to advance/rewind)
+  if (sbPhone) {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    sbPhone.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    sbPhone.addEventListener('touchend', (e) => {
+      if (e.changedTouches && e.changedTouches.length === 1) {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
+        if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+          if (diffX < 0) {
+            // Swiped left -> next chapter
+            jumpToStoryboardStep(currentActiveStep + 1);
+          } else {
+            // Swiped right -> prev chapter
+            jumpToStoryboardStep(currentActiveStep - 1);
+          }
+        }
+      }
+    }, { passive: true });
+  }
+
+  // GSAP ScrollTrigger for Pinned Storyboard - Universal (Desktop & Mobile)
+  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && storyboardSection) {
+    const isMobile = window.innerWidth <= 992;
     ScrollTrigger.create({
       id: 'storyboard',
       trigger: storyboardSection,
       start: 'top top',
-      end: '+=2400',
+      end: isMobile ? '+=1800' : '+=2400',
       pin: true,
-      scrub: 0.5,
+      anticipatePin: 1,
+      scrub: isMobile ? 0.3 : 0.5,
       onUpdate: (self) => {
         const progress = self.progress;
         let step = 0;

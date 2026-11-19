@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KYNX — Connect Beyond Limits | Official Website & Download Portal</title>
   <meta name="description" content="KYNX is a zero-lag cyber messenger engineered by KG with 0ms instant media, screenshot-protected view-once privacy, and offline Bluetooth mesh.">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=0.9.56">
   <link rel="icon" type="image/svg+xml" href="/assets/kynx-logo.svg">
 </head>
 <body>
@@ -165,36 +165,38 @@
           <span>THE ARCHITECTURE THEATRE // 5 CORE HARDWARE PILLARS</span>
         </div>
 
+        <!-- Storyboard Navigation Pills -->
+        <div class="storyboard-nav-pills">
+          <button type="button" class="sb-pill active" data-step="0">
+            <span class="sb-pill-num">01</span>
+            <span class="sb-pill-icon">📡</span>
+            <span class="sb-pill-txt">MESH GRID</span>
+          </button>
+          <button type="button" class="sb-pill" data-step="1">
+            <span class="sb-pill-num">02</span>
+            <span class="sb-pill-icon">⚡</span>
+            <span class="sb-pill-txt">INSTANT MEDIA</span>
+          </button>
+          <button type="button" class="sb-pill" data-step="2">
+            <span class="sb-pill-num">03</span>
+            <span class="sb-pill-icon">🛡️</span>
+            <span class="sb-pill-txt">VIEW-ONCE</span>
+          </button>
+          <button type="button" class="sb-pill" data-step="3">
+            <span class="sb-pill-num">04</span>
+            <span class="sb-pill-icon">👆</span>
+            <span class="sb-pill-txt">120HZ GESTURES</span>
+          </button>
+          <button type="button" class="sb-pill" data-step="4">
+            <span class="sb-pill-num">05</span>
+            <span class="sb-pill-icon">🎨</span>
+            <span class="sb-pill-txt">GPU SHADERS</span>
+          </button>
+        </div>
+
         <div class="storyboard-layout">
           <!-- Left: Narrative Chapters that change on scroll or click -->
           <div class="storyboard-narrative">
-            <div class="storyboard-nav-pills">
-              <button type="button" class="sb-pill active" data-step="0">
-                <span class="sb-pill-num">01</span>
-                <span class="sb-pill-icon">📡</span>
-                <span class="sb-pill-txt">MESH GRID</span>
-              </button>
-              <button type="button" class="sb-pill" data-step="1">
-                <span class="sb-pill-num">02</span>
-                <span class="sb-pill-icon">⚡</span>
-                <span class="sb-pill-txt">INSTANT MEDIA</span>
-              </button>
-              <button type="button" class="sb-pill" data-step="2">
-                <span class="sb-pill-num">03</span>
-                <span class="sb-pill-icon">🛡️</span>
-                <span class="sb-pill-txt">VIEW-ONCE</span>
-              </button>
-              <button type="button" class="sb-pill" data-step="3">
-                <span class="sb-pill-num">04</span>
-                <span class="sb-pill-icon">👆</span>
-                <span class="sb-pill-txt">120HZ GESTURES</span>
-              </button>
-              <button type="button" class="sb-pill" data-step="4">
-                <span class="sb-pill-num">05</span>
-                <span class="sb-pill-icon">🎨</span>
-                <span class="sb-pill-txt">GPU SHADERS</span>
-              </button>
-            </div>
 
             <!-- Chapter 0: Multi-Hop Zero-Knowledge Mesh Grid -->
             <div class="chapter-step active" id="chapter-0">
@@ -324,6 +326,13 @@
               <div class="chapter-quick-action">
                 <span class="action-hint">💡 Tap any shader swatch on the phone stage to transform themes live →</span>
               </div>
+            </div>
+
+            <!-- Mobile Chapter Quick Controls -->
+            <div class="sb-mobile-controls">
+              <button type="button" class="sb-mobile-btn" id="sb-mobile-prev">‹ Prev</button>
+              <span class="sb-mobile-step-pill" id="sb-mobile-step-indicator">01 / 05</span>
+              <button type="button" class="sb-mobile-btn" id="sb-mobile-next">Next ›</button>
             </div>
           </div>
 
@@ -889,12 +898,12 @@
   <!-- React 18 Core & Interactive Lab Engine -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="/js/kynx-interactive-hub.js"></script>
+  <script src="/js/kynx-interactive-hub.js?v=0.9.56"></script>
 
   <!-- Animation & Interaction Scripts -->
   <script src="/js/vendor/lenis.min.js"></script>
   <script src="/js/vendor/gsap.min.js"></script>
   <script src="/js/vendor/ScrollTrigger.min.js"></script>
-  <script src="/js/main.js"></script>
+  <script src="/js/main.js?v=0.9.56"></script>
 </body>
 </html>
