@@ -1,11 +1,11 @@
 {
-  "version_code": 61,
-  "version_name": "0.9.51",
-  "description": "KYNX v0.9.51 (Build 61) Turbo Latency Patch: Cached ECDH shared secrets in-memory for 1000x faster mesh encryption/decryption; offloaded mesh payload processing and packet relaying strictly to background IO dispatchers; and guaranteed 120 FPS buttery-smooth frame rendering.",
+  "version_code": 62,
+  "version_name": "0.9.52",
+  "description": "KYNX v0.9.52 (Build 62) Deep Parity & Mesh Route-Pruning Patch: Instant disconnected peer route-pruning (removeRoutesViaEndpoint); full Web Deck parity with Contact Profile Modal, Unfriend removal & Block/Unblock; zero deprecation warnings; locked 120 FPS.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "5d05b5a2599ee9e320049da5485237ee3e6279611150544f814574223dc60a2a",
+  "sha256_checksum": "d8e83389271982274c15d41b334032a1c913e5c6c1e017ae5fab0974c23fa3ef",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-19T07:27:00+00:00",
+  "published_at": "2026-11-19T08:32:00+00:00",
   "file_size_bytes": 65477930
 }

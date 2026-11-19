@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cmd === 'status') {
       cmdText.textContent = 'kynx --status';
       out.innerHTML = `
-        [SYS] KYNX Core v0.9.51 Mesh Grid [ONLINE]<br>
+        [SYS] KYNX Core v0.9.52 Mesh Grid [ONLINE]<br>
         [ARCHITECT] KG (Lead Systems Engineer)<br>
         [PEER_LINK] Gaurav Gautam (Connected via Cloud + Mesh)<br>
         [LATENCY] 0.8ms | WebSockets: 100% | Bluetooth: ARMED<br>
