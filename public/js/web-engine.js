@@ -89,8 +89,36 @@
     btnGhostShield: document.getElementById('btn-ghost-shield'),
     btnChatMenu: document.getElementById('btn-chat-menu'),
     chatMoreMenu: document.getElementById('chat-more-menu'),
+    menuBtnViewProfile: document.getElementById('menu-btn-view-profile'),
     menuBtnAirdrop: document.getElementById('menu-btn-airdrop'),
     menuBtnClearChat: document.getElementById('menu-btn-clear-chat'),
+    menuBtnRemoveFriend: document.getElementById('menu-btn-remove-friend'),
+    menuBtnBlockUser: document.getElementById('menu-btn-block-user'),
+    menuTextBlock: document.getElementById('menu-text-block'),
+    chatPeerDetails: document.querySelector('.chat-peer-details'),
+    userProfileBadge: document.querySelector('.user-profile-badge'),
+
+    // Profile Modal Elements
+    profileModal: document.getElementById('user-profile-modal'),
+    profileModalTitle: document.getElementById('profile-modal-title'),
+    btnCloseProfileModal: document.getElementById('btn-close-profile-modal'),
+    profileModalAvatar: document.getElementById('profile-modal-avatar'),
+    profileModalOnlineDot: document.getElementById('profile-modal-online-dot'),
+    profileModalDisplayName: document.getElementById('profile-modal-display-name'),
+    profileModalVerified: document.getElementById('profile-modal-verified'),
+    profileModalHandle: document.getElementById('profile-modal-handle'),
+    profileModalStatusText: document.getElementById('profile-modal-status-text'),
+    profileModalBio: document.getElementById('profile-modal-bio'),
+    profileSelfEditWrap: document.getElementById('profile-self-edit-wrap'),
+    profileEditNameInput: document.getElementById('profile-edit-name-input'),
+    profileEditBioInput: document.getElementById('profile-edit-bio-input'),
+    btnSaveSelfProfile: document.getElementById('btn-save-self-profile'),
+    profilePeerActions: document.getElementById('profile-peer-actions'),
+    btnProfileMessage: document.getElementById('btn-profile-message'),
+    btnProfileVoiceCall: document.getElementById('btn-profile-voice-call'),
+    btnProfileVideoCall: document.getElementById('btn-profile-video-call'),
+    btnProfileRemoveFriend: document.getElementById('btn-profile-remove-friend'),
+    btnProfileBlockUser: document.getElementById('btn-profile-block-user'),
     btnAttachMedia: document.getElementById('btn-attach-media'),
     fileInput: document.getElementById('file-upload-input'),
     
@@ -653,6 +681,136 @@
             🗑️ Chat cleared
           </div>`;
         loadConversations();
+      });
+    }
+
+    // View Profile inside 3-dots menu
+    if (el.menuBtnViewProfile) {
+      el.menuBtnViewProfile.addEventListener('click', () => {
+        if (el.chatMoreMenu) el.chatMoreMenu.style.display = 'none';
+        if (!AppState.activeConversation) return;
+        const peerId = getPeerId(AppState.activeConversation);
+        if (peerId) openUserProfileModal(peerId, false);
+      });
+    }
+
+    // Remove Contact (Unfriend) inside 3-dots menu
+    if (el.menuBtnRemoveFriend) {
+      el.menuBtnRemoveFriend.addEventListener('click', () => {
+        if (el.chatMoreMenu) el.chatMoreMenu.style.display = 'none';
+        if (!AppState.activeConversation) return;
+        const peerId = getPeerId(AppState.activeConversation);
+        const peer = AppState.activeConversation.peer || {};
+        const name = peer.display_name || peer.username || 'this user';
+        if (peerId) removeContact(peerId, name);
+      });
+    }
+
+    // Block User inside 3-dots menu
+    if (el.menuBtnBlockUser) {
+      el.menuBtnBlockUser.addEventListener('click', () => {
+        if (el.chatMoreMenu) el.chatMoreMenu.style.display = 'none';
+        if (!AppState.activeConversation) return;
+        const peerId = getPeerId(AppState.activeConversation);
+        const peer = AppState.activeConversation.peer || {};
+        const name = peer.display_name || peer.username || 'this user';
+        const isBlocked = Boolean(peer.is_blocked);
+        if (peerId) toggleBlockUser(peerId, name, isBlocked);
+      });
+    }
+
+    // Tap Chat Peer Header -> Open Peer Profile & Bio Modal
+    if (el.chatPeerDetails) {
+      el.chatPeerDetails.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-mobile-back')) return;
+        if (!AppState.activeConversation) return;
+        const peerId = getPeerId(AppState.activeConversation);
+        if (peerId) openUserProfileModal(peerId, false);
+      });
+    }
+
+    // Tap Sidebar User Profile -> Open Self Profile & Edit Bio Modal
+    if (el.userProfileBadge) {
+      el.userProfileBadge.addEventListener('click', () => {
+        const myId = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
+        if (myId) openUserProfileModal(myId, true);
+      });
+    }
+
+    // Profile Modal Listeners
+    if (el.btnCloseProfileModal) {
+      el.btnCloseProfileModal.addEventListener('click', () => {
+        if (el.profileModal) el.profileModal.style.display = 'none';
+      });
+    }
+
+    if (el.profileModal) {
+      el.profileModal.addEventListener('click', (e) => {
+        if (e.target === el.profileModal) {
+          el.profileModal.style.display = 'none';
+        }
+      });
+    }
+
+    if (el.btnSaveSelfProfile) {
+      el.btnSaveSelfProfile.addEventListener('click', saveSelfProfile);
+    }
+
+    if (el.btnProfileMessage) {
+      el.btnProfileMessage.addEventListener('click', async () => {
+        if (!currentProfileTarget) return;
+        if (el.profileModal) el.profileModal.style.display = 'none';
+        const targetId = currentProfileTarget.id;
+        const existing = AppState.conversations.find(c => getPeerId(c) === targetId);
+        if (existing) {
+          openConversation(existing);
+        } else {
+          try {
+            const createRes = await fetch(`${BACKEND_URL}/api/conversations`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${AppState.token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ recipient_id: targetId })
+            });
+            if (createRes.ok) {
+              const newConv = await createRes.json();
+              AppState.conversations.unshift(newConv);
+              openConversation(newConv);
+            }
+          } catch (err) {
+            console.warn('Error opening conversation from profile:', err);
+          }
+        }
+      });
+    }
+
+    if (el.btnProfileVoiceCall) {
+      el.btnProfileVoiceCall.addEventListener('click', () => {
+        if (el.profileModal) el.profileModal.style.display = 'none';
+        initiateCall('voice');
+      });
+    }
+
+    if (el.btnProfileVideoCall) {
+      el.btnProfileVideoCall.addEventListener('click', () => {
+        if (el.profileModal) el.profileModal.style.display = 'none';
+        initiateCall('video');
+      });
+    }
+
+    if (el.btnProfileRemoveFriend) {
+      el.btnProfileRemoveFriend.addEventListener('click', () => {
+        if (!currentProfileTarget) return;
+        removeContact(currentProfileTarget.id, currentProfileTarget.display_name || currentProfileTarget.username);
+      });
+    }
+
+    if (el.btnProfileBlockUser) {
+      el.btnProfileBlockUser.addEventListener('click', () => {
+        if (!currentProfileTarget) return;
+        toggleBlockUser(currentProfileTarget.id, currentProfileTarget.display_name || currentProfileTarget.username, Boolean(currentProfileTarget.is_blocked));
       });
     }
 
@@ -1514,6 +1672,9 @@
     el.peerAvatar.textContent = title.substring(0, 2).toUpperCase();
     el.peerName.textContent = title;
     el.peerStatus.innerHTML = peer.is_online ? `● online` : `<span style="color:var(--text-sub)">● offline</span>`;
+    if (el.menuTextBlock) {
+      el.menuTextBlock.textContent = peer.is_blocked ? 'Unblock User' : 'Block User';
+    }
 
     el.messagesCanvas.innerHTML = `
       <div style="text-align: center; color: var(--text-sub); font-size: 12px; margin: 20px 0;">
@@ -3639,6 +3800,208 @@
     }, 18000);
   }
 
+  // Remove Contact / Unfriend from Circle
+  async function removeContact(userId, displayName) {
+    if (!AppState.token) return;
+    const confirmed = confirm(`Remove "${displayName || 'this contact'}" from your circle?\n\nThey will be removed from your contacts, and you won't be able to chat until a new friend request is sent and accepted.`);
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/friends/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.detail || 'Could not remove contact.');
+        return;
+      }
+
+      showHeadsUpCard('Removed from Circle', `${displayName || 'User'} has been removed from your contacts.`);
+
+      // If active conversation is with this peer, close active chat
+      if (AppState.activeConversation && getPeerId(AppState.activeConversation) === userId) {
+        AppState.activeConversation = null;
+        if (el.activeChatView) el.activeChatView.style.display = 'none';
+        if (el.emptyState) el.emptyState.style.display = 'flex';
+      }
+
+      // Close profile modal if open
+      if (el.profileModal) el.profileModal.style.display = 'none';
+
+      await loadConversations();
+      if (AppState.activeTab === 'contacts') {
+        await loadAndRenderContacts();
+      }
+    } catch (e) {
+      console.warn('Error removing contact:', e);
+      alert('Error removing contact. Please check your network.');
+    }
+  }
+
+  // Block / Unblock User
+  async function toggleBlockUser(userId, displayName, isCurrentlyBlocked) {
+    if (!AppState.token) return;
+    const action = isCurrentlyBlocked ? 'unblock' : 'block';
+    const confirmed = confirm(isCurrentlyBlocked 
+      ? `Unblock "${displayName || 'this user'}"? They will be able to message you again.`
+      : `Block "${displayName || 'this user'}"? They will not be able to send you messages or call you.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const method = isCurrentlyBlocked ? 'DELETE' : 'POST';
+      const res = await fetch(`${BACKEND_URL}/api/blocks/${userId}`, {
+        method: method,
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.detail || `Could not ${action} user.`);
+        return;
+      }
+
+      showHeadsUpCard(isCurrentlyBlocked ? 'User Unblocked' : 'User Blocked', `${displayName || 'User'} is now ${isCurrentlyBlocked ? 'unblocked' : 'blocked'}.`);
+
+      if (el.profileModal) el.profileModal.style.display = 'none';
+      if (el.chatMoreMenu) el.chatMoreMenu.style.display = 'none';
+
+      await loadConversations();
+      if (AppState.activeTab === 'contacts') {
+        await loadAndRenderContacts();
+      }
+    } catch (e) {
+      console.warn('Error toggling block status:', e);
+      alert(`Error trying to ${action} user.`);
+    }
+  }
+
+  // Open User Profile & Bio Modal (Peer or Self)
+  let currentProfileTarget = null;
+  async function openUserProfileModal(userId, isSelf = false) {
+    if (!el.profileModal) return;
+
+    el.profileModal.style.display = 'flex';
+    el.profileModalTitle.textContent = isSelf ? 'My Profile & Status' : 'User Profile';
+    el.profileModalDisplayName.textContent = 'Loading...';
+    el.profileModalHandle.textContent = '';
+    el.profileModalStatusText.textContent = '';
+    el.profileModalBio.textContent = '...';
+    el.profileModalVerified.style.display = 'none';
+    el.profileSelfEditWrap.style.display = 'none';
+    el.profilePeerActions.style.display = 'none';
+
+    try {
+      let userData = null;
+      if (isSelf) {
+        const meRes = await fetch(`${BACKEND_URL}/api/users/me`, {
+          headers: { 'Authorization': `Bearer ${AppState.token}` }
+        });
+        userData = meRes.ok ? await meRes.json() : AppState.user;
+      } else {
+        const uRes = await fetch(`${BACKEND_URL}/api/users/${userId}`, {
+          headers: { 'Authorization': `Bearer ${AppState.token}` }
+        });
+        if (uRes.ok) {
+          userData = await uRes.json();
+        } else if (AppState.activeConversation && AppState.activeConversation.peer) {
+          userData = AppState.activeConversation.peer;
+        }
+      }
+
+      if (!userData) {
+        el.profileModal.style.display = 'none';
+        return;
+      }
+
+      currentProfileTarget = userData;
+      const name = userData.display_name || userData.displayName || userData.username || 'KYNX User';
+      const handle = userData.username ? `@${userData.username}` : '';
+      const bio = userData.status_message || userData.bio || (isSelf ? 'Available on KYNX Web' : 'Connected on KYNX');
+      const initials = name.substring(0, 2).toUpperCase();
+      const isOnline = Boolean(userData.is_online);
+      const isVerified = Boolean(userData.is_email_verified);
+      const isBlocked = Boolean(userData.is_blocked);
+
+      el.profileModalAvatar.textContent = initials;
+      el.profileModalDisplayName.textContent = name;
+      el.profileModalHandle.textContent = handle;
+      el.profileModalBio.textContent = bio;
+      el.profileModalVerified.style.display = isVerified ? 'inline-flex' : 'none';
+      el.profileModalOnlineDot.style.background = isOnline ? '#10B981' : '#6B7280';
+      el.profileModalStatusText.textContent = isOnline ? '● Online' : '○ Offline';
+
+      if (isSelf) {
+        el.profileSelfEditWrap.style.display = 'flex';
+        el.profileEditNameInput.value = name;
+        el.profileEditBioInput.value = userData.status_message || '';
+      } else {
+        el.profilePeerActions.style.display = 'flex';
+        if (el.btnProfileBlockUser) {
+          el.btnProfileBlockUser.textContent = isBlocked ? '✓ Unblock User' : '🛑 Block User';
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching user profile:', e);
+    }
+  }
+
+  // Save Self Profile (Display Name & Bio)
+  async function saveSelfProfile() {
+    if (!AppState.token) return;
+    const newName = el.profileEditNameInput.value.trim();
+    const newBio = el.profileEditBioInput.value.trim();
+
+    if (!newName) {
+      alert('Display Name cannot be empty.');
+      return;
+    }
+
+    el.btnSaveSelfProfile.disabled = true;
+    el.btnSaveSelfProfile.textContent = 'Saving...';
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${AppState.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          display_name: newName,
+          status_message: newBio
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || 'Could not update profile.');
+        el.btnSaveSelfProfile.disabled = false;
+        el.btnSaveSelfProfile.textContent = 'Save Changes ⚡';
+        return;
+      }
+
+      const updated = await res.json();
+      if (AppState.user) {
+        AppState.user.display_name = updated.display_name;
+        AppState.user.displayName = updated.display_name;
+        AppState.user.status_message = updated.status_message;
+      }
+
+      if (el.userName) el.userName.textContent = updated.display_name;
+      if (el.userAvatar) el.userAvatar.textContent = updated.display_name.substring(0, 2).toUpperCase();
+
+      showHeadsUpCard('Profile Updated', 'Your display name & status are now live.');
+      if (el.profileModal) el.profileModal.style.display = 'none';
+    } catch (e) {
+      console.warn('Error saving profile:', e);
+      alert('Network error updating profile.');
+    } finally {
+      el.btnSaveSelfProfile.disabled = false;
+      el.btnSaveSelfProfile.textContent = 'Save Changes ⚡';
+    }
+  }
+
   // Load and Render Contacts & Friend Requests in Sidebar
   async function loadAndRenderContacts() {
     if (!AppState.token) return;
@@ -3932,7 +4295,27 @@
                 <span class="item-preview">${escapeHtml(contact.status_message || 'Connected on KYNX')}</span>
               </div>
             </div>
+            <div class="contact-actions" style="margin-left:auto; display:flex; gap:6px; align-items:center;">
+              <button class="contact-action-btn btn-contact-profile" title="View Profile & Bio" type="button">👤</button>
+              <button class="contact-action-btn danger btn-contact-remove" title="Remove from Circle" type="button">✕</button>
+            </div>
           `;
+
+          const btnProfile = card.querySelector('.btn-contact-profile');
+          if (btnProfile) {
+            btnProfile.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openUserProfileModal(contact.id, false);
+            });
+          }
+
+          const btnRemove = card.querySelector('.btn-contact-remove');
+          if (btnRemove) {
+            btnRemove.addEventListener('click', (e) => {
+              e.stopPropagation();
+              removeContact(contact.id, title);
+            });
+          }
 
           card.addEventListener('click', async () => {
             const existing = AppState.conversations.find(c => getPeerId(c) === contact.id);

@@ -243,6 +243,10 @@
                 </svg>
               </button>
               <div class="chat-more-dropdown" id="chat-more-menu" style="display:none">
+                <button class="dropdown-item" id="menu-btn-view-profile">
+                  <span>👤</span>
+                  <span>View Profile & Bio</span>
+                </button>
                 <button class="dropdown-item" id="menu-btn-airdrop">
                   <span style="color:var(--accent-purple-light)">⚡</span>
                   <span>Mesh AirDrop (Send File)</span>
@@ -250,6 +254,14 @@
                 <button class="dropdown-item" id="menu-btn-clear-chat">
                   <span>🗑️</span>
                   <span>Clear Chat History</span>
+                </button>
+                <button class="dropdown-item danger" id="menu-btn-remove-friend">
+                  <span>🚫</span>
+                  <span>Remove from Circle</span>
+                </button>
+                <button class="dropdown-item danger" id="menu-btn-block-user">
+                  <span>🛑</span>
+                  <span id="menu-text-block">Block User</span>
                 </button>
               </div>
             </div>
@@ -432,6 +444,78 @@
       <button class="call-min-btn call-min-hangup" id="btn-min-hangup" title="End Call">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       USER PROFILE & BIO MODAL (PEER OR SELF)
+       ======================================================================== -->
+  <div id="user-profile-modal" class="cyber-modal-overlay" style="display:none">
+    <div class="cyber-modal-glass profile-modal-card">
+      <div class="modal-top-bar">
+        <h3 id="profile-modal-title" class="modal-title">User Profile</h3>
+        <button type="button" class="modal-close-btn" id="btn-close-profile-modal" title="Close">✕</button>
+      </div>
+
+      <div class="profile-modal-body">
+        <!-- Big Cyber Avatar with Online Ring -->
+        <div class="profile-modal-avatar-wrap">
+          <div class="profile-modal-avatar" id="profile-modal-avatar">GG</div>
+          <span class="profile-modal-online-dot" id="profile-modal-online-dot"></span>
+        </div>
+
+        <!-- Name & Handle -->
+        <div class="profile-modal-names">
+          <div class="profile-modal-name-row">
+            <span id="profile-modal-display-name" class="profile-display-name">Gaurav Gautam</span>
+            <span id="profile-modal-verified" class="profile-verified-badge" title="Verified Account" style="display:none">✓</span>
+          </div>
+          <div id="profile-modal-handle" class="profile-modal-handle">@gaurav</div>
+          <div id="profile-modal-status-text" class="profile-modal-status-text">● Online</div>
+        </div>
+
+        <!-- Bio / Status Card -->
+        <div class="profile-modal-section">
+          <div class="section-label">BIO & STATUS</div>
+          <div id="profile-modal-bio" class="profile-bio-box">Connected on KYNX</div>
+          <!-- Editable Bio (shown only for self profile) -->
+          <div id="profile-self-edit-wrap" style="display:none; flex-direction:column; gap:10px; margin-top:8px;">
+            <div>
+              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Display Name</label>
+              <input type="text" id="profile-edit-name-input" class="cyber-input" placeholder="Display Name" maxlength="50" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Bio / Status</label>
+              <textarea id="profile-edit-bio-input" class="cyber-input" rows="2" placeholder="Tell the world your status..." maxlength="150"></textarea>
+            </div>
+            <button type="button" id="btn-save-self-profile" class="btn-primary-cyber">Save Changes ⚡</button>
+          </div>
+        </div>
+
+        <!-- Peer Actions (shown only for peer profile) -->
+        <div id="profile-peer-actions" class="profile-modal-actions" style="display:none;">
+          <div class="profile-action-buttons-row">
+            <button type="button" class="profile-btn-action primary" id="btn-profile-message">
+              💬 Message
+            </button>
+            <button type="button" class="profile-btn-action" id="btn-profile-voice-call" title="Audio Call">
+              📞 Call
+            </button>
+            <button type="button" class="profile-btn-action" id="btn-profile-video-call" title="Video Call">
+              📹 Video
+            </button>
+          </div>
+
+          <div class="profile-action-danger-row">
+            <button type="button" class="profile-btn-danger" id="btn-profile-remove-friend">
+              🚫 Remove from Circle (Unfriend)
+            </button>
+            <button type="button" class="profile-btn-danger-outline" id="btn-profile-block-user">
+              🛑 Block User
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
