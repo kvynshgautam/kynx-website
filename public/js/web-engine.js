@@ -76,14 +76,26 @@
     loginError: document.getElementById('login-error'),
     btnLoginSubmit: document.getElementById('btn-login-submit'),
     
-    // OTP Section
+    // Glassy OTP V15 Elements
     otpSection: document.getElementById('otp-section'),
     otpEmailMasked: document.getElementById('otp-email-masked'),
     loginOtp: document.getElementById('login-otp'),
     otpError: document.getElementById('otp-error'),
     btnVerifyOtp: document.getElementById('btn-verify-otp'),
+    btnVerifyOtpText: document.getElementById('btn-verify-otp-text'),
     btnBackToPwd: document.getElementById('btn-back-to-pwd'),
     btnResendOtp: document.getElementById('btn-resend-otp'),
+    otpResendTimer: document.getElementById('otp-resend-timer'),
+    btnShowOtpDemo: document.getElementById('btn-show-otp-demo'),
+    glassyOtpInputView: document.getElementById('glassy-otp-input-view'),
+    glassyOtpSuccessView: document.getElementById('glassy-otp-success-view'),
+    glassyOtpGrid: document.getElementById('glassy-otp-grid'),
+    glassyOtpMorphTarget: document.getElementById('glassy-otp-morph-target'),
+    btnOtpDemoCode: document.getElementById('btn-otp-demo-code'),
+    btnOtpDemoWrong: document.getElementById('btn-otp-demo-wrong'),
+    btnOtpDemoPaste: document.getElementById('btn-otp-demo-paste'),
+    checklistEmailVal: document.getElementById('checklist-email-val'),
+    btnOtpSuccessContinue: document.getElementById('btn-otp-success-continue'),
 
     // Forgot Password Elements
     btnShowForgot: document.getElementById('btn-show-forgot'),
@@ -771,7 +783,8 @@
       el.btnResendResetOtp.addEventListener('click', handleResendResetOtp);
     }
 
-    // OTP verification actions
+    // Glassy OTP V15 verification actions
+    initGlassyOtpEvents();
     if (el.btnVerifyOtp) {
       el.btnVerifyOtp.addEventListener('click', handleVerifyOtp);
     }
@@ -785,8 +798,9 @@
     }
     if (el.btnBackToPwd) {
       el.btnBackToPwd.addEventListener('click', () => {
-        el.otpSection.style.display = 'none';
-        el.loginForm.style.display = 'block';
+        if (el.otpSection) el.otpSection.style.display = 'none';
+        if (el.loginForm) el.loginForm.style.display = 'block';
+        AppState.isDemoOtp = false;
       });
     }
     if (el.btnResendOtp) {
@@ -1549,13 +1563,11 @@
       // 1. Two-Factor OTP Required
       if (data.status === 'otp_required') {
         AppState.tempToken = data.temp_token;
+        AppState.isDemoOtp = false;
         el.loginError.textContent = '';
         el.loginForm.style.display = 'none';
         el.otpSection.style.display = 'block';
-        el.otpEmailMasked.textContent = `Security code sent to ${data.email_masked || 'your registered email'}.`;
-        el.loginOtp.value = '';
-        el.otpError.textContent = '';
-        el.loginOtp.focus();
+        resetGlassyOtp(data.email_masked || 'your registered email');
         return;
       }
 
@@ -1589,19 +1601,315 @@
     }
   }
 
+  // ==========================================================================
+  // GLASSY OTP V15 — FROSTED GLASS VERIFICATION ENGINE & MORPHING ANIMATIONS
+  // ==========================================================================
+
+  let otpResendInterval = null;
+
+  function initGlassyOtpEvents() {
+    const cells = document.querySelectorAll('.glassy-otp-cell');
+
+    // Individual Cell Navigation & Input Handling
+    cells.forEach((cell, idx) => {
+      cell.addEventListener('input', (e) => {
+        const val = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = val ? val.slice(-1) : '';
+        if (e.target.value) {
+          e.target.classList.add('filled');
+          if (idx < cells.length - 1) {
+            cells[idx + 1].focus();
+          }
+        } else {
+          e.target.classList.remove('filled');
+        }
+        syncGlassyOtpValue();
+
+        // If all 6 filled, auto submit
+        const fullOtp = el.loginOtp ? el.loginOtp.value.trim() : '';
+        if (fullOtp.length === 6) {
+          handleVerifyOtp();
+        }
+      });
+
+      cell.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace') {
+          if (!cell.value && idx > 0) {
+            cells[idx - 1].focus();
+            cells[idx - 1].value = '';
+            cells[idx - 1].classList.remove('filled');
+            syncGlassyOtpValue();
+          } else {
+            cell.value = '';
+            cell.classList.remove('filled');
+            syncGlassyOtpValue();
+          }
+        } else if (e.key === 'ArrowLeft' && idx > 0) {
+          cells[idx - 1].focus();
+        } else if (e.key === 'ArrowRight' && idx < cells.length - 1) {
+          cells[idx + 1].focus();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          handleVerifyOtp();
+        }
+      });
+
+      cell.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        if (!pasteData) return;
+        pasteData.split('').forEach((char, pIdx) => {
+          if (cells[pIdx]) {
+            cells[pIdx].value = char;
+            cells[pIdx].classList.add('filled');
+          }
+        });
+        syncGlassyOtpValue();
+        const nextIdx = Math.min(pasteData.length, cells.length - 1);
+        cells[nextIdx].focus();
+        if (pasteData.length === 6) {
+          handleVerifyOtp();
+        }
+      });
+    });
+
+    // Demo Launch Button on Login Form
+    if (el.btnShowOtpDemo) {
+      el.btnShowOtpDemo.addEventListener('click', () => {
+        AppState.isDemoOtp = true;
+        el.loginForm.style.display = 'none';
+        if (el.otpSection) el.otpSection.style.display = 'block';
+        resetGlassyOtp('alex@kynx.mesh');
+      });
+    }
+
+    // Demo Toolbar Pills
+    if (el.btnOtpDemoCode) {
+      el.btnOtpDemoCode.addEventListener('click', () => {
+        fillOtpDigits('246810', true);
+      });
+    }
+
+    if (el.btnOtpDemoWrong) {
+      el.btnOtpDemoWrong.addEventListener('click', () => {
+        fillOtpDigits('999999', false);
+        triggerGlassyOtpShake('Invalid verification code (Demo accepts 246810)');
+      });
+    }
+
+    if (el.btnOtpDemoPaste) {
+      el.btnOtpDemoPaste.addEventListener('click', () => {
+        animateAutofill('246810');
+      });
+    }
+
+    // Success View Continue Button
+    if (el.btnOtpSuccessContinue) {
+      el.btnOtpSuccessContinue.addEventListener('click', () => {
+        hideAuth();
+        showDeck();
+      });
+    }
+  }
+
+  function syncGlassyOtpValue() {
+    const cells = document.querySelectorAll('.glassy-otp-cell');
+    let combined = '';
+    cells.forEach(c => { combined += c.value; });
+    if (el.loginOtp) el.loginOtp.value = combined;
+    if (el.otpError) el.otpError.textContent = '';
+  }
+
+  function fillOtpDigits(code, autoVerify) {
+    const cells = document.querySelectorAll('.glassy-otp-cell');
+    cells.forEach((c, idx) => {
+      c.value = code[idx] || '';
+      if (code[idx]) c.classList.add('filled');
+      else c.classList.remove('filled');
+    });
+    if (el.loginOtp) el.loginOtp.value = code;
+    if (autoVerify) {
+      setTimeout(() => handleVerifyOtp(), 120);
+    }
+  }
+
+  function animateAutofill(code) {
+    const cells = document.querySelectorAll('.glassy-otp-cell');
+    cells.forEach(c => { c.value = ''; c.classList.remove('filled'); });
+    if (el.loginOtp) el.loginOtp.value = '';
+    let idx = 0;
+    const interval = setInterval(() => {
+      if (idx < code.length && cells[idx]) {
+        cells[idx].value = code[idx];
+        cells[idx].classList.add('filled');
+        cells[idx].focus();
+        idx++;
+      } else {
+        clearInterval(interval);
+        if (el.loginOtp) el.loginOtp.value = code;
+        setTimeout(() => handleVerifyOtp(), 180);
+      }
+    }, 70);
+  }
+
+  function resetGlassyOtp(emailText) {
+    const cells = document.querySelectorAll('.glassy-otp-cell');
+    cells.forEach(c => {
+      c.value = '';
+      c.classList.remove('filled');
+    });
+    if (el.loginOtp) el.loginOtp.value = '';
+
+    if (el.glassyOtpInputView) el.glassyOtpInputView.style.display = 'flex';
+    if (el.glassyOtpSuccessView) el.glassyOtpSuccessView.style.display = 'none';
+    if (el.glassyOtpMorphTarget) el.glassyOtpMorphTarget.style.display = 'none';
+    if (el.glassyOtpGrid) {
+      el.glassyOtpGrid.classList.remove('collapsed');
+      el.glassyOtpGrid.classList.remove('shake');
+    }
+
+    if (el.btnVerifyOtp) {
+      el.btnVerifyOtp.classList.remove('verified');
+      el.btnVerifyOtp.disabled = false;
+      if (el.btnVerifyOtpText) el.btnVerifyOtpText.textContent = 'Verify & Sign In ⚡';
+    }
+
+    if (el.otpError) el.otpError.textContent = '';
+    if (el.otpEmailMasked) {
+      el.otpEmailMasked.textContent = `Enter the 6-digit security code sent to ${emailText || 'your registered email'}.`;
+    }
+    if (el.checklistEmailVal) {
+      el.checklistEmailVal.textContent = emailText || 'user@kynx.mesh';
+    }
+
+    setTimeout(() => {
+      if (cells[0]) cells[0].focus();
+    }, 80);
+
+    startOtpResendTimer();
+  }
+
+  function startOtpResendTimer() {
+    if (!el.btnResendOtp) return;
+    if (otpResendInterval) clearInterval(otpResendInterval);
+
+    let seconds = 30;
+    el.btnResendOtp.disabled = true;
+    if (el.otpResendTimer) {
+      el.otpResendTimer.style.display = 'inline';
+      el.otpResendTimer.textContent = `(${seconds}s)`;
+    }
+
+    otpResendInterval = setInterval(() => {
+      seconds--;
+      if (seconds > 0) {
+        if (el.otpResendTimer) el.otpResendTimer.textContent = `(${seconds}s)`;
+      } else {
+        clearInterval(otpResendInterval);
+        el.btnResendOtp.disabled = false;
+        if (el.otpResendTimer) el.otpResendTimer.style.display = 'none';
+      }
+    }, 1000);
+  }
+
+  function triggerGlassyOtpShake(errMsg) {
+    if (el.glassyOtpGrid) {
+      el.glassyOtpGrid.classList.remove('shake');
+      void el.glassyOtpGrid.offsetWidth; // Force reflow
+      el.glassyOtpGrid.classList.add('shake');
+      setTimeout(() => {
+        if (el.glassyOtpGrid) el.glassyOtpGrid.classList.remove('shake');
+      }, 500);
+    }
+
+    if (el.otpError) {
+      el.otpError.style.color = 'var(--accent-red)';
+      el.otpError.textContent = errMsg;
+    }
+
+    if (el.btnVerifyOtp) {
+      el.btnVerifyOtp.disabled = false;
+      if (el.btnVerifyOtpText) el.btnVerifyOtpText.textContent = 'Verify & Sign In ⚡';
+    }
+
+    if (navigator.vibrate) {
+      navigator.vibrate([40, 60, 40]);
+    }
+  }
+
+  function playGlassySuccessAnimation(email, onComplete) {
+    // 1. Collapse the 6 glass cells inwards
+    if (el.glassyOtpGrid) {
+      el.glassyOtpGrid.classList.add('collapsed');
+    }
+
+    // 2. Reveal morph target (glowing green checkmark badge + concentric ripples)
+    if (el.glassyOtpMorphTarget) {
+      el.glassyOtpMorphTarget.style.display = 'flex';
+    }
+
+    // 3. Morph verify button into green "Verified"
+    if (el.btnVerifyOtp) {
+      el.btnVerifyOtp.classList.add('verified');
+      if (el.btnVerifyOtpText) el.btnVerifyOtpText.textContent = '✓ Verified';
+    }
+
+    if (el.otpError) el.otpError.textContent = '';
+    if (navigator.vibrate) {
+      navigator.vibrate([30, 40, 80]);
+    }
+
+    // 4. After 650ms ripple expansion, morph to Success View
+    setTimeout(() => {
+      if (el.glassyOtpInputView) el.glassyOtpInputView.style.display = 'none';
+      if (el.glassyOtpSuccessView) {
+        el.glassyOtpSuccessView.style.display = 'flex';
+      }
+      if (el.checklistEmailVal) {
+        el.checklistEmailVal.textContent = email || 'user@kynx.mesh';
+      }
+
+      // Auto continue after 2 seconds or when user clicks Continue
+      setTimeout(() => {
+        if (onComplete) onComplete();
+      }, 2000);
+    }, 650);
+  }
+
   async function handleVerifyOtp() {
-    const otp = el.loginOtp.value.trim();
-    el.otpError.textContent = '';
+    const otp = el.loginOtp ? el.loginOtp.value.trim() : '';
+    if (el.otpError) el.otpError.textContent = '';
     
-    if (!otp || otp.length < 4) {
-      el.otpError.textContent = 'Please enter the 6-digit verification code.';
+    if (!otp || otp.length < 6) {
+      triggerGlassyOtpShake('Please enter all 6 digits of your verification code.');
       return;
     }
-    
+
+    // Show button loading state
+    if (el.btnVerifyOtp) {
+      el.btnVerifyOtp.disabled = true;
+      if (el.btnVerifyOtpText) {
+        el.btnVerifyOtpText.innerHTML = '<span class="glassy-btn-spinner"></span> Verifying...';
+      }
+    }
+
+    // Demo Mode Verification (allows testing UI/animations without real backend 2FA token)
+    if (AppState.isDemoOtp) {
+      setTimeout(() => {
+        if (otp === '246810') {
+          playGlassySuccessAnimation('demo@kynx.mesh', () => {
+            hideAuth();
+            showDeck();
+          });
+        } else {
+          triggerGlassyOtpShake('Invalid verification code (Demo accepts 246810).');
+        }
+      }, 450);
+      return;
+    }
+
+    // Real Mode: Dispatch to KYNX Backend
     try {
-      el.otpError.style.color = 'var(--accent-purple-light)';
-      el.otpError.textContent = 'Verifying security code...';
-      
       let res;
       try {
         res = await fetch(`${BACKEND_URL}/api/auth/login/verify-otp`, {
@@ -1610,7 +1918,8 @@
           body: JSON.stringify({ temp_token: AppState.tempToken, otp: otp })
         });
       } catch (netErr) {
-        throw new Error('Could not reach KYNX Cloud service.');
+        triggerGlassyOtpShake('Could not reach KYNX Cloud service.');
+        return;
       }
       
       let data = {};
@@ -1618,13 +1927,14 @@
         data = await res.json();
       } catch (parseErr) {
         if (!res.ok) {
-          throw new Error(`Server error (${res.status}).`);
+          triggerGlassyOtpShake(`Server error (${res.status}).`);
+          return;
         }
       }
-      el.otpError.style.color = 'var(--accent-red)';
       
       if (!res.ok) {
-        throw new Error(data.detail || data.error || data.message || 'Verification failed.');
+        triggerGlassyOtpShake(data.detail || data.error || data.message || 'Verification failed.');
+        return;
       }
       
       AppState.token = data.access_token;
@@ -1633,24 +1943,31 @@
       localStorage.setItem('kynx_web_token', AppState.token);
       localStorage.setItem('kynx_web_user', JSON.stringify(AppState.user));
       
-      el.otpError.style.color = 'var(--accent-green)';
-      el.otpError.textContent = 'Verified! Entering Web Deck...';
-      
-      setTimeout(() => {
+      playGlassySuccessAnimation(data.user?.email || 'user@kynx.mesh', () => {
         hideAuth();
         showDeck();
-      }, 500);
+      });
     } catch (err) {
-      el.otpError.style.color = 'var(--accent-red)';
-      el.otpError.textContent = err.message;
+      triggerGlassyOtpShake(err.message || 'Verification failed.');
     }
   }
 
   async function handleResendOtp() {
+    if (AppState.isDemoOtp) {
+      if (el.otpError) {
+        el.otpError.style.color = 'var(--accent-green)';
+        el.otpError.textContent = '✨ Demo code is 246810. Try clicking the demo pill below!';
+      }
+      startOtpResendTimer();
+      return;
+    }
+
     if (!AppState.tempToken) return;
     try {
-      el.otpError.style.color = 'var(--accent-purple-light)';
-      el.otpError.textContent = 'Requesting new code...';
+      if (el.otpError) {
+        el.otpError.style.color = 'var(--accent-purple-light)';
+        el.otpError.textContent = 'Requesting new code...';
+      }
       const res = await fetch(`${BACKEND_URL}/api/auth/login/resend-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1658,11 +1975,13 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Could not resend code.');
-      el.otpError.style.color = 'var(--accent-green)';
-      el.otpError.textContent = 'New code sent! Please check your email.';
+      if (el.otpError) {
+        el.otpError.style.color = 'var(--accent-green)';
+        el.otpError.textContent = 'New 6-digit code dispatched! Please check your email.';
+      }
+      startOtpResendTimer();
     } catch (err) {
-      el.otpError.style.color = 'var(--accent-red)';
-      el.otpError.textContent = err.message;
+      triggerGlassyOtpShake(err.message || 'Could not resend code.');
     }
   }
 

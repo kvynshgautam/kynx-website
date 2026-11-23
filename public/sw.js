@@ -1,11 +1,11 @@
-// KYNX Web Deck High-Performance PWA Service Worker (v12 - Prevent Timestamp & Metadata Text Selection)
-const CACHE_NAME = 'kynx-pwa-v12';
+// KYNX Web Deck High-Performance PWA Service Worker (v13 - Glassy OTP V15 Verification UI)
+const CACHE_NAME = 'kynx-pwa-v13';
 
 const STATIC_PRECACHE = [
   '/web',
-  '/css/web.css?v=12',
+  '/css/web.css?v=13',
   '/css/web.css',
-  '/js/web-engine.js?v=12',
+  '/js/web-engine.js?v=13',
   '/js/web-engine.js',
   '/js/qrcode.min.js',
   '/manifest.json',

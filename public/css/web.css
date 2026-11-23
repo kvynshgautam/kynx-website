@@ -3296,5 +3296,470 @@ html, body {
   box-shadow: 0 0 6px var(--accent-purple);
 }
 
+/* ==========================================================================
+   GLASSY OTP V15 — FROSTED GLASSMORPHISM VERIFICATION & MORPHING ANIMATIONS
+   ========================================================================== */
+
+.glassy-otp-container {
+  width: 100%;
+  animation: glassyFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes glassyFadeIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.glassy-otp-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+/* Floating Icon Badge with Notification Dot */
+.glassy-otp-badge-wrap {
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.glassy-otp-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  position: relative;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glassy-otp-badge-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #F43F5E;
+  border: 2px solid #11111A;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.85);
+  animation: badgeDotPulse 2s infinite ease-in-out;
+}
+
+@keyframes badgeDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.8; }
+}
+
+.glassy-otp-header {
+  margin-bottom: 20px;
+  max-width: 320px;
+}
+
+.glassy-otp-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.2px;
+  margin-bottom: 5px;
+}
+
+.glassy-otp-subtitle {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+/* 6 Glass Digit Input Cells */
+.glassy-otp-cells-wrapper {
+  width: 100%;
+  margin-bottom: 16px;
+  position: relative;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glassy-otp-grid {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.glassy-otp-grid.collapsed {
+  transform: scale(0.4) rotate(-10deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glassy-otp-cell {
+  width: 44px;
+  height: 52px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 4px 14px rgba(0, 0, 0, 0.25);
+  color: #FFFFFF;
+  font-family: var(--font-mono, monospace);
+  font-size: 21px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glassy-otp-cell:focus {
+  border-color: var(--accent-purple, #00E5FF);
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 0 16px var(--accent-purple-glow, rgba(0, 229, 255, 0.35)), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.glassy-otp-cell.filled {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Shake on Error */
+.glassy-otp-grid.shake {
+  animation: otpShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes otpShake {
+  10%, 90% { transform: translate3d(-2px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+  40%, 60% { transform: translate3d(6px, 0, 0); }
+}
+
+/* Morph Target: Glowing Green Glass Checkmark Badge */
+.glassy-otp-morph-target {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.glassy-otp-check-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10B981, #059669);
+  border: 2px solid #34D399;
+  box-shadow: 0 0 32px rgba(16, 185, 129, 0.65), inset 0 2px 2px rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: morphCheckBadge 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes morphCheckBadge {
+  0% { transform: scale(0.3) rotate(-20deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.glassy-svg-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: drawCheck 0.4s 0.2s ease-out forwards;
+}
+
+@keyframes drawCheck {
+  to { stroke-dashoffset: 0; }
+}
+
+.glassy-otp-ripple-ring {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid rgba(16, 185, 129, 0.6);
+  animation: glassRippleRing 1.4s infinite ease-out;
+}
+
+.glassy-otp-ripple-ring.ring-2 {
+  animation-delay: 0.4s;
+}
+
+@keyframes glassRippleRing {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Error message */
+.glassy-otp-error {
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--accent-red);
+  margin-bottom: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+/* Verify CTA Button */
+.glassy-otp-btn-verify {
+  width: 100%;
+  padding: 12px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-purple-dark));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 20px var(--accent-purple-glow);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.glassy-otp-btn-verify:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--accent-purple-glow);
+}
+
+.glassy-otp-btn-verify.verified {
+  background: linear-gradient(135deg, #10B981, #059669) !important;
+  border-color: #34D399 !important;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.55) !important;
+}
+
+/* Spinner in button */
+.glassy-btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: btnSpin 0.7s infinite linear;
+}
+
+@keyframes btnSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Footer & Resend */
+.glassy-otp-footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.glassy-otp-resend-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.glassy-otp-resend-btn {
+  background: none;
+  border: none;
+  color: var(--accent-purple-light);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.glassy-otp-resend-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.glassy-otp-back-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: color 0.2s;
+}
+
+.glassy-otp-back-btn:hover {
+  color: var(--text-main);
+}
+
+/* Demo Toolbar at Bottom */
+.glassy-otp-demo-toolbar {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  width: 100%;
+}
+
+.glassy-demo-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.glassy-demo-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Success View Elements */
+.glassy-otp-success-icon-wrap {
+  margin-bottom: 14px;
+}
+
+.glassy-otp-success-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10B981, #059669);
+  border: 2px solid #34D399;
+  box-shadow: 0 0 28px rgba(16, 185, 129, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: morphCheckBadge 0.4s ease-out both;
+}
+
+.glassy-otp-success-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.2px;
+  margin-bottom: 6px;
+}
+
+.glassy-otp-success-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  max-width: 300px;
+  margin-bottom: 18px;
+}
+
+.glassy-otp-checklist {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.glassy-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.checklist-icon-box {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.checklist-info {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+}
+
+.checklist-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.checklist-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checklist-check-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10B981;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.glassy-otp-btn-continue {
+  width: 100%;
+  padding: 12px;
+  border-radius: 13px;
+  background: #FFFFFF;
+  color: #050507;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.25);
+  transition: all 0.2s ease;
+}
+
+.glassy-otp-btn-continue:hover {
+  background: #f0f0f5;
+  transform: translateY(-2px);
+}
+
+/* Mobile responsive tuning for OTP cells on iPhone */
+@media (max-width: 480px) {
+  .glassy-otp-grid {
+    gap: 5px;
+  }
+  .glassy-otp-cell {
+    width: 38px;
+    height: 48px;
+    font-size: 19px;
+    border-radius: 10px;
+  }
+}
+
 
 
