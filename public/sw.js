@@ -1,5 +1,5 @@
-// KYNX Web Deck High-Performance PWA Service Worker (v3 - Ultra-Fast Instant Launch)
-const CACHE_NAME = 'kynx-pwa-v3';
+// KYNX Web Deck High-Performance PWA Service Worker (v4 - Frosted Glass Polish)
+const CACHE_NAME = 'kynx-pwa-v4';
 
 const STATIC_PRECACHE = [
   '/web',
