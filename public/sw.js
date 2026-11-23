@@ -1,8 +1,9 @@
-// KYNX Web Deck High-Performance PWA Service Worker (v4 - Frosted Glass Polish)
-const CACHE_NAME = 'kynx-pwa-v4';
+// KYNX Web Deck High-Performance PWA Service Worker (v5 - Solid Crisp Polish)
+const CACHE_NAME = 'kynx-pwa-v5';
 
 const STATIC_PRECACHE = [
   '/web',
+  '/css/web.css?v=5',
   '/css/web.css',
   '/js/web-engine.js',
   '/js/qrcode.min.js',
