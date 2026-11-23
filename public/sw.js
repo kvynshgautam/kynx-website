@@ -1,11 +1,11 @@
-// KYNX Web Deck High-Performance PWA Service Worker (v11 - Reverted to Single Tap)
-const CACHE_NAME = 'kynx-pwa-v11';
+// KYNX Web Deck High-Performance PWA Service Worker (v12 - Prevent Timestamp & Metadata Text Selection)
+const CACHE_NAME = 'kynx-pwa-v12';
 
 const STATIC_PRECACHE = [
   '/web',
-  '/css/web.css?v=11',
+  '/css/web.css?v=12',
   '/css/web.css',
-  '/js/web-engine.js?v=11',
+  '/js/web-engine.js?v=12',
   '/js/web-engine.js',
   '/js/qrcode.min.js',
   '/manifest.json',

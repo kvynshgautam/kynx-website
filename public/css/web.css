@@ -933,10 +933,25 @@ html, body {
   margin-top: 4px;
   font-size: 11px;
   color: var(--text-muted);
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  pointer-events: none;
+}
+.msg-meta-row * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 .msg-ticks {
   color: var(--accent-cyan);
   font-size: 12px;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+.msg-text-body {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* GHOST SHIELD BLUR EFFECT */
@@ -1666,6 +1681,8 @@ html, body {
   padding: 3px 6px;
   gap: 2px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 .msg-bubble-wrapper.mine .msg-hover-actions {
@@ -1703,6 +1720,8 @@ html, body {
   flex-wrap: wrap;
   gap: 4px;
   margin-top: 5px;
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 .msg-reaction-pill {
@@ -1716,6 +1735,8 @@ html, body {
   border: 1px solid rgba(121, 80, 255, 0.4);
   color: #fff;
   cursor: pointer;
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 .msg-deleted-text {
