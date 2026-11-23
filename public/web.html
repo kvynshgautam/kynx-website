@@ -56,7 +56,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"></noscript>
-  <link rel="stylesheet" href="/css/web.css?v=16">
+  <link rel="stylesheet" href="/css/web.css?v=17">
 </head>
 <body style="background-color: #06060C; background: #06060C; color: #FFFFFF;">
 
@@ -134,7 +134,6 @@
         <button type="button" id="toggle-direct-login" class="direct-login-toggle-btn">
           ⚡ Login with Email/Password Instead
         </button>
-        <button type="button" id="btn-show-otp-demo-main" class="login-btn-ghost" style="width:100%; margin-top:8px; font-size:12px; padding:9px 12px; border-radius:12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); color:#FFFFFF; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s;"><span style="font-weight:700;">✨ Preview Glassy OTP V15 Experience</span></button>
 
         <!-- Direct Login Form (Hidden by default, toggled via button) -->
         <div id="direct-login-section" style="display:none; margin-top:16px;">
@@ -153,7 +152,6 @@
             </div>
             <div id="login-error" style="color:var(--accent-red); font-size:12px; margin-bottom:10px;"></div>
             <button type="submit" id="btn-login-submit" class="btn-submit-auth">Connect Session 🚀</button>
-            <button type="button" id="btn-show-otp-demo" class="login-btn-ghost" style="width:100%; margin-top:10px; font-size:12px; padding:9px 12px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px dashed rgba(255,255,255,0.2); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s;"><span>✨ Glassy OTP V15 Experience</span></button>
           </form>
 
           <!-- Step 2: Glassy OTP V15 Verification (Exact Replica of Video) -->
@@ -234,23 +232,13 @@
                 <span id="v15-btn-text">Verify code</span>
               </button>
 
-              <!-- Footer with Resend / Replay demo / Back -->
+              <!-- Footer with Resend / Back -->
               <div class="v15-footer">
                 <div id="v15-resend-row">
                   Didn't get a code? <button type="button" id="v15-btn-resend" class="v15-resend-link">⟳ Resend in 0:25</button>
                 </div>
-                <div id="v15-replay-row" style="display:none;">
-                  <button type="button" id="v15-btn-replay" class="v15-replay-btn">⟳ Replay demo</button>
-                </div>
                 <button type="button" id="btn-back-to-pwd" class="v15-back-to-pwd">← Back to Password</button>
               </div>
-            </div>
-
-            <!-- Floating Bottom Toolbar (matching video) -->
-            <div class="v15-demo-toolbar">
-              <button type="button" id="v15-pill-demo" class="v15-demo-pill">✦ Demo code 246810</button>
-              <button type="button" id="v15-pill-wrong" class="v15-demo-pill">Try wrong</button>
-              <button type="button" id="v15-pill-autofill" class="v15-demo-pill">Autofill</button>
             </div>
           </div>
 
@@ -807,6 +795,6 @@
 
   <!-- QR Code Generator & Core Web Engine Script -->
   <script src="/js/qrcode.min.js"></script>
-  <script src="/js/web-engine.js?v=16"></script>
+  <script src="/js/web-engine.js?v=17"></script>
 </body>
 </html>

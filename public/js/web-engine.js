@@ -86,16 +86,6 @@
     btnBackToPwd: document.getElementById('btn-back-to-pwd'),
     btnResendOtp: document.getElementById('btn-resend-otp'),
     otpResendTimer: document.getElementById('otp-resend-timer'),
-    btnShowOtpDemo: document.getElementById('btn-show-otp-demo'),
-    glassyOtpInputView: document.getElementById('glassy-otp-input-view'),
-    glassyOtpSuccessView: document.getElementById('glassy-otp-success-view'),
-    glassyOtpGrid: document.getElementById('glassy-otp-grid'),
-    glassyOtpMorphTarget: document.getElementById('glassy-otp-morph-target'),
-    btnOtpDemoCode: document.getElementById('btn-otp-demo-code'),
-    btnOtpDemoWrong: document.getElementById('btn-otp-demo-wrong'),
-    btnOtpDemoPaste: document.getElementById('btn-otp-demo-paste'),
-    checklistEmailVal: document.getElementById('checklist-email-val'),
-    btnOtpSuccessContinue: document.getElementById('btn-otp-success-continue'),
 
     // Forgot Password Elements
     btnShowForgot: document.getElementById('btn-show-forgot'),
@@ -800,7 +790,6 @@
       el.btnBackToPwd.addEventListener('click', () => {
         if (el.otpSection) el.otpSection.style.display = 'none';
         if (el.loginForm) el.loginForm.style.display = 'block';
-        AppState.isDemoOtp = false;
       });
     }
     if (el.btnResendOtp) {
@@ -1563,7 +1552,6 @@
       // 1. Two-Factor OTP Required
       if (data.status === 'otp_required') {
         AppState.tempToken = data.temp_token;
-        AppState.isDemoOtp = false;
         el.loginError.textContent = '';
         el.loginForm.style.display = 'none';
         el.otpSection.style.display = 'flex';
@@ -1668,7 +1656,6 @@
     const sub = document.getElementById('v15-subtitle');
     const subEmail = document.getElementById('v15-sub-email');
     const resendRow = document.getElementById('v15-resend-row');
-    const replayRow = document.getElementById('v15-replay-row');
 
     // STAGE 1 (t = 0ms): 6 cells glide into 2x3 grid, button turns white "Verifying..."
     setV15State('v15-state-grid');
@@ -1710,7 +1697,6 @@
       }
 
       if (resendRow) resendRow.style.display = 'none';
-      if (replayRow) replayRow.style.display = 'block';
 
       if (navigator.vibrate) navigator.vibrate([30, 40, 80]);
 
@@ -1752,7 +1738,6 @@
     const title = document.getElementById('v15-title');
     const sub = document.getElementById('v15-subtitle');
     const resendRow = document.getElementById('v15-resend-row');
-    const replayRow = document.getElementById('v15-replay-row');
     const btn = document.getElementById('v15-btn-action');
     const btnText = document.getElementById('v15-btn-text');
 
@@ -1762,7 +1747,6 @@
       sub.innerHTML = `Enter the 6-digit code we sent<br>to <span class="v15-email-pill" id="v15-email-display">${email}</span>`;
     }
     if (resendRow) resendRow.style.display = 'block';
-    if (replayRow) replayRow.style.display = 'none';
 
     if (btn && btnText) {
       btn.className = 'v15-btn-action btn-idle';
@@ -1798,32 +1782,6 @@
         btn.disabled = false;
       }
     }, 1000);
-  }
-
-  // --- TYPEWRITER AUTOFILL ANIMATION (Matching Video Autofill Button) ---
-  function runV15AutofillSequence(targetCode) {
-    clearV15Timers();
-    resetV15ToIdle();
-    const code = targetCode || '246810';
-    let idx = 0;
-
-    function step() {
-      if (idx < code.length) {
-        updateV15CellsUI(code.slice(0, idx + 1));
-        if (navigator.vibrate) navigator.vibrate(20);
-        idx++;
-        const t = setTimeout(step, 80);
-        v15AnimationTimers.push(t);
-      } else {
-        const t = setTimeout(() => {
-          handleVerifyOtp();
-        }, 120);
-        v15AnimationTimers.push(t);
-      }
-    }
-
-    const startTimer = setTimeout(step, 60);
-    v15AnimationTimers.push(startTimer);
   }
 
   // --- INIT V15 EVENT LISTENERS ---
@@ -1873,39 +1831,10 @@
           if (v15CurrentCode.length === 6) {
             handleVerifyOtp();
           } else {
-            runV15AutofillSequence('246810');
+            const hidden = document.getElementById('v15-hidden-input');
+            if (hidden) hidden.focus();
           }
         }
-      });
-    }
-
-    // Replay Demo Button
-    const btnReplay = document.getElementById('v15-btn-replay');
-    if (btnReplay) {
-      btnReplay.addEventListener('click', () => {
-        resetV15ToIdle();
-      });
-    }
-
-    // Floating Demo Toolbar Pills (matching video)
-    const pillDemo = document.getElementById('v15-pill-demo');
-    if (pillDemo) {
-      pillDemo.addEventListener('click', () => {
-        runV15AutofillSequence('246810');
-      });
-    }
-
-    const pillWrong = document.getElementById('v15-pill-wrong');
-    if (pillWrong) {
-      pillWrong.addEventListener('click', () => {
-        runV15ErrorAnimation('999999');
-      });
-    }
-
-    const pillAutofill = document.getElementById('v15-pill-autofill');
-    if (pillAutofill) {
-      pillAutofill.addEventListener('click', () => {
-        runV15AutofillSequence('246810');
       });
     }
 
@@ -1916,46 +1845,15 @@
         const otpSec = document.getElementById('otp-section');
         if (otpSec) otpSec.style.display = 'none';
         if (el.loginForm) el.loginForm.style.display = 'block';
-        AppState.isDemoOtp = false;
         clearV15Timers();
       });
     }
-
-    // Demo buttons to launch Glassy OTP V15 Experience
-    function openV15Demo() {
-      AppState.isDemoOtp = true;
-      if (el.loginForm) el.loginForm.style.display = 'none';
-      if (el.qrContainer) el.qrContainer.style.display = 'none';
-      if (el.directLoginSection) el.directLoginSection.style.display = 'block';
-      const otpSec = document.getElementById('otp-section');
-      if (otpSec) otpSec.style.display = 'flex';
-      resetV15ToIdle('al••••a@example.com');
-    }
-
-    const btnShowDemo = document.getElementById('btn-show-otp-demo');
-    if (btnShowDemo) btnShowDemo.addEventListener('click', openV15Demo);
-
-    const btnShowDemoMain = document.getElementById('btn-show-otp-demo-main');
-    if (btnShowDemoMain) btnShowDemoMain.addEventListener('click', openV15Demo);
   }
 
   async function handleVerifyOtp() {
     const otp = v15CurrentCode.trim();
     if (otp.length < 6) {
       runV15ErrorAnimation(otp);
-      return;
-    }
-
-    if (AppState.isDemoOtp) {
-      if (otp === '246810') {
-        runV15SuccessChoreography('246810', 'al••••a@example.com', () => {
-          setTimeout(() => {
-            // Keep on screen so user can admire the success state or click Continue
-          }, 500);
-        });
-      } else {
-        runV15ErrorAnimation(otp);
-      }
       return;
     }
 
