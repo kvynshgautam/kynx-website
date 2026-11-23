@@ -941,11 +941,17 @@ html, body {
 
 /* GHOST SHIELD BLUR EFFECT */
 .ghost-shield-active .msg-bubble-content {
-  filter: blur(5px);
+  filter: blur(6px);
   user-select: none;
+  transition: filter 0.2s ease;
 }
-.ghost-shield-active .msg-bubble-wrapper:hover .msg-bubble-content {
-  filter: none;
+.ghost-shield-active .msg-bubble-wrapper.ghost-revealed .msg-bubble-content {
+  filter: none !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ghost-shield-active .msg-bubble-wrapper:hover .msg-bubble-content {
+    filter: none;
+  }
 }
 
 /* VIEW-ONCE CHIP IN CHAT */
@@ -1659,13 +1665,14 @@ html, body {
   display: none;
   position: absolute;
   top: -14px;
-  z-index: 5;
-  background: rgba(16, 16, 26, 0.95);
-  border: 1px solid rgba(121, 80, 255, 0.4);
+  z-index: 10;
+  background: rgba(16, 16, 26, 0.96);
+  border: 1px solid var(--accent-purple, rgba(121, 80, 255, 0.4));
   border-radius: 20px;
   padding: 3px 6px;
   gap: 2px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65), 0 0 12px var(--accent-purple-glow, transparent);
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .msg-bubble-wrapper.mine .msg-hover-actions {
@@ -1676,9 +1683,24 @@ html, body {
   left: 8px;
 }
 
-.msg-bubble-wrapper:hover .msg-hover-actions {
-  display: inline-flex;
+/* Explicit double-tap / double-click reaction bar display */
+.msg-bubble-wrapper.show-actions .msg-hover-actions {
+  display: inline-flex !important;
   align-items: center;
+  animation: popInActions 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popInActions {
+  from { opacity: 0; transform: scale(0.85) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Desktop mouse hover (only when ghost shield is NOT active) */
+@media (hover: hover) and (pointer: fine) {
+  body:not(.ghost-shield-active) .msg-bubble-wrapper:hover .msg-hover-actions {
+    display: inline-flex;
+    align-items: center;
+  }
 }
 
 .msg-act-btn {

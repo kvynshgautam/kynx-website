@@ -1169,7 +1169,15 @@
             !el.emojiPickerPopover.contains(e.target) && e.target !== el.btnEmojiPicker) {
           el.emojiPickerPopover.style.display = 'none';
         }
+        if (!e.target.closest('.msg-bubble-wrapper')) {
+          document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(m => m.classList.remove('show-actions'));
+        }
       });
+      document.addEventListener('touchstart', (e) => {
+        if (!e.target.closest('.msg-bubble-wrapper')) {
+          document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(m => m.classList.remove('show-actions'));
+        }
+      }, { passive: true });
     }
 
     // Ctrl+V Instant Screenshot / Image / File Paste
@@ -2984,6 +2992,7 @@
         } else if (act === 'delete') {
           deleteMessageFromWeb(currentId, isMine);
         }
+        wrapper.classList.remove('show-actions');
       });
     });
 
@@ -3060,6 +3069,59 @@
         }, 1000);
       });
     }
+
+    // Double-tap (mobile) & Double-click (desktop) for emoji reaction bar
+    // Single-tap / Click for Ghost Shield unblur toggle without emojis
+    let lastTapTime = 0;
+    let singleTapTimer = null;
+    let touchHandled = false;
+
+    function toggleActionsPopup() {
+      const isAlreadyOpen = wrapper.classList.contains('show-actions');
+      document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(m => {
+        if (m !== wrapper) m.classList.remove('show-actions');
+      });
+      if (isAlreadyOpen) {
+        wrapper.classList.remove('show-actions');
+      } else {
+        wrapper.classList.add('show-actions');
+      }
+    }
+
+    wrapper.addEventListener('dblclick', (e) => {
+      if (e.target.closest('.msg-act-btn') || e.target.closest('a') || e.target.closest('button') || e.target.closest('[data-ptt-play]') || e.target.closest('[data-burn-reveal]')) return;
+      e.preventDefault();
+      toggleActionsPopup();
+    });
+
+    wrapper.addEventListener('touchstart', () => { touchHandled = true; }, { passive: true });
+
+    wrapper.addEventListener('touchend', (e) => {
+      if (e.target.closest('.msg-act-btn') || e.target.closest('a') || e.target.closest('button') || e.target.closest('[data-ptt-play]') || e.target.closest('[data-burn-reveal]')) return;
+      const now = Date.now();
+      const diff = now - lastTapTime;
+      if (diff < 320 && diff > 40) {
+        clearTimeout(singleTapTimer);
+        lastTapTime = 0;
+        e.preventDefault();
+        toggleActionsPopup();
+      } else {
+        lastTapTime = now;
+        singleTapTimer = setTimeout(() => {
+          if (AppState.ghostShield) {
+            wrapper.classList.toggle('ghost-revealed');
+          }
+        }, 320);
+      }
+    });
+
+    wrapper.addEventListener('click', (e) => {
+      if (touchHandled) { touchHandled = false; return; }
+      if (e.target.closest('.msg-act-btn') || e.target.closest('a') || e.target.closest('button') || e.target.closest('[data-ptt-play]') || e.target.closest('[data-burn-reveal]')) return;
+      if (AppState.ghostShield) {
+        wrapper.classList.toggle('ghost-revealed');
+      }
+    });
 
     el.messagesCanvas.appendChild(wrapper);
     return true;
@@ -3143,12 +3205,18 @@
     AppState.ghostShield = !AppState.ghostShield;
     if (AppState.ghostShield) {
       document.body.classList.add('ghost-shield-active');
-      el.btnGhostShield.classList.add('active');
-      el.btnGhostShield.innerHTML = `🛡️ Ghost Shield [ON]`;
+      if (el.btnGhostShield) {
+        el.btnGhostShield.classList.add('active');
+        el.btnGhostShield.innerHTML = `🛡️ Ghost Shield [ON]`;
+      }
     } else {
       document.body.classList.remove('ghost-shield-active');
-      el.btnGhostShield.classList.remove('active');
-      el.btnGhostShield.innerHTML = `🛡️ Ghost Shield`;
+      if (el.btnGhostShield) {
+        el.btnGhostShield.classList.remove('active');
+        el.btnGhostShield.innerHTML = `🛡️ Ghost Shield`;
+      }
+      document.querySelectorAll('.msg-bubble-wrapper.ghost-revealed').forEach(el => el.classList.remove('ghost-revealed'));
+      document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(el => el.classList.remove('show-actions'));
     }
   }
 
