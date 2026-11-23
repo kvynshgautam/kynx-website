@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
   <title>KYNX Web Deck — Connect Beyond Limits (Ghost Link)</title>
   <meta name="description" content="Next-generation Web Messaging Deck for KYNX with Instant Cyber Pairing, Local AirDrop, and Ghost Shield privacy.">
   <link rel="icon" type="image/svg+xml" href="/assets/kynx-logo.svg">
@@ -243,6 +246,14 @@
                 </svg>
               </button>
               <div class="chat-more-dropdown" id="chat-more-menu" style="display:none">
+                <button class="dropdown-item mobile-only-menu-item" id="menu-btn-walkie-talkie">
+                  <span>📻</span>
+                  <span>Walkie-Talkie (PTT)</span>
+                </button>
+                <button class="dropdown-item mobile-only-menu-item" id="menu-btn-watch-together">
+                  <span>🎵</span>
+                  <span>Watch Together Room</span>
+                </button>
                 <button class="dropdown-item" id="menu-btn-view-profile">
                   <span>👤</span>
                   <span>View Profile & Bio</span>

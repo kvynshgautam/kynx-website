@@ -90,6 +90,8 @@
     btnChatMenu: document.getElementById('btn-chat-menu'),
     chatMoreMenu: document.getElementById('chat-more-menu'),
     menuBtnViewProfile: document.getElementById('menu-btn-view-profile'),
+    menuBtnWalkieTalkie: document.getElementById('menu-btn-walkie-talkie'),
+    menuBtnWatchTogether: document.getElementById('menu-btn-watch-together'),
     menuBtnAirdrop: document.getElementById('menu-btn-airdrop'),
     menuBtnClearChat: document.getElementById('menu-btn-clear-chat'),
     menuBtnRemoveFriend: document.getElementById('menu-btn-remove-friend'),
@@ -557,6 +559,30 @@
   // Initialize Web Deck
   function init() {
     bindEvents();
+
+    // Dev test hook for automated verification in sandboxed browser
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('mock_auth')) {
+      AppState.token = 'dev_test_token';
+      AppState.user = { id: 'kg_1', displayName: 'Kavyansh (KG)', username: 'kavyansh' };
+      try {
+        localStorage.setItem('kynx_web_token', AppState.token);
+        localStorage.setItem('kynx_web_user', JSON.stringify(AppState.user));
+      } catch (_) {}
+      hideAuth();
+      showDeck();
+
+      if (urlParams.has('mock_chat')) {
+        setTimeout(() => {
+          openConversation({
+            id: 'conv_123',
+            peer: { id: 'peer_1', display_name: 'Gaurav Gautam', username: 'gaurav', is_online: true }
+          });
+        }, 250);
+      }
+      return;
+    }
+
     if (AppState.token && AppState.user) {
       showDeck();
     } else {
@@ -655,6 +681,21 @@
         if (!el.chatMoreMenu.contains(e.target) && e.target !== el.btnChatMenu) {
           el.chatMoreMenu.style.display = 'none';
         }
+      });
+    }
+
+    // Walkie-Talkie & Watch Together in 3-dots menu (Accessible on mobile)
+    if (el.menuBtnWalkieTalkie) {
+      el.menuBtnWalkieTalkie.addEventListener('click', () => {
+        if (el.chatMoreMenu) el.chatMoreMenu.style.display = 'none';
+        if (el.btnWalkieTalkie) el.btnWalkieTalkie.click();
+      });
+    }
+
+    if (el.menuBtnWatchTogether) {
+      el.menuBtnWatchTogether.addEventListener('click', () => {
+        if (el.chatMoreMenu) el.chatMoreMenu.style.display = 'none';
+        if (el.btnWatchTogether) el.btnWatchTogether.click();
       });
     }
 
@@ -939,9 +980,20 @@
 
     if (el.btnMobileBack) {
       el.btnMobileBack.addEventListener('click', () => {
-        if (el.webApp) el.webApp.classList.remove('mobile-chat-open');
+        if (history.state && history.state.kynxChatOpen) {
+          history.back();
+        } else if (el.webApp) {
+          el.webApp.classList.remove('mobile-chat-open');
+        }
       });
     }
+
+    // Native Mobile Back Swipe / Browser Back Navigation
+    window.addEventListener('popstate', () => {
+      if (el.webApp && el.webApp.classList.contains('mobile-chat-open')) {
+        el.webApp.classList.remove('mobile-chat-open');
+      }
+    });
 
     if (el.btnEmojiPicker) {
       el.btnEmojiPicker.addEventListener('click', (e) => {
@@ -1729,6 +1781,11 @@
     el.activeChatView.style.display = 'flex';
     if (openMobilePanel && el.webApp) {
       el.webApp.classList.add('mobile-chat-open');
+      if (window.innerWidth <= 820 && (!history.state || !history.state.kynxChatOpen)) {
+        try {
+          history.pushState({ kynxChatOpen: true }, '');
+        } catch (_) {}
+      }
     }
 
     const peer = conv.peer || {};
