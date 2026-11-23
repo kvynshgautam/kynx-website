@@ -1,10 +1,11 @@
-// KYNX Web Deck High-Performance PWA Service Worker (v5 - Solid Crisp Polish)
-const CACHE_NAME = 'kynx-pwa-v5';
+// KYNX Web Deck High-Performance PWA Service Worker (v6 - 0ms Instant Cache)
+const CACHE_NAME = 'kynx-pwa-v6';
 
 const STATIC_PRECACHE = [
   '/web',
   '/css/web.css?v=5',
   '/css/web.css',
+  '/js/web-engine.js?v=6',
   '/js/web-engine.js',
   '/js/qrcode.min.js',
   '/manifest.json',

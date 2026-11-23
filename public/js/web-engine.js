@@ -9,6 +9,11 @@
   const BACKEND_URL = 'https://kynx-backend.onrender.com';
   const WS_URL = 'wss://kynx-backend.onrender.com/ws';
 
+  let cachedConvsInit = [];
+  try {
+    cachedConvsInit = JSON.parse(localStorage.getItem('kynx_cached_conversations') || '[]');
+  } catch (_) {}
+
   const AppState = {
     token: localStorage.getItem('kynx_web_token') || null,
     user: JSON.parse(localStorage.getItem('kynx_web_user') || 'null'),
@@ -16,7 +21,7 @@
     resetEmail: '',
     resetIdentifier: '',
     audioMuted: localStorage.getItem('kynx_audio_muted') === 'true',
-    conversations: [],
+    conversations: Array.isArray(cachedConvsInit) ? cachedConvsInit : [],
     activeConversation: null,
     messages: {}, // conversationId -> Array of messages
     ws: null,
@@ -29,6 +34,31 @@
     pairingCode: null,
     pairingPollTimer: null
   };
+
+  function getCachedMessages(convId) {
+    if (!convId) return [];
+    if (AppState.messages[convId] && AppState.messages[convId].length > 0) {
+      return AppState.messages[convId];
+    }
+    try {
+      const raw = localStorage.getItem('kynx_cached_msgs_' + convId);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          AppState.messages[convId] = parsed;
+          return parsed;
+        }
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  function saveCachedMessages(convId, msgs) {
+    if (!convId || !Array.isArray(msgs)) return;
+    try {
+      localStorage.setItem('kynx_cached_msgs_' + convId, JSON.stringify(msgs.slice(-50)));
+    } catch (_) {}
+  }
 
   // DOM Elements
   const el = {
@@ -1876,19 +1906,25 @@
   async function showDeck() {
     hideAuth();
 
-    // Verify / load user profile if needed
+    // 0ms Instant Load: Render cached conversations immediately on screen!
+    if (AppState.conversations && AppState.conversations.length > 0 && AppState.activeTab === 'chats') {
+      renderConversations();
+    }
+
+    // Verify / refresh user profile in background (non-blocking)
     if (!AppState.user || !AppState.user.id) {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/users/me`, {
-          headers: { 'Authorization': `Bearer ${AppState.token}` }
-        });
-        if (res.ok) {
-          AppState.user = await res.json();
-          localStorage.setItem('kynx_web_user', JSON.stringify(AppState.user));
+      fetch(`${BACKEND_URL}/api/users/me`, {
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      }).then(res => res.ok ? res.json() : null).then(u => {
+        if (u) {
+          AppState.user = u;
+          try { localStorage.setItem('kynx_web_user', JSON.stringify(u)); } catch (_) {}
+          const inits = (u.displayName || u.display_name || u.username || 'KG').substring(0, 2).toUpperCase();
+          if (el.userAvatar) el.userAvatar.textContent = inits;
+          if (el.userName) el.userName.textContent = u.displayName || u.display_name || u.username;
+          if (el.userHandle) el.userHandle.textContent = '@' + (u.username || 'kynx_user');
         }
-      } catch (e) {
-        console.warn('Could not refresh profile:', e);
-      }
+      }).catch(e => console.warn('Could not refresh profile:', e));
     }
 
     // Update user profile in sidebar
@@ -2122,6 +2158,9 @@
       if (res.ok) {
         const data = await res.json();
         AppState.conversations = Array.isArray(data) ? data : (data.conversations || []);
+        try {
+          localStorage.setItem('kynx_cached_conversations', JSON.stringify(AppState.conversations));
+        } catch (_) {}
         if (AppState.activeTab === 'chats') {
           renderConversations();
           if (AppState.searchQuery) {
@@ -2222,13 +2261,29 @@
       el.menuTextBlock.textContent = peer.is_blocked ? 'Unblock User' : 'Block User';
     }
 
-    el.messagesCanvas.innerHTML = `
-      <div style="text-align: center; color: var(--text-sub); font-size: 12px; margin: 20px 0;">
-        🔒 Hardware Encrypted Peer Session (Render + WebRTC)
-      </div>`;
+    const convId = conv.id;
+    const cachedMsgs = getCachedMessages(convId);
+    if (cachedMsgs.length > 0) {
+      el.messagesCanvas.innerHTML = `
+        <div style="text-align: center; color: var(--text-sub); font-size: 12px; margin: 20px 0;">
+          🔒 Hardware Encrypted Peer Session (Render + WebRTC)
+        </div>`;
+      cachedMsgs.forEach(m => appendMessageToUI(m));
+      scrollChatToBottom();
+      PowerState.chatHistorySeeded = true;
+    } else {
+      el.messagesCanvas.innerHTML = `
+        <div style="text-align: center; color: var(--text-sub); font-size: 12px; margin: 20px 0;">
+          🔒 Hardware Encrypted Peer Session (Render + WebRTC)
+        </div>
+        <div class="chat-sync-placeholder" style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 24px;">
+          <div style="display:inline-block; width:14px; height:14px; border:2px solid var(--accent-purple); border-top-color:transparent; border-radius:50%; animation:spin 0.8s linear infinite; margin-right:8px; vertical-align:middle;"></div>
+          Syncing messages...
+        </div>`;
+    }
 
-    // Fetch initial message history
-    await syncActiveConversation();
+    // Fetch initial message history in background (0ms UI latency)
+    syncActiveConversation();
 
     // Adaptive fallback sync: WS delivers in <50ms, so only poll every 15s while WS is live (4s if WS drops)
     if (activeSyncTimer) clearInterval(activeSyncTimer);
@@ -2302,7 +2357,10 @@
           const rendered = appendMessageToUI(m);
           if (rendered) shouldScroll = true;
         });
+        const placeholder = el.messagesCanvas.querySelector('.chat-sync-placeholder');
+        if (placeholder) placeholder.remove();
         PowerState.chatHistorySeeded = true;
+        saveCachedMessages(convId, AppState.messages[convId]);
 
         if (shouldScroll) {
           scrollChatToBottom();
@@ -2348,6 +2406,7 @@
       AppState.messages[AppState.activeConversation.id] = [];
     }
     AppState.messages[AppState.activeConversation.id].push(newMsg);
+    saveCachedMessages(AppState.activeConversation.id, AppState.messages[AppState.activeConversation.id]);
     appendMessageToUI(newMsg);
     scrollChatToBottom();
 
@@ -2427,6 +2486,7 @@
     const exists = AppState.messages[convId].some(m => m.id === msg.id || (m.client_msg_id && m.client_msg_id === (msg.client_msg_id || msg.id)));
     if (!exists) {
       AppState.messages[convId].push(msg);
+      saveCachedMessages(convId, AppState.messages[convId]);
     }
 
     if (AppState.activeConversation && AppState.activeConversation.id === convId) {
