@@ -103,7 +103,10 @@
               <input type="text" id="login-identifier" class="login-input" placeholder="kg@kynx.app" required>
             </div>
             <div class="login-form-group">
-              <label for="login-password">Password</label>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <label for="login-password" style="margin-bottom:0;">Password</label>
+                <button type="button" id="btn-show-forgot" style="background:none; border:none; color:var(--accent-purple-light); font-size:12px; font-weight:600; cursor:pointer; padding:0; text-decoration:none; transition:opacity 0.2s;">Forgot Password?</button>
+              </div>
               <input type="password" id="login-password" class="login-input" placeholder="••••••••" required>
             </div>
             <div id="login-error" style="color:var(--accent-red); font-size:12px; margin-bottom:10px;"></div>
@@ -125,6 +128,49 @@
             <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-top:8px;">
               <button type="button" id="btn-back-to-pwd" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">← Back to Password</button>
               <button type="button" id="btn-resend-otp" style="background:none; border:none; color:var(--accent-purple-light); cursor:pointer;">Resend Code</button>
+            </div>
+          </div>
+
+          <!-- Step 3: Forgot Password - Request Recovery Code (Hidden by default) -->
+          <div id="forgot-req-section" style="display:none;">
+            <div style="margin-bottom:14px; text-align:left;">
+              <h4 style="font-size:15px; font-weight:700; color:var(--text-main); margin-bottom:4px;">Reset Password</h4>
+              <p style="font-size:12.5px; color:var(--text-muted); line-height:1.4;">Enter your username or email address and we'll dispatch a 6-digit recovery code.</p>
+            </div>
+            <div class="login-form-group">
+              <label for="forgot-identifier">Username or Registered Email</label>
+              <input type="text" id="forgot-identifier" class="login-input" placeholder="e.g. kvynshgautam or you@domain.com">
+            </div>
+            <div id="forgot-req-error" style="color:var(--accent-red); font-size:12px; margin-bottom:10px;"></div>
+            <button type="button" id="btn-send-reset-otp" class="btn-submit-auth" style="margin-bottom:10px;">Send Recovery Code ✉️</button>
+            <div style="text-align:center; font-size:12px; margin-top:8px;">
+              <button type="button" id="btn-back-to-login" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">← Back to Sign In</button>
+            </div>
+          </div>
+
+          <!-- Step 4: Forgot Password - Confirm New Password (Hidden by default) -->
+          <div id="forgot-confirm-section" style="display:none;">
+            <div style="margin-bottom:14px; text-align:left;">
+              <h4 style="font-size:15px; font-weight:700; color:var(--text-main); margin-bottom:4px;">Set New Password</h4>
+              <p id="forgot-confirm-masked" style="font-size:12.5px; color:var(--text-muted); line-height:1.4;">Enter the 6-digit code sent to your email along with your new password.</p>
+            </div>
+            <div class="login-form-group">
+              <label for="forgot-otp">6-Digit Recovery Code</label>
+              <input type="text" id="forgot-otp" class="login-input" placeholder="123456" maxlength="6" pattern="[0-9]*" inputmode="numeric" style="letter-spacing: 4px; font-size: 18px; font-weight: 700; text-align: center;">
+            </div>
+            <div class="login-form-group">
+              <label for="forgot-new-pwd">New Password</label>
+              <input type="password" id="forgot-new-pwd" class="login-input" placeholder="At least 8 characters">
+            </div>
+            <div class="login-form-group">
+              <label for="forgot-confirm-pwd">Confirm New Password</label>
+              <input type="password" id="forgot-confirm-pwd" class="login-input" placeholder="Repeat new password">
+            </div>
+            <div id="forgot-confirm-error" style="color:var(--accent-red); font-size:12px; margin-bottom:10px;"></div>
+            <button type="button" id="btn-verify-reset-pwd" class="btn-submit-auth" style="margin-bottom:10px;">Update Password & Sign In ⚡</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-top:8px;">
+              <button type="button" id="btn-back-to-forgot-req" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">← Back</button>
+              <button type="button" id="btn-resend-reset-otp" style="background:none; border:none; color:var(--accent-purple-light); cursor:pointer;">Resend Code</button>
             </div>
           </div>
         </div>

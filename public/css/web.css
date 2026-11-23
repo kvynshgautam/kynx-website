@@ -344,6 +344,15 @@ html, body {
 .btn-submit-auth:active {
   transform: scale(0.98);
 }
+.btn-submit-auth:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+#btn-show-forgot:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
 
 /* ==========================================================================
    DESKTOP WORKSPACE LAYOUT

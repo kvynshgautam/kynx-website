@@ -13,6 +13,8 @@
     token: localStorage.getItem('kynx_web_token') || null,
     user: JSON.parse(localStorage.getItem('kynx_web_user') || 'null'),
     tempToken: null,
+    resetEmail: '',
+    resetIdentifier: '',
     conversations: [],
     activeConversation: null,
     messages: {}, // conversationId -> Array of messages
@@ -51,6 +53,23 @@
     btnVerifyOtp: document.getElementById('btn-verify-otp'),
     btnBackToPwd: document.getElementById('btn-back-to-pwd'),
     btnResendOtp: document.getElementById('btn-resend-otp'),
+
+    // Forgot Password Elements
+    btnShowForgot: document.getElementById('btn-show-forgot'),
+    forgotReqSection: document.getElementById('forgot-req-section'),
+    forgotIdentifier: document.getElementById('forgot-identifier'),
+    forgotReqError: document.getElementById('forgot-req-error'),
+    btnSendResetOtp: document.getElementById('btn-send-reset-otp'),
+    btnBackToLogin: document.getElementById('btn-back-to-login'),
+    forgotConfirmSection: document.getElementById('forgot-confirm-section'),
+    forgotConfirmMasked: document.getElementById('forgot-confirm-masked'),
+    forgotOtp: document.getElementById('forgot-otp'),
+    forgotNewPwd: document.getElementById('forgot-new-pwd'),
+    forgotConfirmPwd: document.getElementById('forgot-confirm-pwd'),
+    forgotConfirmError: document.getElementById('forgot-confirm-error'),
+    btnVerifyResetPwd: document.getElementById('btn-verify-reset-pwd'),
+    btnBackToForgotReq: document.getElementById('btn-back-to-forgot-req'),
+    btnResendResetOtp: document.getElementById('btn-resend-reset-otp'),
     
     // Desktop Deck
     userAvatar: document.getElementById('user-avatar'),
@@ -599,6 +618,12 @@
       el.directLoginSection.style.display = isDirect ? 'none' : 'block';
       el.qrContainer.style.display = isDirect ? 'flex' : 'none';
       el.toggleLoginBtn.textContent = isDirect ? '⚡ Login with Email/Password Instead' : '📱 Scan Cyber QR / Pairing Code';
+      if (!isDirect) {
+        el.loginForm.style.display = 'block';
+        if (el.otpSection) el.otpSection.style.display = 'none';
+        if (el.forgotReqSection) el.forgotReqSection.style.display = 'none';
+        if (el.forgotConfirmSection) el.forgotConfirmSection.style.display = 'none';
+      }
     });
 
     // Handle Direct Login Form
@@ -606,6 +631,67 @@
       e.preventDefault();
       await handleDirectLogin();
     });
+
+    // Forgot Password triggers
+    if (el.btnShowForgot) {
+      el.btnShowForgot.addEventListener('click', () => {
+        el.loginForm.style.display = 'none';
+        if (el.otpSection) el.otpSection.style.display = 'none';
+        if (el.forgotConfirmSection) el.forgotConfirmSection.style.display = 'none';
+        if (el.forgotReqSection) {
+          el.forgotReqSection.style.display = 'block';
+          if (el.loginIdentifier && el.loginIdentifier.value.trim() && el.forgotIdentifier) {
+            el.forgotIdentifier.value = el.loginIdentifier.value.trim();
+          }
+          if (el.forgotReqError) el.forgotReqError.textContent = '';
+          if (el.forgotIdentifier) el.forgotIdentifier.focus();
+        }
+      });
+    }
+
+    if (el.btnBackToLogin) {
+      el.btnBackToLogin.addEventListener('click', () => {
+        if (el.forgotReqSection) el.forgotReqSection.style.display = 'none';
+        if (el.forgotConfirmSection) el.forgotConfirmSection.style.display = 'none';
+        el.loginForm.style.display = 'block';
+      });
+    }
+
+    if (el.btnBackToForgotReq) {
+      el.btnBackToForgotReq.addEventListener('click', () => {
+        if (el.forgotConfirmSection) el.forgotConfirmSection.style.display = 'none';
+        if (el.forgotReqSection) el.forgotReqSection.style.display = 'block';
+      });
+    }
+
+    if (el.btnSendResetOtp) {
+      el.btnSendResetOtp.addEventListener('click', handleSendResetOtp);
+    }
+    if (el.forgotIdentifier) {
+      el.forgotIdentifier.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleSendResetOtp();
+        }
+      });
+    }
+
+    if (el.btnVerifyResetPwd) {
+      el.btnVerifyResetPwd.addEventListener('click', handleConfirmResetPwd);
+    }
+    const handleResetEnter = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleConfirmResetPwd();
+      }
+    };
+    if (el.forgotOtp) el.forgotOtp.addEventListener('keydown', handleResetEnter);
+    if (el.forgotNewPwd) el.forgotNewPwd.addEventListener('keydown', handleResetEnter);
+    if (el.forgotConfirmPwd) el.forgotConfirmPwd.addEventListener('keydown', handleResetEnter);
+
+    if (el.btnResendResetOtp) {
+      el.btnResendResetOtp.addEventListener('click', handleResendResetOtp);
+    }
 
     // OTP verification actions
     if (el.btnVerifyOtp) {
@@ -1258,6 +1344,7 @@
     }
 
     try {
+      if (el.btnLoginSubmit) el.btnLoginSubmit.disabled = true;
       el.loginError.style.color = 'var(--accent-purple-light)';
       el.loginError.textContent = 'Authenticating with KYNX Cloud...';
       
@@ -1269,7 +1356,7 @@
           body: JSON.stringify({ username_or_email: identifier, password: password })
         });
       } catch (netErr) {
-        throw new Error('Could not reach KYNX Cloud service. Please check your internet connection or backend status.');
+        throw new Error('Could not reach KYNX Cloud service. Server may be spinning up from sleep. Please wait 10 seconds and tap Connect again.');
       }
 
       let data = {};
@@ -1321,9 +1408,11 @@
       el.loginError.style.color = 'var(--accent-red)';
       let msg = err.message || 'Login failed.';
       if (msg.toLowerCase().includes('load failed') || msg.toLowerCase().includes('failed to fetch')) {
-        msg = 'Cloud server unreachable or database quota exceeded. Please check connection.';
+        msg = 'Cloud server unreachable. Server may be waking up from sleep. Please retry in 10 seconds.';
       }
       el.loginError.textContent = msg;
+    } finally {
+      if (el.btnLoginSubmit) el.btnLoginSubmit.disabled = false;
     }
   }
 
@@ -1401,6 +1490,169 @@
     } catch (err) {
       el.otpError.style.color = 'var(--accent-red)';
       el.otpError.textContent = err.message;
+    }
+  }
+
+  // --- Password Reset Handlers ---
+  async function handleSendResetOtp() {
+    const identifier = el.forgotIdentifier ? el.forgotIdentifier.value.trim() : '';
+    if (!identifier) {
+      if (el.forgotReqError) {
+        el.forgotReqError.style.color = 'var(--accent-red)';
+        el.forgotReqError.textContent = 'Please enter your username or registered email.';
+      }
+      return;
+    }
+
+    try {
+      if (el.btnSendResetOtp) el.btnSendResetOtp.disabled = true;
+      if (el.forgotReqError) {
+        el.forgotReqError.style.color = 'var(--accent-purple-light)';
+        el.forgotReqError.textContent = 'Contacting KYNX security cloud...';
+      }
+
+      const res = await fetch(`${BACKEND_URL}/api/auth/password-reset/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_or_username: identifier })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.detail || data.message || 'Could not send reset code. Please verify username/email.');
+      }
+
+      AppState.resetEmail = data.email || identifier;
+      AppState.resetIdentifier = identifier;
+
+      if (el.forgotReqError) el.forgotReqError.textContent = '';
+      if (el.forgotReqSection) el.forgotReqSection.style.display = 'none';
+      if (el.forgotConfirmSection) {
+        el.forgotConfirmSection.style.display = 'block';
+        if (el.forgotConfirmMasked) {
+          el.forgotConfirmMasked.textContent = `A 6-digit recovery code was dispatched to ${data.masked_email || data.email || 'your email'}.`;
+        }
+        if (el.forgotOtp) {
+          el.forgotOtp.value = '';
+          el.forgotOtp.focus();
+        }
+        if (el.forgotConfirmError) el.forgotConfirmError.textContent = '';
+      }
+    } catch (err) {
+      if (el.forgotReqError) {
+        el.forgotReqError.style.color = 'var(--accent-red)';
+        let msg = err.message || 'Failed to dispatch recovery code.';
+        if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('load failed')) {
+          msg = 'Cloud server unreachable. Please wait 10 seconds and retry.';
+        }
+        el.forgotReqError.textContent = msg;
+      }
+    } finally {
+      if (el.btnSendResetOtp) el.btnSendResetOtp.disabled = false;
+    }
+  }
+
+  async function handleResendResetOtp() {
+    const identifier = AppState.resetIdentifier || (el.forgotIdentifier ? el.forgotIdentifier.value.trim() : '');
+    if (!identifier) return;
+
+    try {
+      if (el.forgotConfirmError) {
+        el.forgotConfirmError.style.color = 'var(--accent-purple-light)';
+        el.forgotConfirmError.textContent = 'Resending recovery code...';
+      }
+      const res = await fetch(`${BACKEND_URL}/api/auth/password-reset/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_or_username: identifier })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || 'Could not resend recovery code.');
+
+      if (el.forgotConfirmError) {
+        el.forgotConfirmError.style.color = 'var(--accent-green)';
+        el.forgotConfirmError.textContent = 'Fresh recovery code dispatched to your email!';
+      }
+    } catch (err) {
+      if (el.forgotConfirmError) {
+        el.forgotConfirmError.style.color = 'var(--accent-red)';
+        el.forgotConfirmError.textContent = err.message || 'Resend failed.';
+      }
+    }
+  }
+
+  async function handleConfirmResetPwd() {
+    const code = el.forgotOtp ? el.forgotOtp.value.trim() : '';
+    const newPwd = el.forgotNewPwd ? el.forgotNewPwd.value.trim() : '';
+    const confirmPwd = el.forgotConfirmPwd ? el.forgotConfirmPwd.value.trim() : '';
+    const email = AppState.resetEmail || (el.forgotIdentifier ? el.forgotIdentifier.value.trim() : '');
+
+    if (!code || code.length !== 6) {
+      if (el.forgotConfirmError) {
+        el.forgotConfirmError.style.color = 'var(--accent-red)';
+        el.forgotConfirmError.textContent = 'Please enter the 6-digit recovery code from your email.';
+      }
+      return;
+    }
+    if (!newPwd || newPwd.length < 8) {
+      if (el.forgotConfirmError) {
+        el.forgotConfirmError.style.color = 'var(--accent-red)';
+        el.forgotConfirmError.textContent = 'New password must be at least 8 characters long.';
+      }
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      if (el.forgotConfirmError) {
+        el.forgotConfirmError.style.color = 'var(--accent-red)';
+        el.forgotConfirmError.textContent = 'Passwords do not match. Please re-enter.';
+      }
+      return;
+    }
+
+    try {
+      if (el.btnVerifyResetPwd) el.btnVerifyResetPwd.disabled = true;
+      if (el.forgotConfirmError) {
+        el.forgotConfirmError.style.color = 'var(--accent-purple-light)';
+        el.forgotConfirmError.textContent = 'Updating password securely...';
+      }
+
+      const res = await fetch(`${BACKEND_URL}/api/auth/password-reset/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          code: code,
+          new_password: newPwd,
+          confirm_new_password: confirmPwd
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.detail || data.message || 'Password update failed. Check the code and try again.');
+      }
+
+      if (el.forgotConfirmError) {
+        el.forgotConfirmError.style.color = 'var(--accent-green)';
+        el.forgotConfirmError.textContent = 'Password reset successfully! Connecting session...';
+      }
+
+      // Pre-fill login form with new credentials and auto-login
+      if (el.loginIdentifier) el.loginIdentifier.value = AppState.resetIdentifier || email;
+      if (el.loginPassword) el.loginPassword.value = newPwd;
+
+      setTimeout(async () => {
+        if (el.forgotConfirmSection) el.forgotConfirmSection.style.display = 'none';
+        if (el.loginForm) el.loginForm.style.display = 'block';
+        await handleDirectLogin();
+      }, 1000);
+    } catch (err) {
+      if (el.forgotConfirmError) {
+        el.forgotConfirmError.style.color = 'var(--accent-red)';
+        el.forgotConfirmError.textContent = err.message || 'Failed to update password.';
+      }
+    } finally {
+      if (el.btnVerifyResetPwd) el.btnVerifyResetPwd.disabled = false;
     }
   }
 
