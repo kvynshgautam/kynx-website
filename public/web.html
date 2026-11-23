@@ -56,7 +56,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"></noscript>
-  <link rel="stylesheet" href="/css/web.css?v=13">
+  <link rel="stylesheet" href="/css/web.css?v=14">
 </head>
 <body style="background-color: #06060C; background: #06060C; color: #FFFFFF;">
 
@@ -155,112 +155,99 @@
             <button type="button" id="btn-show-otp-demo" class="login-btn-ghost" style="width:100%; margin-top:10px; font-size:12px; padding:9px 12px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px dashed rgba(255,255,255,0.2); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s;"><span>✨ Glassy OTP V15 Experience</span></button>
           </form>
 
-          <!-- Step 2: Glassy OTP V15 Verification (Hidden by default) -->
-          <div id="otp-section" class="glassy-otp-container" style="display:none;">
-            <!-- View 1: Glassy OTP Input & Verification View -->
-            <div id="glassy-otp-input-view" class="glassy-otp-view">
-              <!-- Floating Icon Badge with glowing notification dot -->
-              <div class="glassy-otp-badge-wrap">
-                <div class="glassy-otp-badge">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Step 2: Glassy OTP V15 Verification (Exact Replica of Video) -->
+          <div id="otp-section" class="glassy-otp-container v15-state-row" style="display:none;">
+            <div class="v15-card" id="v15-card">
+              <!-- Top Slot: Holds Mail Badge in Idle state, and receives Green Badge in Success state -->
+              <div class="v15-top-slot">
+                <div class="v15-mail-badge" id="v15-mail-badge">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                     <polyline points="22,6 12,13 2,6"></polyline>
                   </svg>
-                  <span class="glassy-otp-badge-dot"></span>
+                  <span class="v15-mail-badge-dot"></span>
                 </div>
               </div>
 
-              <!-- Header -->
-              <div class="glassy-otp-header">
-                <h3 class="glassy-otp-title">Enter Verification Code</h3>
-                <p id="otp-email-masked" class="glassy-otp-subtitle">We sent a 6-digit code to your registered email.</p>
+              <!-- Header Texts -->
+              <div class="v15-header">
+                <h3 class="v15-title" id="v15-title">Check your inbox</h3>
+                <p class="v15-subtitle" id="v15-subtitle">
+                  Enter the 4-digit code we sent<br>
+                  to <span class="v15-email-pill" id="v15-email-display">al••••a@example.com</span>
+                </p>
               </div>
 
-              <!-- Hidden input for backwards compatibility -->
+              <!-- Hidden keyboard input -->
+              <input type="text" id="v15-hidden-input" class="v15-hidden-input" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" />
               <input type="hidden" id="login-otp" value="" />
 
-              <!-- 6 Glass Digit Input Cells & Morph Target -->
-              <div class="glassy-otp-cells-wrapper">
-                <div class="glassy-otp-grid" id="glassy-otp-grid">
-                  <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="glassy-otp-cell" data-index="0" autocomplete="one-time-code" autofocus />
-                  <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="glassy-otp-cell" data-index="1" />
-                  <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="glassy-otp-cell" data-index="2" />
-                  <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="glassy-otp-cell" data-index="3" />
-                  <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="glassy-otp-cell" data-index="4" />
-                  <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="glassy-otp-cell" data-index="5" />
-                </div>
+              <!-- The Interactive Morphing Arena (170px) -->
+              <div class="v15-arena" id="v15-arena">
+                <!-- 4 Interactive Digit Cells (Morph from row into 2x2 grid) -->
+                <div class="v15-cell" data-pos="0" id="v15-cell-0"><span class="v15-cell-text"></span><span class="v15-caret"></span></div>
+                <div class="v15-cell" data-pos="1" id="v15-cell-1"><span class="v15-cell-text"></span></div>
+                <div class="v15-cell" data-pos="2" id="v15-cell-2"><span class="v15-cell-text"></span></div>
+                <div class="v15-cell" data-pos="3" id="v15-cell-3"><span class="v15-cell-text"></span></div>
 
-                <!-- Morph Target: Collapses grid and blossoms into glowing green checkmark -->
-                <div class="glassy-otp-morph-target" id="glassy-otp-morph-target" style="display:none;">
-                  <div class="glassy-otp-ripple-ring"></div>
-                  <div class="glassy-otp-ripple-ring ring-2"></div>
-                  <div class="glassy-otp-check-circle">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="glassy-svg-check">
+                <!-- Center Glowing Green Dot (appears in 2x2 grid) -->
+                <div class="v15-center-dot" id="v15-center-dot"></div>
+
+                <!-- Center Merged Checkmark Badge & Frame -->
+                <div class="v15-center-badge-box" id="v15-center-badge-box">
+                  <div class="v15-ripple-ring"></div>
+                  <div class="v15-ripple-ring ring-2"></div>
+                  <div class="v15-ripple-ring ring-3"></div>
+                  <div class="v15-green-badge" id="v15-green-badge">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                   </div>
                 </div>
+
+                <!-- Success Checklist Cards (Revealed in State 4) -->
+                <div class="v15-checklist-wrap" id="v15-checklist-wrap">
+                  <div class="v15-check-item">
+                    <div class="v15-item-icon-box">✉️</div>
+                    <div class="v15-item-content">
+                      <div class="v15-item-title">Email confirmed</div>
+                      <div class="v15-item-sub" id="v15-sub-email">al••••a@example.com</div>
+                    </div>
+                    <div class="v15-check-circle">✓</div>
+                  </div>
+                  <div class="v15-check-item">
+                    <div class="v15-item-icon-box">🛡️</div>
+                    <div class="v15-item-content">
+                      <div class="v15-item-title">Device trusted</div>
+                      <div class="v15-item-sub">Verified for 30 days</div>
+                    </div>
+                    <div class="v15-check-circle">✓</div>
+                  </div>
+                </div>
               </div>
 
-              <!-- Error Box -->
-              <div id="otp-error" class="glassy-otp-error"></div>
-
-              <!-- CTA Verify Button -->
-              <button type="button" id="btn-verify-otp" class="glassy-otp-btn-verify">
-                <span id="btn-verify-otp-text">Verify & Sign In ⚡</span>
+              <!-- Dynamic CTA Action Button -->
+              <button type="button" id="v15-btn-action" class="v15-btn-action btn-idle">
+                <span id="v15-btn-text">Verify code</span>
               </button>
 
-              <!-- Footer with Resend & Back -->
-              <div class="glassy-otp-footer">
-                <div class="glassy-otp-resend-row">
-                  <span>Didn't receive the code?</span>
-                  <button type="button" id="btn-resend-otp" class="glassy-otp-resend-btn">Resend Code</button>
-                  <span id="otp-resend-timer" style="display:none; color:var(--text-dim); font-size:11px;">(30s)</span>
+              <!-- Footer with Resend / Replay demo / Back -->
+              <div class="v15-footer">
+                <div id="v15-resend-row">
+                  Didn't get a code? <button type="button" id="v15-btn-resend" class="v15-resend-link">⟳ Resend in 0:25</button>
                 </div>
-                <button type="button" id="btn-back-to-pwd" class="glassy-otp-back-btn">← Back to Password</button>
-              </div>
-
-              <!-- Demo Toolbar for Testing / Verification Experience -->
-              <div class="glassy-otp-demo-toolbar">
-                <button type="button" id="btn-otp-demo-code" class="glassy-demo-pill" title="Fill 246810 & Verify">✨ Demo 246810</button>
-                <button type="button" id="btn-otp-demo-wrong" class="glassy-demo-pill" title="Test error shake animation">Try Wrong</button>
-                <button type="button" id="btn-otp-demo-paste" class="glassy-demo-pill" title="Test autofill animation">Autofill</button>
+                <div id="v15-replay-row" style="display:none;">
+                  <button type="button" id="v15-btn-replay" class="v15-replay-btn">⟳ Replay demo</button>
+                </div>
+                <button type="button" id="btn-back-to-pwd" class="v15-back-to-pwd">← Back to Password</button>
               </div>
             </div>
 
-            <!-- View 2: Glassy OTP Verified Success View -->
-            <div id="glassy-otp-success-view" class="glassy-otp-view" style="display:none;">
-              <div class="glassy-otp-success-icon-wrap">
-                <div class="glassy-otp-success-badge">
-                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-              </div>
-
-              <h3 class="glassy-otp-success-title">You're Verified!</h3>
-              <p class="glassy-otp-success-subtitle">Authentication confirmed. Establishing encrypted peer-to-peer session...</p>
-
-              <div class="glassy-otp-checklist">
-                <div class="glassy-checklist-item">
-                  <div class="checklist-icon-box">✉️</div>
-                  <div class="checklist-info">
-                    <div class="checklist-title">Email Confirmed</div>
-                    <div id="checklist-email-val" class="checklist-sub">user@kynx.mesh</div>
-                  </div>
-                  <div class="checklist-check-badge">✓</div>
-                </div>
-                <div class="glassy-checklist-item">
-                  <div class="checklist-icon-box">🛡️</div>
-                  <div class="checklist-info">
-                    <div class="checklist-title">Device Trusted</div>
-                    <div class="checklist-sub">Web Crypto Key Registered</div>
-                  </div>
-                  <div class="checklist-check-badge">✓</div>
-                </div>
-              </div>
-
-              <button type="button" id="btn-otp-success-continue" class="glassy-otp-btn-continue">Continue to Deck 🚀</button>
+            <!-- Floating Bottom Toolbar (matching video) -->
+            <div class="v15-demo-toolbar">
+              <button type="button" id="v15-pill-demo" class="v15-demo-pill">✦ Demo code 2468</button>
+              <button type="button" id="v15-pill-wrong" class="v15-demo-pill">Try wrong</button>
+              <button type="button" id="v15-pill-autofill" class="v15-demo-pill">Autofill</button>
             </div>
           </div>
 
@@ -817,6 +804,6 @@
 
   <!-- QR Code Generator & Core Web Engine Script -->
   <script src="/js/qrcode.min.js"></script>
-  <script src="/js/web-engine.js?v=13"></script>
+  <script src="/js/web-engine.js?v=14"></script>
 </body>
 </html>
