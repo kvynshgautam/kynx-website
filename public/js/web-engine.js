@@ -112,6 +112,7 @@
     statusViewerModal: document.getElementById('status-viewer-modal'),
     btnCloseStoryViewer: document.getElementById('btn-close-story-viewer'),
     btnStoryDelete: document.getElementById('btn-story-delete'),
+    storyProgressBarWrap: document.getElementById('story-progress-bar-wrap'),
     storyProgressFill: document.getElementById('story-progress-fill'),
     storyUserAvatar: document.getElementById('story-user-avatar'),
     storyUserName: document.getElementById('story-user-name'),
@@ -504,9 +505,13 @@
     try {
       cancelActiveVoiceRecording();
       PowerState.pttStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+      let mimeType = '';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mimeType = 'audio/webm;codecs=opus';
+        else if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+        else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+        else if (MediaRecorder.isTypeSupported('audio/aac')) mimeType = 'audio/aac';
+      }
       PowerState.pttRecorder = mimeType
         ? new MediaRecorder(PowerState.pttStream, { mimeType, audioBitsPerSecond: 32000 })
         : new MediaRecorder(PowerState.pttStream);
@@ -564,8 +569,11 @@
       PowerState.pttChunks = [];
       if (cancelOnly || elapsed < 350 || chunks.length === 0 || !AppState.activeConversation) return;
 
-      const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
-      const ext = (blob.type || '').includes('ogg') ? 'ogg' : 'webm';
+      const blobType = rec.mimeType || (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4');
+      const blob = new Blob(chunks, { type: blobType });
+      let ext = 'webm';
+      if ((blob.type || '').includes('mp4') || (blob.type || '').includes('aac')) ext = 'm4a';
+      else if ((blob.type || '').includes('ogg')) ext = 'ogg';
       const file = new File([blob], `ptt_${Date.now()}.${ext}`, { type: blob.type || 'audio/webm' });
 
       try {
@@ -1231,12 +1239,27 @@
         document.querySelectorAll('.sidebar-nav-tabs .nav-tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const tabName = btn.textContent.trim().toLowerCase();
+
+        const searchWrapper = document.querySelector('.sidebar-search-box');
+        if (searchWrapper && el.searchInput) {
+          if (tabName.includes('settings')) {
+            searchWrapper.style.display = 'none';
+          } else {
+            searchWrapper.style.display = 'block';
+            if (tabName.includes('chats')) el.searchInput.placeholder = 'Search chats, contacts, messages...';
+            else if (tabName.includes('updates')) el.searchInput.placeholder = 'Search updates...';
+            else if (tabName.includes('contacts')) el.searchInput.placeholder = 'Search contacts circle...';
+            else if (tabName.includes('calls')) el.searchInput.placeholder = 'Search call logs...';
+          }
+        }
+
         if (tabName.includes('chats')) {
           AppState.activeTab = 'chats';
           renderConversations();
           if (AppState.searchQuery) filterConversations(AppState.searchQuery);
         } else if (tabName.includes('updates')) {
           AppState.activeTab = 'updates';
+          if (el.updatesBadgeDot) el.updatesBadgeDot.style.display = 'none';
           loadAndRenderUpdates();
         } else if (tabName.includes('calls')) {
           AppState.activeTab = 'calls';
@@ -1287,6 +1310,43 @@
         if (e.target === el.statusViewerModal) closeStoryViewer();
       });
     }
+    if (el.storyContentBox) {
+      el.storyContentBox.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-story-delete') || e.target.closest('#btn-close-story-viewer')) return;
+        const rect = el.storyContentBox.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        if (clickX < rect.width * 0.35) {
+          // Tap left -> previous story
+          if (currentViewingIndex > 0) {
+            currentViewingIndex--;
+            renderCurrentStoryItem();
+          } else {
+            renderCurrentStoryItem();
+          }
+        } else {
+          // Tap right -> next story
+          currentViewingIndex++;
+          renderCurrentStoryItem();
+        }
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (el.statusViewerModal && el.statusViewerModal.style.display !== 'none') {
+        if (e.key === 'Escape') {
+          closeStoryViewer();
+        } else if (e.key === 'ArrowRight' || e.key === ' ') {
+          e.preventDefault();
+          currentViewingIndex++;
+          renderCurrentStoryItem();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          if (currentViewingIndex > 0) {
+            currentViewingIndex--;
+            renderCurrentStoryItem();
+          }
+        }
+      }
+    });
   }
 
   // ==========================================================================
@@ -1855,9 +1915,10 @@
     // Connect WebSocket
     connectWebSocket();
 
-    // Fetch Conversations & Friend Requests
+    // Fetch Conversations & Friend Requests & Updates Badge
     loadConversations();
     checkPendingRequestsBadge();
+    checkUpdatesBadge();
 
     // Smart adaptive conversation refresh (pauses while tab hidden; relaxes when WS is live)
     if (conversationsPollTimer) clearInterval(conversationsPollTimer);
@@ -1865,6 +1926,7 @@
       if (document.hidden) return;
       loadConversations();
       checkPendingRequestsBadge();
+      checkUpdatesBadge();
     }, 20000);
   }
 
@@ -1872,6 +1934,7 @@
     if (!document.hidden && AppState.token) {
       loadConversations();
       checkPendingRequestsBadge();
+      checkUpdatesBadge();
       if (AppState.activeConversation) syncActiveConversation();
     }
   });
@@ -2579,9 +2642,13 @@
     }
     try {
       voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+      let mimeType = '';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mimeType = 'audio/webm;codecs=opus';
+        else if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+        else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+        else if (MediaRecorder.isTypeSupported('audio/aac')) mimeType = 'audio/aac';
+      }
       voiceRecorder = mimeType ? new MediaRecorder(voiceStream, { mimeType }) : new MediaRecorder(voiceStream);
       voiceChunks = [];
       isRecordingVoice = true;
@@ -2607,8 +2674,11 @@
         }
         if (voiceChunks.length === 0) return;
 
-        const blob = new Blob(voiceChunks, { type: voiceRecorder.mimeType || 'audio/webm' });
-        const ext = (blob.type || '').includes('ogg') ? 'ogg' : 'webm';
+        const blobType = voiceRecorder.mimeType || (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4');
+        const blob = new Blob(voiceChunks, { type: blobType });
+        let ext = 'webm';
+        if ((blob.type || '').includes('mp4') || (blob.type || '').includes('aac')) ext = 'm4a';
+        else if ((blob.type || '').includes('ogg')) ext = 'ogg';
         const file = new File([blob], `voice_${Date.now()}.${ext}`, { type: blob.type || 'audio/webm' });
         voiceChunks = [];
 
@@ -4476,6 +4546,7 @@
 
       showHeadsUpCard('Profile Updated', 'Your display name & status are now live.');
       if (el.profileModal) el.profileModal.style.display = 'none';
+      if (AppState.activeTab === 'settings') loadAndRenderSettings();
     } catch (e) {
       console.warn('Error saving profile:', e);
       alert('Network error updating profile.');
@@ -5127,7 +5198,7 @@
         if (!textContent) {
           throw new Error('Please enter text for your status update.');
         }
-        mediaType = 'text';
+        mediaType = null;
       }
 
       const res = await fetch(`${BACKEND_URL}/api/status`, {
@@ -5138,8 +5209,8 @@
         },
         body: JSON.stringify({
           text: textContent,
-          media_url: mediaUrl,
-          media_type: mediaType,
+          media_url: mediaUrl || undefined,
+          media_type: mediaType || undefined,
           expires_in_hours: 24
         })
       });
@@ -5202,6 +5273,15 @@
     const authorName = item.display_name || item.username || (isMe ? 'You' : 'User');
     const authorInitial = authorName.substring(0, 2).toUpperCase();
 
+    // Render multi-story progress bar segments
+    if (el.storyProgressBarWrap) {
+      el.storyProgressBarWrap.innerHTML = currentViewingStatuses.map((_, idx) => `
+        <div style="flex:1; height:3px; background:rgba(255,255,255,0.3); border-radius:3px; overflow:hidden;">
+          <div id="story-progress-fill-${idx}" style="height:100%; width:${idx < currentViewingIndex ? '100%' : '0%'}; background:#fff; transition:width 0.05s linear;"></div>
+        </div>
+      `).join('');
+    }
+
     if (el.storyUserName) el.storyUserName.textContent = authorName;
     if (el.storyTimeText) el.storyTimeText.textContent = formatTimeAgo(item.created_at);
     if (el.storyUserAvatar) {
@@ -5223,6 +5303,7 @@
     }
 
     if (item.media_url) {
+      if (el.storyContentBox) el.storyContentBox.style.background = '#07090E';
       if (el.storyContentImg) {
         el.storyContentImg.src = resolveMediaUrl(item.media_url);
         el.storyContentImg.style.display = 'block';
@@ -5230,6 +5311,7 @@
       if (el.storyContentText) el.storyContentText.style.display = 'none';
       if (el.storyCaptionText) el.storyCaptionText.textContent = item.text || '';
     } else {
+      if (el.storyContentBox) el.storyContentBox.style.background = 'linear-gradient(135deg, #7950FF, #3B82F6)';
       if (el.storyContentImg) el.storyContentImg.style.display = 'none';
       if (el.storyContentText) {
         el.storyContentText.textContent = item.text || '';
@@ -5251,12 +5333,12 @@
 
     const duration = 5000;
     const startTime = Date.now();
-    if (el.storyProgressFill) el.storyProgressFill.style.width = '0%';
+    const activeFill = document.getElementById(`story-progress-fill-${currentViewingIndex}`);
 
     activeStoryProgressInterval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const pct = Math.min(100, (elapsed / duration) * 100);
-      if (el.storyProgressFill) el.storyProgressFill.style.width = `${pct}%`;
+      if (activeFill) activeFill.style.width = `${pct}%`;
     }, 50);
 
     activeStoryTimer = setTimeout(() => {
@@ -5274,6 +5356,27 @@
     currentViewingIndex = 0;
   }
 
+  async function checkUpdatesBadge() {
+    if (!AppState.token) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/status`, {
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (!res.ok) return;
+      const raw = await res.json();
+      const list = Array.isArray(raw) ? raw : [];
+      const myId = AppState.user ? AppState.user.id : null;
+      const others = list.filter(s => s.user_id !== myId);
+      if (el.updatesBadgeDot) {
+        if (others.length > 0 && AppState.activeTab !== 'updates') {
+          el.updatesBadgeDot.style.display = 'inline-block';
+        } else {
+          el.updatesBadgeDot.style.display = 'none';
+        }
+      }
+    } catch (_) {}
+  }
+
   async function loadAndRenderUpdates() {
     if (!AppState.token) return;
     el.conversationsList.innerHTML = `
@@ -5289,7 +5392,8 @@
         headers: { 'Authorization': `Bearer ${AppState.token}` }
       });
       if (!res.ok) throw new Error('Failed to load statuses');
-      const allStatuses = await res.json();
+      const rawStatuses = await res.json();
+      const allStatuses = Array.isArray(rawStatuses) ? rawStatuses : [];
 
       const myId = AppState.user ? AppState.user.id : null;
       const myStatuses = allStatuses.filter(s => s.user_id === myId);
@@ -5610,7 +5714,7 @@
   }
 
   function filterConversations(query) {
-    const cards = el.conversationsList.querySelectorAll('.chat-item-card');
+    const cards = el.conversationsList.querySelectorAll('.chat-item-card, .request-card');
     cards.forEach(card => {
       const text = card.textContent.toLowerCase();
       card.style.display = text.includes(query) ? 'flex' : 'none';
