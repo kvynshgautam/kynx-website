@@ -1631,8 +1631,8 @@
       const caret = cell.querySelector('.v15-caret');
       if (textSpan) textSpan.textContent = code[idx] || '';
 
-      // Caret logic: blinking red cursor on the active cell
-      if (idx === code.length && code.length < 4) {
+      // Caret logic: blinking red cursor on the active cell (up to 6 digits)
+      if (idx === code.length && code.length < 6) {
         if (!caret) {
           const newCaret = document.createElement('span');
           newCaret.className = 'v15-caret';
@@ -1670,7 +1670,7 @@
     const resendRow = document.getElementById('v15-resend-row');
     const replayRow = document.getElementById('v15-replay-row');
 
-    // STAGE 1 (t = 0ms): 4 cells glide into 2x2 grid, button turns white "Verifying..."
+    // STAGE 1 (t = 0ms): 6 cells glide into 2x3 grid, button turns white "Verifying..."
     setV15State('v15-state-grid');
     if (btn && btnText) {
       btn.className = 'v15-btn-action btn-verifying';
@@ -1689,7 +1689,7 @@
     }, 550);
     v15AnimationTimers.push(t1);
 
-    // STAGE 3 (t = 1150ms): 4 cells merge into the center green checkmark square
+    // STAGE 3 (t = 1150ms): 6 cells merge into the center green checkmark square
     const t2 = setTimeout(() => {
       setV15State('v15-state-merged');
       if (navigator.vibrate) navigator.vibrate(40);
@@ -1724,7 +1724,7 @@
   // --- ERROR SHAKE ANIMATION ---
   function runV15ErrorAnimation(wrongCode) {
     clearV15Timers();
-    updateV15CellsUI(wrongCode || '9999');
+    updateV15CellsUI(wrongCode || '999999');
     setV15State('v15-state-error');
 
     const btn = document.getElementById('v15-btn-action');
@@ -1759,7 +1759,7 @@
     if (title) title.textContent = 'Check your inbox';
     if (sub) {
       const email = maskedEmail || 'al••••a@example.com';
-      sub.innerHTML = `Enter the 4-digit code we sent<br>to <span class="v15-email-pill" id="v15-email-display">${email}</span>`;
+      sub.innerHTML = `Enter the 6-digit code we sent<br>to <span class="v15-email-pill" id="v15-email-display">${email}</span>`;
     }
     if (resendRow) resendRow.style.display = 'block';
     if (replayRow) replayRow.style.display = 'none';
@@ -1804,7 +1804,7 @@
   function runV15AutofillSequence(targetCode) {
     clearV15Timers();
     resetV15ToIdle();
-    const code = targetCode || '2468';
+    const code = targetCode || '246810';
     let idx = 0;
 
     function step() {
@@ -1812,11 +1812,11 @@
         updateV15CellsUI(code.slice(0, idx + 1));
         if (navigator.vibrate) navigator.vibrate(20);
         idx++;
-        const t = setTimeout(step, 90);
+        const t = setTimeout(step, 80);
         v15AnimationTimers.push(t);
       } else {
         const t = setTimeout(() => {
-          runV15SuccessChoreography(code, 'al••••a@example.com');
+          handleVerifyOtp();
         }, 120);
         v15AnimationTimers.push(t);
       }
@@ -1844,9 +1844,9 @@
     if (hiddenInput) {
       hiddenInput.addEventListener('input', (e) => {
         if (v15State !== 'v15-state-row') return;
-        const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+        const val = e.target.value.replace(/\D/g, '').slice(0, 6);
         updateV15CellsUI(val);
-        if (val.length === 4) {
+        if (val.length === 6) {
           handleVerifyOtp();
         }
       });
@@ -1854,7 +1854,7 @@
       hiddenInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          if (v15CurrentCode.length === 4) {
+          if (v15CurrentCode.length === 6) {
             handleVerifyOtp();
           }
         }
@@ -1870,10 +1870,10 @@
           hideAuth();
           showDeck();
         } else if (v15State === 'v15-state-row') {
-          if (v15CurrentCode.length === 4) {
+          if (v15CurrentCode.length === 6) {
             handleVerifyOtp();
           } else {
-            runV15AutofillSequence('2468');
+            runV15AutofillSequence('246810');
           }
         }
       });
@@ -1891,21 +1891,21 @@
     const pillDemo = document.getElementById('v15-pill-demo');
     if (pillDemo) {
       pillDemo.addEventListener('click', () => {
-        runV15SuccessChoreography('2468', 'al••••a@example.com');
+        runV15AutofillSequence('246810');
       });
     }
 
     const pillWrong = document.getElementById('v15-pill-wrong');
     if (pillWrong) {
       pillWrong.addEventListener('click', () => {
-        runV15ErrorAnimation('9999');
+        runV15ErrorAnimation('999999');
       });
     }
 
     const pillAutofill = document.getElementById('v15-pill-autofill');
     if (pillAutofill) {
       pillAutofill.addEventListener('click', () => {
-        runV15AutofillSequence('2468');
+        runV15AutofillSequence('246810');
       });
     }
 
@@ -1941,14 +1941,14 @@
 
   async function handleVerifyOtp() {
     const otp = v15CurrentCode.trim();
-    if (otp.length < 4) {
+    if (otp.length < 6) {
       runV15ErrorAnimation(otp);
       return;
     }
 
     if (AppState.isDemoOtp) {
-      if (otp === '2468') {
-        runV15SuccessChoreography('2468', 'al••••a@example.com', () => {
+      if (otp === '246810') {
+        runV15SuccessChoreography('246810', 'al••••a@example.com', () => {
           setTimeout(() => {
             // Keep on screen so user can admire the success state or click Continue
           }, 500);
@@ -1984,7 +1984,7 @@
       localStorage.setItem('kynx_web_token', AppState.token);
       localStorage.setItem('kynx_web_user', JSON.stringify(AppState.user));
 
-      runV15SuccessChoreography(otp, data.user?.email || 'al••••a@example.com', () => {
+      runV15SuccessChoreography(otp, data.user?.email || AppState.user?.email || 'al••••a@example.com', () => {
         setTimeout(() => {
           hideAuth();
           showDeck();

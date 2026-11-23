@@ -3447,9 +3447,9 @@ html, body {
 /* Individual Cell */
 .v15-cell {
   position: absolute;
-  width: 58px;
-  height: 58px;
-  border-radius: 16px;
+  width: 46px;
+  height: 56px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12), 0 4px 16px rgba(0, 0, 0, 0.25);
@@ -3457,7 +3457,7 @@ html, body {
   align-items: center;
   justify-content: center;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 23px;
+  font-size: 22px;
   font-weight: 700;
   color: #FFFFFF;
   backdrop-filter: blur(12px);
@@ -3476,7 +3476,7 @@ html, body {
 /* Blinking Red Vertical Caret */
 .v15-caret {
   width: 2px;
-  height: 26px;
+  height: 24px;
   background: #F43F5E;
   border-radius: 2px;
   animation: v15BlinkCaret 1s infinite;
@@ -3487,25 +3487,32 @@ html, body {
   50% { opacity: 0; }
 }
 
-/* --- STATE: ROW (State 0: Horizontal 4-cell row) --- */
-.v15-state-row .v15-cell[data-pos="0"] { transform: translate(-96px, 0px); }
-.v15-state-row .v15-cell[data-pos="1"] { transform: translate(-32px, 0px); }
-.v15-state-row .v15-cell[data-pos="2"] { transform: translate(32px, 0px); }
-.v15-state-row .v15-cell[data-pos="3"] { transform: translate(96px, 0px); }
+/* --- STATE: ROW (State 0: Horizontal 6-cell row) --- */
+.v15-state-row .v15-cell[data-pos="0"] { transform: translate(-130px, 0px); }
+.v15-state-row .v15-cell[data-pos="1"] { transform: translate(-78px, 0px); }
+.v15-state-row .v15-cell[data-pos="2"] { transform: translate(-26px, 0px); }
+.v15-state-row .v15-cell[data-pos="3"] { transform: translate(26px, 0px); }
+.v15-state-row .v15-cell[data-pos="4"] { transform: translate(78px, 0px); }
+.v15-state-row .v15-cell[data-pos="5"] { transform: translate(130px, 0px); }
 
-/* --- STATE: GRID / VERIFYING (State 1: Morph into 2x2 Square) --- */
-/* In video: Row 1 = 2 & 6, Row 2 = 4 & 8 */
+/* --- STATE: GRID / VERIFYING (State 1: Morph into 2x3 Grid) --- */
 .v15-state-grid .v15-cell[data-pos="0"],
-.v15-state-verified .v15-cell[data-pos="0"] { transform: translate(-34px, -34px); }
+.v15-state-verified .v15-cell[data-pos="0"] { transform: translate(-56px, -34px); }
 
 .v15-state-grid .v15-cell[data-pos="1"],
-.v15-state-verified .v15-cell[data-pos="1"] { transform: translate(-34px, 34px); }
+.v15-state-verified .v15-cell[data-pos="1"] { transform: translate(0px, -34px); }
 
 .v15-state-grid .v15-cell[data-pos="2"],
-.v15-state-verified .v15-cell[data-pos="2"] { transform: translate(34px, -34px); }
+.v15-state-verified .v15-cell[data-pos="2"] { transform: translate(56px, -34px); }
 
 .v15-state-grid .v15-cell[data-pos="3"],
-.v15-state-verified .v15-cell[data-pos="3"] { transform: translate(34px, 34px); }
+.v15-state-verified .v15-cell[data-pos="3"] { transform: translate(-56px, 34px); }
+
+.v15-state-grid .v15-cell[data-pos="4"],
+.v15-state-verified .v15-cell[data-pos="4"] { transform: translate(0px, 34px); }
+
+.v15-state-grid .v15-cell[data-pos="5"],
+.v15-state-verified .v15-cell[data-pos="5"] { transform: translate(56px, 34px); }
 
 /* --- STATE: VERIFIED (State 2: Glowing Green Borders & Center Dot) --- */
 .v15-state-verified .v15-cell {
