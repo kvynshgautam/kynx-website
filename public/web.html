@@ -56,7 +56,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"></noscript>
-  <link rel="stylesheet" href="/css/web.css?v=14">
+  <link rel="stylesheet" href="/css/web.css?v=15">
 </head>
 <body style="background-color: #06060C; background: #06060C; color: #FFFFFF;">
 
@@ -134,6 +134,7 @@
         <button type="button" id="toggle-direct-login" class="direct-login-toggle-btn">
           ⚡ Login with Email/Password Instead
         </button>
+        <button type="button" id="btn-show-otp-demo-main" class="login-btn-ghost" style="width:100%; margin-top:8px; font-size:12px; padding:9px 12px; border-radius:12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); color:#FFFFFF; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s;"><span style="font-weight:700;">✨ Preview Glassy OTP V15 Experience</span></button>
 
         <!-- Direct Login Form (Hidden by default, toggled via button) -->
         <div id="direct-login-section" style="display:none; margin-top:16px;">
@@ -195,11 +196,11 @@
 
                 <!-- Center Merged Checkmark Badge & Frame -->
                 <div class="v15-center-badge-box" id="v15-center-badge-box">
-                  <div class="v15-ripple-ring"></div>
-                  <div class="v15-ripple-ring ring-2"></div>
-                  <div class="v15-ripple-ring ring-3"></div>
                   <div class="v15-green-badge" id="v15-green-badge">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <div class="v15-ripple-ring"></div>
+                    <div class="v15-ripple-ring ring-2"></div>
+                    <div class="v15-ripple-ring ring-3"></div>
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                   </div>
@@ -804,6 +805,6 @@
 
   <!-- QR Code Generator & Core Web Engine Script -->
   <script src="/js/qrcode.min.js"></script>
-  <script src="/js/web-engine.js?v=14"></script>
+  <script src="/js/web-engine.js?v=15"></script>
 </body>
 </html>

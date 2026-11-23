@@ -1,11 +1,11 @@
-// KYNX Web Deck High-Performance PWA Service Worker (v14 - Exact Glassy OTP V15 Motion Animation)
-const CACHE_NAME = 'kynx-pwa-v14';
+// KYNX Web Deck High-Performance PWA Service Worker (v15 - Exact Glassy OTP V15 Motion Animation)
+const CACHE_NAME = 'kynx-pwa-v15';
 
 const STATIC_PRECACHE = [
   '/web',
-  '/css/web.css?v=14',
+  '/css/web.css?v=15',
   '/css/web.css',
-  '/js/web-engine.js?v=14',
+  '/js/web-engine.js?v=15',
   '/js/web-engine.js',
   '/js/qrcode.min.js',
   '/manifest.json',

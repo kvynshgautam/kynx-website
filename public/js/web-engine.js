@@ -1921,17 +1921,22 @@
       });
     }
 
-    // Demo button on login form
-    const btnShowDemo = document.getElementById('btn-show-otp-demo');
-    if (btnShowDemo) {
-      btnShowDemo.addEventListener('click', () => {
-        AppState.isDemoOtp = true;
-        if (el.loginForm) el.loginForm.style.display = 'none';
-        const otpSec = document.getElementById('otp-section');
-        if (otpSec) otpSec.style.display = 'flex';
-        resetV15ToIdle('al••••a@example.com');
-      });
+    // Demo buttons to launch Glassy OTP V15 Experience
+    function openV15Demo() {
+      AppState.isDemoOtp = true;
+      if (el.loginForm) el.loginForm.style.display = 'none';
+      if (el.qrContainer) el.qrContainer.style.display = 'none';
+      if (el.directLoginSection) el.directLoginSection.style.display = 'block';
+      const otpSec = document.getElementById('otp-section');
+      if (otpSec) otpSec.style.display = 'flex';
+      resetV15ToIdle('al••••a@example.com');
     }
+
+    const btnShowDemo = document.getElementById('btn-show-otp-demo');
+    if (btnShowDemo) btnShowDemo.addEventListener('click', openV15Demo);
+
+    const btnShowDemoMain = document.getElementById('btn-show-otp-demo-main');
+    if (btnShowDemoMain) btnShowDemoMain.addEventListener('click', openV15Demo);
   }
 
   async function handleVerifyOtp() {

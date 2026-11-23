@@ -3587,10 +3587,14 @@ html, body {
 /* Concentric Green Ripple Rings */
 .v15-ripple-ring {
   position: absolute;
-  width: 58px;
-  height: 58px;
+  top: 50%;
+  left: 50%;
+  width: 54px;
+  height: 54px;
+  margin-top: -27px;
+  margin-left: -27px;
   border-radius: 50%;
-  border: 2px solid rgba(34, 197, 94, 0.65);
+  border: 2px solid rgba(34, 197, 94, 0.7);
   pointer-events: none;
   opacity: 0;
 }
@@ -3604,11 +3608,11 @@ html, body {
 }
 
 .v15-state-success .v15-green-badge {
-  transform: translateY(-166px) !important;
+  transform: translateY(-214px) !important;
   border-radius: 50% !important;
-  width: 54px !important;
-  height: 54px !important;
-  box-shadow: 0 0 28px rgba(34, 197, 94, 0.7) !important;
+  width: 52px !important;
+  height: 52px !important;
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.75) !important;
 }
 
 .v15-state-success .v15-mail-badge {
