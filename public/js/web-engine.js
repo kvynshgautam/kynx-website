@@ -18,6 +18,7 @@
     token: localStorage.getItem('kynx_web_token') || null,
     user: JSON.parse(localStorage.getItem('kynx_web_user') || 'null'),
     tempToken: null,
+    maskedEmail: '',
     resetEmail: '',
     resetIdentifier: '',
     audioMuted: localStorage.getItem('kynx_audio_muted') === 'true',
@@ -686,7 +687,19 @@
       showDeck();
     } else {
       showAuth();
-      startPairingFlow();
+      const savedTemp = sessionStorage.getItem('kynx_temp_token') || localStorage.getItem('kynx_temp_token');
+      const savedMasked = sessionStorage.getItem('kynx_masked_email') || localStorage.getItem('kynx_masked_email');
+      if (savedTemp) {
+        AppState.tempToken = savedTemp;
+        AppState.maskedEmail = savedMasked || '';
+        if (el.qrContainer) el.qrContainer.style.display = 'none';
+        if (el.directLoginSection) el.directLoginSection.style.display = 'block';
+        if (el.loginForm) el.loginForm.style.display = 'none';
+        if (el.otpSection) el.otpSection.style.display = 'flex';
+        resetV15ToIdle(savedMasked || 'your registered email');
+      } else {
+        startPairingFlow();
+      }
     }
   }
 
@@ -790,6 +803,13 @@
       el.btnBackToPwd.addEventListener('click', () => {
         if (el.otpSection) el.otpSection.style.display = 'none';
         if (el.loginForm) el.loginForm.style.display = 'block';
+        AppState.tempToken = null;
+        try {
+          sessionStorage.removeItem('kynx_temp_token');
+          sessionStorage.removeItem('kynx_masked_email');
+          localStorage.removeItem('kynx_temp_token');
+          localStorage.removeItem('kynx_masked_email');
+        } catch (_) {}
       });
     }
     if (el.btnResendOtp) {
@@ -1552,10 +1572,18 @@
       // 1. Two-Factor OTP Required
       if (data.status === 'otp_required') {
         AppState.tempToken = data.temp_token;
+        AppState.maskedEmail = data.email_masked || 'your registered email';
+        try {
+          sessionStorage.setItem('kynx_temp_token', data.temp_token);
+          sessionStorage.setItem('kynx_masked_email', AppState.maskedEmail);
+          localStorage.setItem('kynx_temp_token', data.temp_token);
+          localStorage.setItem('kynx_masked_email', AppState.maskedEmail);
+        } catch (_) {}
+
         el.loginError.textContent = '';
         el.loginForm.style.display = 'none';
         el.otpSection.style.display = 'flex';
-        resetV15ToIdle(data.email_masked || 'your registered email');
+        resetV15ToIdle(AppState.maskedEmail);
         return;
       }
 
@@ -1708,23 +1736,45 @@
   }
 
   // --- ERROR SHAKE ANIMATION ---
-  function runV15ErrorAnimation(wrongCode) {
+  function runV15ErrorAnimation(wrongCode, errorMsg) {
     clearV15Timers();
-    updateV15CellsUI(wrongCode || '999999');
+    updateV15CellsUI(wrongCode || '');
     setV15State('v15-state-error');
 
     const btn = document.getElementById('v15-btn-action');
     const btnText = document.getElementById('v15-btn-text');
+    const sub = document.getElementById('v15-subtitle');
+
+    const displayMsg = errorMsg || 'Invalid code';
+
     if (btn && btnText) {
       btn.className = 'v15-btn-action btn-idle';
-      btnText.textContent = 'Invalid code';
+      btnText.textContent = displayMsg.length > 25 ? displayMsg.slice(0, 25) + '...' : displayMsg;
+    }
+
+    if (sub) {
+      sub.innerHTML = `<span style="color:#EF4444; font-weight:600; display:block;">⚠️ ${displayMsg}</span>`;
     }
 
     if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
 
     const t = setTimeout(() => {
-      resetV15ToIdle();
-    }, 950);
+      setV15State('v15-state-row');
+      if (btn && btnText) {
+        btn.className = 'v15-btn-action btn-idle';
+        btnText.textContent = 'Verify code';
+      }
+      const hidden = document.getElementById('v15-hidden-input');
+      if (hidden) {
+        hidden.value = '';
+        hidden.focus();
+      }
+      updateV15CellsUI('');
+      if (sub && !displayMsg.toLowerCase().includes('expired')) {
+        const email = AppState.maskedEmail || sessionStorage.getItem('kynx_masked_email') || 'your registered email';
+        sub.innerHTML = `Enter the 6-digit code we sent<br>to <span class="v15-email-pill" id="v15-email-display">${email}</span>`;
+      }
+    }, 1500);
     v15AnimationTimers.push(t);
   }
 
@@ -1741,9 +1791,10 @@
     const btn = document.getElementById('v15-btn-action');
     const btnText = document.getElementById('v15-btn-text');
 
+    const email = maskedEmail || AppState.maskedEmail || sessionStorage.getItem('kynx_masked_email') || 'your registered email';
+
     if (title) title.textContent = 'Check your inbox';
     if (sub) {
-      const email = maskedEmail || 'al••••a@example.com';
       sub.innerHTML = `Enter the 6-digit code we sent<br>to <span class="v15-email-pill" id="v15-email-display">${email}</span>`;
     }
     if (resendRow) resendRow.style.display = 'block';
@@ -1782,6 +1833,55 @@
         btn.disabled = false;
       }
     }, 1000);
+  }
+
+  async function handleResendOtp() {
+    const tempToken = AppState.tempToken || sessionStorage.getItem('kynx_temp_token') || localStorage.getItem('kynx_temp_token');
+    const btn = document.getElementById('v15-btn-resend');
+    const sub = document.getElementById('v15-subtitle');
+    if (!tempToken) {
+      if (sub) {
+        sub.innerHTML = `<span style="color:#EF4444; font-weight:600;">Verification session expired. Please sign in again.</span>`;
+      }
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⟳ Sending replacement...';
+    }
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/login/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temp_token: tempToken })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.detail || 'Could not resend code');
+      }
+
+      if (sub) {
+        const email = AppState.maskedEmail || sessionStorage.getItem('kynx_masked_email') || 'your registered email';
+        sub.innerHTML = `Enter the new 6-digit code sent<br>to <span class="v15-email-pill" id="v15-email-display">${email}</span>`;
+      }
+      startV15ResendTimer(30);
+      updateV15CellsUI('');
+      const hidden = document.getElementById('v15-hidden-input');
+      if (hidden) {
+        hidden.value = '';
+        hidden.focus();
+      }
+    } catch (err) {
+      if (sub) {
+        sub.innerHTML = `<span style="color:#EF4444; font-weight:600;">⚠️ ${err.message}</span>`;
+      }
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '⟳ Resend code';
+      }
+    }
   }
 
   // --- INIT V15 EVENT LISTENERS ---
@@ -1838,6 +1938,12 @@
       });
     }
 
+    // Resend link click
+    const btnResend = document.getElementById('v15-btn-resend');
+    if (btnResend) {
+      btnResend.addEventListener('click', handleResendOtp);
+    }
+
     // Back to password button
     const btnBack = document.getElementById('btn-back-to-pwd');
     if (btnBack) {
@@ -1845,17 +1951,36 @@
         const otpSec = document.getElementById('otp-section');
         if (otpSec) otpSec.style.display = 'none';
         if (el.loginForm) el.loginForm.style.display = 'block';
+        AppState.tempToken = null;
+        try {
+          sessionStorage.removeItem('kynx_temp_token');
+          sessionStorage.removeItem('kynx_masked_email');
+          localStorage.removeItem('kynx_temp_token');
+          localStorage.removeItem('kynx_masked_email');
+        } catch (_) {}
         clearV15Timers();
       });
     }
   }
 
+  let isVerifyingOtp = false;
+
   async function handleVerifyOtp() {
+    if (isVerifyingOtp) return;
+
     const otp = v15CurrentCode.trim();
     if (otp.length < 6) {
-      runV15ErrorAnimation(otp);
+      runV15ErrorAnimation(otp, 'Please enter all 6 digits');
       return;
     }
+
+    const tempToken = AppState.tempToken || sessionStorage.getItem('kynx_temp_token') || localStorage.getItem('kynx_temp_token');
+    if (!tempToken) {
+      runV15ErrorAnimation(otp, 'Session expired. Please sign in again.');
+      return;
+    }
+
+    isVerifyingOtp = true;
 
     // Real backend 2FA
     try {
@@ -1870,11 +1995,19 @@
       const res = await fetch(`${BACKEND_URL}/api/auth/login/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ temp_token: AppState.tempToken, otp: otp })
+        body: JSON.stringify({ temp_token: tempToken, otp: otp })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.detail || 'Verification failed');
+        let msg = 'Verification failed';
+        if (typeof data.detail === 'string') {
+          msg = data.detail;
+        } else if (Array.isArray(data.detail) && data.detail[0]) {
+          msg = data.detail[0].msg || JSON.stringify(data.detail[0]);
+        } else if (data.message) {
+          msg = data.message;
+        }
+        throw new Error(msg);
       }
 
       AppState.token = data.access_token;
@@ -1882,14 +2015,28 @@
       localStorage.setItem('kynx_web_token', AppState.token);
       localStorage.setItem('kynx_web_user', JSON.stringify(AppState.user));
 
-      runV15SuccessChoreography(otp, data.user?.email || AppState.user?.email || 'al••••a@example.com', () => {
+      // Clean up temporary tokens on success
+      AppState.tempToken = null;
+      try {
+        sessionStorage.removeItem('kynx_temp_token');
+        sessionStorage.removeItem('kynx_masked_email');
+        localStorage.removeItem('kynx_temp_token');
+        localStorage.removeItem('kynx_masked_email');
+      } catch (_) {}
+
+      const userEmail = data.user?.email || AppState.user?.email || AppState.maskedEmail || sessionStorage.getItem('kynx_masked_email') || 'verified';
+
+      runV15SuccessChoreography(otp, userEmail, () => {
         setTimeout(() => {
           hideAuth();
           showDeck();
-        }, 2200);
+        }, 1200);
       });
     } catch (err) {
-      runV15ErrorAnimation(otp);
+      console.error('[KYNX OTP] Verification error:', err);
+      runV15ErrorAnimation(otp, err.message);
+    } finally {
+      isVerifyingOtp = false;
     }
   }
 
