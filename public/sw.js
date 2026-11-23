@@ -1,11 +1,11 @@
-// KYNX Web Deck High-Performance PWA Service Worker (v7 - Cyberpunk Themes)
-const CACHE_NAME = 'kynx-pwa-v7';
+// KYNX Web Deck High-Performance PWA Service Worker (v8 - Dynamic Themed Avatars & Handles)
+const CACHE_NAME = 'kynx-pwa-v8';
 
 const STATIC_PRECACHE = [
   '/web',
-  '/css/web.css?v=7',
+  '/css/web.css?v=8',
   '/css/web.css',
-  '/js/web-engine.js?v=7',
+  '/js/web-engine.js?v=8',
   '/js/web-engine.js',
   '/js/qrcode.min.js',
   '/manifest.json',

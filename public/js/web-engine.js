@@ -1911,6 +1911,27 @@
       renderConversations();
     }
 
+    function syncSidebarProfile(userObj) {
+      const u = userObj || AppState.user || {};
+      const name = u.displayName || u.display_name || u.username || 'KYNX User';
+      const handle = u.username || 'kynx_user';
+      const inits = (u.displayName || u.display_name || u.username || 'KG').substring(0, 2).toUpperCase();
+      const photo = u.profile_photo_url || u.photo_url || u.avatar_url;
+      if (el.userAvatar) {
+        if (photo) {
+          el.userAvatar.innerHTML = `<span class="online-dot-indicator"></span>`;
+          el.userAvatar.style.backgroundImage = `url('${resolveMediaUrl(photo)}')`;
+          el.userAvatar.style.backgroundSize = 'cover';
+          el.userAvatar.style.backgroundPosition = 'center';
+        } else {
+          el.userAvatar.innerHTML = `${inits}<span class="online-dot-indicator"></span>`;
+          el.userAvatar.style.backgroundImage = 'none';
+        }
+      }
+      if (el.userName) el.userName.textContent = name;
+      if (el.userHandle) el.userHandle.textContent = '@' + handle;
+    }
+
     // Verify / refresh user profile in background (non-blocking)
     if (!AppState.user || !AppState.user.id) {
       fetch(`${BACKEND_URL}/api/users/me`, {
@@ -1919,21 +1940,13 @@
         if (u) {
           AppState.user = u;
           try { localStorage.setItem('kynx_web_user', JSON.stringify(u)); } catch (_) {}
-          const inits = (u.displayName || u.display_name || u.username || 'KG').substring(0, 2).toUpperCase();
-          if (el.userAvatar) el.userAvatar.textContent = inits;
-          if (el.userName) el.userName.textContent = u.displayName || u.display_name || u.username;
-          if (el.userHandle) el.userHandle.textContent = '@' + (u.username || 'kynx_user');
+          syncSidebarProfile(u);
         }
       }).catch(e => console.warn('Could not refresh profile:', e));
     }
 
-    // Update user profile in sidebar
-    const initials = ((AppState.user && (AppState.user.displayName || AppState.user.display_name || AppState.user.username)) || 'KG')
-      .substring(0, 2)
-      .toUpperCase();
-    el.userAvatar.textContent = initials;
-    el.userName.textContent = (AppState.user && (AppState.user.displayName || AppState.user.display_name || AppState.user.username)) || 'KYNX User';
-    el.userHandle.textContent = '@' + ((AppState.user && AppState.user.username) || 'kynx_user');
+    // Update user profile in sidebar immediately from cache
+    syncSidebarProfile(AppState.user);
 
     // Notifications status check
     if ('Notification' in window) {
@@ -4362,7 +4375,7 @@
     const initials = (senderName || 'KYNX').substring(0, 2).toUpperCase();
 
     card.innerHTML = `
-      <div class="heads-up-avatar" style="background:linear-gradient(135deg, #7950FF, #5527D7); color:#fff">${escapeHtml(initials)}</div>
+      <div class="heads-up-avatar" style="background:var(--avatar-gradient); color:var(--avatar-color); border:1px solid var(--avatar-border);">${escapeHtml(initials)}</div>
       <div class="heads-up-body">
         <div class="heads-up-top">
           <span class="heads-up-name">Friend Request</span>
@@ -4370,7 +4383,7 @@
         </div>
         <div class="heads-up-text"><strong>${escapeHtml(senderName)}</strong> (@${escapeHtml(senderUsername || '')}) wants to connect.</div>
         <div style="display:flex; gap:6px; margin-top:8px;">
-          <button class="btn-heads-up-accept" style="background:#7950FF; color:#fff; border:none; border-radius:6px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">✓ Accept</button>
+          <button class="btn-heads-up-accept" style="background:var(--accent-purple); color:#fff; border:none; border-radius:6px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">✓ Accept</button>
           <button class="btn-heads-up-decline" style="background:rgba(255,255,255,0.1); color:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11.5px; cursor:pointer;">Decline</button>
         </div>
       </div>
@@ -4536,7 +4549,16 @@
       const isVerified = Boolean(userData.is_email_verified);
       const isBlocked = Boolean(userData.is_blocked);
 
-      el.profileModalAvatar.textContent = initials;
+      const photo = userData.profile_photo_url || userData.photo_url || userData.avatar_url;
+      if (photo) {
+        el.profileModalAvatar.textContent = '';
+        el.profileModalAvatar.style.backgroundImage = `url('${resolveMediaUrl(photo)}')`;
+        el.profileModalAvatar.style.backgroundSize = 'cover';
+        el.profileModalAvatar.style.backgroundPosition = 'center';
+      } else {
+        el.profileModalAvatar.style.backgroundImage = 'none';
+        el.profileModalAvatar.textContent = initials;
+      }
       el.profileModalDisplayName.textContent = name;
       el.profileModalHandle.textContent = handle;
       el.profileModalBio.textContent = bio;
@@ -5481,7 +5503,7 @@
             <h4 style="font-size: 14px; font-weight: 700; color: #fff; margin: 0;">Status Updates</h4>
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">24-hour disappearing stories</div>
           </div>
-          <button type="button" id="btn-trigger-add-status" style="background: linear-gradient(135deg, #7950FF, #5527D7); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+          <button type="button" id="btn-trigger-add-status" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-purple-dark)); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 10px var(--accent-purple-glow); color: #fff; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
             <span>+</span> Add Update
           </button>
         </div>
@@ -5673,7 +5695,7 @@
 
         <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #7950FF, #5527D7); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #fff; flex-shrink: 0; background-size: cover; background-position: center; ${user.profile_photo_url ? `background-image: url('${resolveMediaUrl(user.profile_photo_url)}');` : ''}">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--avatar-gradient); border: 2px solid var(--avatar-border); box-shadow: 0 0 10px var(--accent-purple-glow); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: var(--avatar-color); flex-shrink: 0; background-size: cover; background-position: center; transition: all 0.25s ease; ${user.profile_photo_url ? `background-image: url('${resolveMediaUrl(user.profile_photo_url)}');` : ''}">
               ${user.profile_photo_url ? '' : initial}
             </div>
             <div style="min-width: 0;">
