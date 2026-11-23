@@ -887,6 +887,10 @@ html, body {
   max-width: 65%;
   position: relative;
   animation: fadeInMsg 0.2s ease-out;
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 @keyframes fadeInMsg {
   from { opacity: 0; transform: translateY(6px); }
@@ -1664,14 +1668,19 @@ html, body {
 .msg-hover-actions {
   display: none;
   position: absolute;
-  top: -14px;
-  z-index: 10;
+  top: -20px;
+  z-index: 100;
   background: rgba(16, 16, 26, 0.96);
   border: 1px solid var(--accent-purple, rgba(121, 80, 255, 0.4));
-  border-radius: 20px;
-  padding: 3px 6px;
-  gap: 2px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65), 0 0 12px var(--accent-purple-glow, transparent);
+  border-radius: 22px;
+  padding: 4px 8px;
+  gap: 3px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.75), 0 0 16px var(--accent-purple-glow, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
@@ -1683,7 +1692,11 @@ html, body {
   left: 8px;
 }
 
-/* Explicit double-tap / double-click reaction bar display */
+.msg-bubble-wrapper.show-actions {
+  z-index: 50 !important;
+}
+
+/* Explicit double-tap / long-press reaction bar display */
 .msg-bubble-wrapper.show-actions .msg-hover-actions {
   display: inline-flex !important;
   align-items: center;

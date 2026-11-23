@@ -1169,11 +1169,13 @@
             !el.emojiPickerPopover.contains(e.target) && e.target !== el.btnEmojiPicker) {
           el.emojiPickerPopover.style.display = 'none';
         }
+        if (Date.now() - (window.__lastActionsOpenTime || 0) < 450) return;
         if (!e.target.closest('.msg-bubble-wrapper')) {
           document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(m => m.classList.remove('show-actions'));
         }
       });
       document.addEventListener('touchstart', (e) => {
+        if (Date.now() - (window.__lastActionsOpenTime || 0) < 450) return;
         if (!e.target.closest('.msg-bubble-wrapper')) {
           document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(m => m.classList.remove('show-actions'));
         }
@@ -3070,49 +3072,92 @@
       });
     }
 
-    // Double-tap (mobile) & Double-click (desktop) for emoji reaction bar
+    // Double-tap & Tap-and-Hold (Long Press) for emoji reaction bar
     // Single-tap / Click for Ghost Shield unblur toggle without emojis
     let lastTapTime = 0;
     let singleTapTimer = null;
+    let longPressTimer = null;
+    let isLongPressTriggered = false;
+    let touchStartX = 0;
+    let touchStartY = 0;
     let touchHandled = false;
 
-    function toggleActionsPopup() {
-      const isAlreadyOpen = wrapper.classList.contains('show-actions');
+    function openActionsPopup() {
+      window.__lastActionsOpenTime = Date.now();
       document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(m => {
         if (m !== wrapper) m.classList.remove('show-actions');
       });
-      if (isAlreadyOpen) {
-        wrapper.classList.remove('show-actions');
-      } else {
-        wrapper.classList.add('show-actions');
-      }
+      wrapper.classList.add('show-actions');
+      try { if (navigator.vibrate) navigator.vibrate(40); } catch (_) {}
     }
 
+    // Desktop double-click
     wrapper.addEventListener('dblclick', (e) => {
       if (e.target.closest('.msg-act-btn') || e.target.closest('a') || e.target.closest('button') || e.target.closest('[data-ptt-play]') || e.target.closest('[data-burn-reveal]')) return;
       e.preventDefault();
-      toggleActionsPopup();
+      openActionsPopup();
     });
 
-    wrapper.addEventListener('touchstart', () => { touchHandled = true; }, { passive: true });
+    // Touch handling: Long Press + Double Tap + Single Tap Ghost unblur
+    wrapper.addEventListener('touchstart', (e) => {
+      touchHandled = true;
+      if (e.target.closest('.msg-act-btn') || e.target.closest('a') || e.target.closest('button') || e.target.closest('[data-ptt-play]') || e.target.closest('[data-burn-reveal]')) return;
+
+      isLongPressTriggered = false;
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+
+      clearTimeout(longPressTimer);
+      longPressTimer = setTimeout(() => {
+        isLongPressTriggered = true;
+        clearTimeout(singleTapTimer);
+        lastTapTime = 0;
+        openActionsPopup();
+      }, 380);
+    }, { passive: true });
+
+    wrapper.addEventListener('touchmove', (e) => {
+      if (longPressTimer && e.touches && e.touches[0]) {
+        const t = e.touches[0];
+        if (Math.abs(t.clientX - touchStartX) > 10 || Math.abs(t.clientY - touchStartY) > 10) {
+          clearTimeout(longPressTimer);
+        }
+      }
+    }, { passive: true });
 
     wrapper.addEventListener('touchend', (e) => {
+      clearTimeout(longPressTimer);
+      if (isLongPressTriggered) {
+        isLongPressTriggered = false;
+        e.preventDefault();
+        return;
+      }
+
       if (e.target.closest('.msg-act-btn') || e.target.closest('a') || e.target.closest('button') || e.target.closest('[data-ptt-play]') || e.target.closest('[data-burn-reveal]')) return;
+
       const now = Date.now();
       const diff = now - lastTapTime;
-      if (diff < 320 && diff > 40) {
+
+      if (diff < 350 && diff > 40) {
         clearTimeout(singleTapTimer);
         lastTapTime = 0;
         e.preventDefault();
-        toggleActionsPopup();
+        openActionsPopup();
       } else {
         lastTapTime = now;
         singleTapTimer = setTimeout(() => {
           if (AppState.ghostShield) {
             wrapper.classList.toggle('ghost-revealed');
           }
-        }, 320);
+        }, 280);
       }
+    });
+
+    wrapper.addEventListener('touchcancel', () => {
+      clearTimeout(longPressTimer);
+      clearTimeout(singleTapTimer);
+      isLongPressTriggered = false;
     });
 
     wrapper.addEventListener('click', (e) => {

@@ -1,11 +1,11 @@
-// KYNX Web Deck High-Performance PWA Service Worker (v9 - Double Tap Reactions & Ghost Unblur)
-const CACHE_NAME = 'kynx-pwa-v9';
+// KYNX Web Deck High-Performance PWA Service Worker (v10 - Double Tap & Long Press Emojis)
+const CACHE_NAME = 'kynx-pwa-v10';
 
 const STATIC_PRECACHE = [
   '/web',
-  '/css/web.css?v=9',
+  '/css/web.css?v=10',
   '/css/web.css',
-  '/js/web-engine.js?v=9',
+  '/js/web-engine.js?v=10',
   '/js/web-engine.js',
   '/js/qrcode.min.js',
   '/manifest.json',
