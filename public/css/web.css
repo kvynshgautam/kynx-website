@@ -887,10 +887,6 @@ html, body {
   max-width: 65%;
   position: relative;
   animation: fadeInMsg 0.2s ease-out;
-  touch-action: pan-y;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
 }
 @keyframes fadeInMsg {
   from { opacity: 0; transform: translateY(6px); }
@@ -945,17 +941,11 @@ html, body {
 
 /* GHOST SHIELD BLUR EFFECT */
 .ghost-shield-active .msg-bubble-content {
-  filter: blur(6px);
+  filter: blur(5px);
   user-select: none;
-  transition: filter 0.2s ease;
 }
-.ghost-shield-active .msg-bubble-wrapper.ghost-revealed .msg-bubble-content {
-  filter: none !important;
-}
-@media (hover: hover) and (pointer: fine) {
-  .ghost-shield-active .msg-bubble-wrapper:hover .msg-bubble-content {
-    filter: none;
-  }
+.ghost-shield-active .msg-bubble-wrapper:hover .msg-bubble-content {
+  filter: none;
 }
 
 /* VIEW-ONCE CHIP IN CHAT */
@@ -1668,20 +1658,14 @@ html, body {
 .msg-hover-actions {
   display: none;
   position: absolute;
-  top: -20px;
-  z-index: 100;
-  background: rgba(16, 16, 26, 0.96);
-  border: 1px solid var(--accent-purple, rgba(121, 80, 255, 0.4));
-  border-radius: 22px;
-  padding: 4px 8px;
-  gap: 3px;
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.75), 0 0 16px var(--accent-purple-glow, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  pointer-events: auto;
-  user-select: none;
-  -webkit-user-select: none;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  top: -14px;
+  z-index: 5;
+  background: rgba(16, 16, 26, 0.95);
+  border: 1px solid rgba(121, 80, 255, 0.4);
+  border-radius: 20px;
+  padding: 3px 6px;
+  gap: 2px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
 }
 
 .msg-bubble-wrapper.mine .msg-hover-actions {
@@ -1692,28 +1676,9 @@ html, body {
   left: 8px;
 }
 
-.msg-bubble-wrapper.show-actions {
-  z-index: 50 !important;
-}
-
-/* Explicit double-tap / long-press reaction bar display */
-.msg-bubble-wrapper.show-actions .msg-hover-actions {
-  display: inline-flex !important;
+.msg-bubble-wrapper:hover .msg-hover-actions {
+  display: inline-flex;
   align-items: center;
-  animation: popInActions 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes popInActions {
-  from { opacity: 0; transform: scale(0.85) translateY(4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-/* Desktop mouse hover (only when ghost shield is NOT active) */
-@media (hover: hover) and (pointer: fine) {
-  body:not(.ghost-shield-active) .msg-bubble-wrapper:hover .msg-hover-actions {
-    display: inline-flex;
-    align-items: center;
-  }
 }
 
 .msg-act-btn {

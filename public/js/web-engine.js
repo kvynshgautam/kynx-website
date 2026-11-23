@@ -1169,17 +1169,7 @@
             !el.emojiPickerPopover.contains(e.target) && e.target !== el.btnEmojiPicker) {
           el.emojiPickerPopover.style.display = 'none';
         }
-        if (Date.now() - (window.__lastActionsOpenTime || 0) < 450) return;
-        if (!e.target.closest('.msg-bubble-wrapper')) {
-          document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(m => m.classList.remove('show-actions'));
-        }
       });
-      document.addEventListener('touchstart', (e) => {
-        if (Date.now() - (window.__lastActionsOpenTime || 0) < 450) return;
-        if (!e.target.closest('.msg-bubble-wrapper')) {
-          document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(m => m.classList.remove('show-actions'));
-        }
-      }, { passive: true });
     }
 
     // Ctrl+V Instant Screenshot / Image / File Paste
@@ -2994,7 +2984,6 @@
         } else if (act === 'delete') {
           deleteMessageFromWeb(currentId, isMine);
         }
-        wrapper.classList.remove('show-actions');
       });
     });
 
@@ -3071,102 +3060,6 @@
         }, 1000);
       });
     }
-
-    // Double-tap & Tap-and-Hold (Long Press) for emoji reaction bar
-    // Single-tap / Click for Ghost Shield unblur toggle without emojis
-    let lastTapTime = 0;
-    let singleTapTimer = null;
-    let longPressTimer = null;
-    let isLongPressTriggered = false;
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchHandled = false;
-
-    function openActionsPopup() {
-      window.__lastActionsOpenTime = Date.now();
-      document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(m => {
-        if (m !== wrapper) m.classList.remove('show-actions');
-      });
-      wrapper.classList.add('show-actions');
-      try { if (navigator.vibrate) navigator.vibrate(40); } catch (_) {}
-    }
-
-    // Desktop double-click
-    wrapper.addEventListener('dblclick', (e) => {
-      if (e.target.closest('.msg-act-btn') || e.target.closest('a') || e.target.closest('button') || e.target.closest('[data-ptt-play]') || e.target.closest('[data-burn-reveal]')) return;
-      e.preventDefault();
-      openActionsPopup();
-    });
-
-    // Touch handling: Long Press + Double Tap + Single Tap Ghost unblur
-    wrapper.addEventListener('touchstart', (e) => {
-      touchHandled = true;
-      if (e.target.closest('.msg-act-btn') || e.target.closest('a') || e.target.closest('button') || e.target.closest('[data-ptt-play]') || e.target.closest('[data-burn-reveal]')) return;
-
-      isLongPressTriggered = false;
-      const t = e.touches[0];
-      touchStartX = t.clientX;
-      touchStartY = t.clientY;
-
-      clearTimeout(longPressTimer);
-      longPressTimer = setTimeout(() => {
-        isLongPressTriggered = true;
-        clearTimeout(singleTapTimer);
-        lastTapTime = 0;
-        openActionsPopup();
-      }, 380);
-    }, { passive: true });
-
-    wrapper.addEventListener('touchmove', (e) => {
-      if (longPressTimer && e.touches && e.touches[0]) {
-        const t = e.touches[0];
-        if (Math.abs(t.clientX - touchStartX) > 10 || Math.abs(t.clientY - touchStartY) > 10) {
-          clearTimeout(longPressTimer);
-        }
-      }
-    }, { passive: true });
-
-    wrapper.addEventListener('touchend', (e) => {
-      clearTimeout(longPressTimer);
-      if (isLongPressTriggered) {
-        isLongPressTriggered = false;
-        e.preventDefault();
-        return;
-      }
-
-      if (e.target.closest('.msg-act-btn') || e.target.closest('a') || e.target.closest('button') || e.target.closest('[data-ptt-play]') || e.target.closest('[data-burn-reveal]')) return;
-
-      const now = Date.now();
-      const diff = now - lastTapTime;
-
-      if (diff < 350 && diff > 40) {
-        clearTimeout(singleTapTimer);
-        lastTapTime = 0;
-        e.preventDefault();
-        openActionsPopup();
-      } else {
-        lastTapTime = now;
-        singleTapTimer = setTimeout(() => {
-          if (AppState.ghostShield) {
-            wrapper.classList.toggle('ghost-revealed');
-          }
-        }, 280);
-      }
-    });
-
-    wrapper.addEventListener('touchcancel', () => {
-      clearTimeout(longPressTimer);
-      clearTimeout(singleTapTimer);
-      isLongPressTriggered = false;
-    });
-
-    wrapper.addEventListener('click', (e) => {
-      if (touchHandled) { touchHandled = false; return; }
-      if (e.target.closest('.msg-act-btn') || e.target.closest('a') || e.target.closest('button') || e.target.closest('[data-ptt-play]') || e.target.closest('[data-burn-reveal]')) return;
-      if (AppState.ghostShield) {
-        wrapper.classList.toggle('ghost-revealed');
-      }
-    });
 
     el.messagesCanvas.appendChild(wrapper);
     return true;
@@ -3250,18 +3143,12 @@
     AppState.ghostShield = !AppState.ghostShield;
     if (AppState.ghostShield) {
       document.body.classList.add('ghost-shield-active');
-      if (el.btnGhostShield) {
-        el.btnGhostShield.classList.add('active');
-        el.btnGhostShield.innerHTML = `🛡️ Ghost Shield [ON]`;
-      }
+      el.btnGhostShield.classList.add('active');
+      el.btnGhostShield.innerHTML = `🛡️ Ghost Shield [ON]`;
     } else {
       document.body.classList.remove('ghost-shield-active');
-      if (el.btnGhostShield) {
-        el.btnGhostShield.classList.remove('active');
-        el.btnGhostShield.innerHTML = `🛡️ Ghost Shield`;
-      }
-      document.querySelectorAll('.msg-bubble-wrapper.ghost-revealed').forEach(el => el.classList.remove('ghost-revealed'));
-      document.querySelectorAll('.msg-bubble-wrapper.show-actions').forEach(el => el.classList.remove('show-actions'));
+      el.btnGhostShield.classList.remove('active');
+      el.btnGhostShield.innerHTML = `🛡️ Ghost Shield`;
     }
   }
 
