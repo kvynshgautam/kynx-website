@@ -743,7 +743,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cmd === 'status') {
       cmdText.textContent = 'kynx --status';
       out.innerHTML = `
-        [SYS] KYNX Core v0.9.53 Build 63 [ONLINE]<br>
+        [SYS] KYNX Core v0.9.56 [ONLINE - UPDATED 23-NOV-2026]<br>
         [ARCHITECT] KG (Lead Systems Engineer)<br>
         [GRID_STATUS] Multi-Hop Mesh (7-Hop E2EE) + WebSockets [ARMED]<br>
         [WEB_DECK] Bidirectional Session Sync Active [MONITORED]<br>

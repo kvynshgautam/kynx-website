@@ -6,21 +6,20 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.39",
-  version_code: 49,
-  release_name: "Build 49: High-Contrast ISO QR Quiet Zone & Instant Multi-Scanner Link",
+  version_name: "0.9.56",
+  version_code: 66,
+  release_name: "v0.9.56: Glassy OTP V15 Motion Experience & Security",
   apk_filename: "KYNX-latest.apk",
-  file_size: "65.3 MB",
-  sha256: "f6c7b609ccef87d98b00804104674df79639df1d18598b3fad2024dcdb19c0fa",
-  release_date: "November 17, 2026",
+  file_size: "62.5 MB",
+  sha256: "6ec6fb9e5a93fa54f41b033abf9c4ac049a0b7050e41f81b81fb55a668effc25",
+  release_date: "23 November 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   changelog: [
-    "High-contrast ISO Quiet Zone for 100% instant QR code acquisition.",
-    "Removal of interfering laser scanline to guarantee camera focus and zero moiré distortion.",
-    "Universal web link pairing payload (https://getkynx.vercel.app/web?pair=...) compatible with KYNX scanner, Google Lens, and Samsung/iPhone camera.",
-    "Real-time visual Toast feedback during Web Deck pairing.",
-    "Hardware-encrypted WebRTC Bridge & 16 KB Page-Size Architecture."
+    "Glassy OTP V15 motion architecture in Android Jetpack Compose.",
+    "Dynamic 4-stage physics choreography: 2x3 spring morphing, emerald glow, center checkmark merge, and top slot ascension with ripple rings.",
+    "Blinking active caret and interactive 6-digit hardware & soft keyboard focus.",
+    "Zero bloat, locked 120 FPS performance and Android 15 ready."
   ]
 };
 
