@@ -1261,17 +1261,29 @@
       el.loginError.style.color = 'var(--accent-purple-light)';
       el.loginError.textContent = 'Authenticating with KYNX Cloud...';
       
-      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username_or_email: identifier, password: password })
-      });
+      let res;
+      try {
+        res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username_or_email: identifier, password: password })
+        });
+      } catch (netErr) {
+        throw new Error('Could not reach KYNX Cloud service. Please check your internet connection or backend status.');
+      }
 
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        if (!res.ok) {
+          throw new Error(`Server error (${res.status}). Cloud database or backend service is undergoing maintenance.`);
+        }
+      }
       el.loginError.style.color = 'var(--accent-red)';
       
       if (!res.ok) {
-        throw new Error(data.detail || data.error || data.message || 'Login failed. Please check credentials.');
+        throw new Error(data.detail || data.error || data.message || `Login failed (${res.status}). Please check credentials.`);
       }
 
       // 1. Two-Factor OTP Required
@@ -1307,7 +1319,11 @@
       }
     } catch (err) {
       el.loginError.style.color = 'var(--accent-red)';
-      el.loginError.textContent = err.message;
+      let msg = err.message || 'Login failed.';
+      if (msg.toLowerCase().includes('load failed') || msg.toLowerCase().includes('failed to fetch')) {
+        msg = 'Cloud server unreachable or database quota exceeded. Please check connection.';
+      }
+      el.loginError.textContent = msg;
     }
   }
 
@@ -1324,13 +1340,25 @@
       el.otpError.style.color = 'var(--accent-purple-light)';
       el.otpError.textContent = 'Verifying security code...';
       
-      const res = await fetch(`${BACKEND_URL}/api/auth/login/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ temp_token: AppState.tempToken, otp: otp })
-      });
+      let res;
+      try {
+        res = await fetch(`${BACKEND_URL}/api/auth/login/verify-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ temp_token: AppState.tempToken, otp: otp })
+        });
+      } catch (netErr) {
+        throw new Error('Could not reach KYNX Cloud service.');
+      }
       
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        if (!res.ok) {
+          throw new Error(`Server error (${res.status}).`);
+        }
+      }
       el.otpError.style.color = 'var(--accent-red)';
       
       if (!res.ok) {
