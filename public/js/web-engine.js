@@ -15,6 +15,7 @@
     tempToken: null,
     resetEmail: '',
     resetIdentifier: '',
+    audioMuted: localStorage.getItem('kynx_audio_muted') === 'true',
     conversations: [],
     activeConversation: null,
     messages: {}, // conversationId -> Array of messages
@@ -81,6 +82,45 @@
     conversationsList: document.getElementById('conversations-list'),
     searchInput: document.getElementById('sidebar-search'),
     contactsBadge: document.getElementById('contacts-badge'),
+    navBtnChats: document.getElementById('nav-btn-chats'),
+    navBtnUpdates: document.getElementById('nav-btn-updates'),
+    navBtnContacts: document.getElementById('nav-btn-contacts'),
+    navBtnCalls: document.getElementById('nav-btn-calls'),
+    navBtnSettings: document.getElementById('nav-btn-settings'),
+    updatesBadgeDot: document.getElementById('updates-badge-dot'),
+
+    // Status Post Modal
+    statusPostModal: document.getElementById('status-post-modal'),
+    btnCloseStatusModal: document.getElementById('btn-close-status-modal'),
+    tabStatusPhoto: document.getElementById('tab-status-photo'),
+    tabStatusText: document.getElementById('tab-status-text'),
+    statusPhotoContainer: document.getElementById('status-photo-container'),
+    statusTextContainer: document.getElementById('status-text-container'),
+    statusDropzone: document.getElementById('status-dropzone'),
+    statusFileInput: document.getElementById('status-file-input'),
+    statusPreviewBox: document.getElementById('status-preview-box'),
+    statusPreviewImg: document.getElementById('status-preview-img'),
+    statusPlaceholderText: document.getElementById('status-placeholder-text'),
+    statusTextInput: document.getElementById('status-text-input'),
+    statusTextBgPreview: document.getElementById('status-text-bg-preview'),
+    statusCaptionGroup: document.getElementById('status-caption-group'),
+    statusCaptionInput: document.getElementById('status-caption-input'),
+    statusPostError: document.getElementById('status-post-error'),
+    btnSubmitStatus: document.getElementById('btn-submit-status'),
+
+    // Story Viewer Modal
+    statusViewerModal: document.getElementById('status-viewer-modal'),
+    btnCloseStoryViewer: document.getElementById('btn-close-story-viewer'),
+    btnStoryDelete: document.getElementById('btn-story-delete'),
+    storyProgressFill: document.getElementById('story-progress-fill'),
+    storyUserAvatar: document.getElementById('story-user-avatar'),
+    storyUserName: document.getElementById('story-user-name'),
+    storyTimeText: document.getElementById('story-time-text'),
+    storyContentBox: document.getElementById('story-content-box'),
+    storyContentImg: document.getElementById('story-content-img'),
+    storyContentText: document.getElementById('story-content-text'),
+    storyCaptionText: document.getElementById('story-caption-text'),
+    storyViewsText: document.getElementById('story-views-text'),
     
     // Chat Canvas
     webApp: document.getElementById('web-app'),
@@ -1185,7 +1225,7 @@
     if (el.btnMinExpand) el.btnMinExpand.addEventListener('click', toggleCallMinimize);
     if (el.btnMinHangup) el.btnMinHangup.addEventListener('click', () => endCall('Call ended'));
 
-    // Sidebar navigation tabs (Chats, Calls, Contacts)
+    // Sidebar navigation tabs (Chats, Updates, Contacts, Calls, Settings)
     document.querySelectorAll('.sidebar-nav-tabs .nav-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.sidebar-nav-tabs .nav-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1195,15 +1235,58 @@
           AppState.activeTab = 'chats';
           renderConversations();
           if (AppState.searchQuery) filterConversations(AppState.searchQuery);
+        } else if (tabName.includes('updates')) {
+          AppState.activeTab = 'updates';
+          loadAndRenderUpdates();
         } else if (tabName.includes('calls')) {
           AppState.activeTab = 'calls';
           loadAndRenderCalls();
         } else if (tabName.includes('contacts')) {
           AppState.activeTab = 'contacts';
           loadAndRenderContacts();
+        } else if (tabName.includes('settings')) {
+          AppState.activeTab = 'settings';
+          loadAndRenderSettings();
         }
       });
     });
+
+    // Status Post Modal wiring
+    if (el.btnCloseStatusModal) el.btnCloseStatusModal.addEventListener('click', closeStatusPostModal);
+    if (el.statusPostModal) {
+      el.statusPostModal.addEventListener('click', (e) => {
+        if (e.target === el.statusPostModal) closeStatusPostModal();
+      });
+    }
+    if (el.tabStatusPhoto) {
+      el.tabStatusPhoto.addEventListener('click', () => switchStatusMode('photo'));
+    }
+    if (el.tabStatusText) {
+      el.tabStatusText.addEventListener('click', () => switchStatusMode('text'));
+    }
+    if (el.statusDropzone && el.statusFileInput) {
+      el.statusDropzone.addEventListener('click', () => el.statusFileInput.click());
+      el.statusFileInput.addEventListener('change', handleStatusFileSelect);
+    }
+    document.querySelectorAll('.gradient-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        const grad = dot.dataset.grad;
+        if (el.statusTextBgPreview && grad) {
+          el.statusTextBgPreview.style.background = grad;
+          document.querySelectorAll('.gradient-dot').forEach(d => d.style.borderColor = 'transparent');
+          dot.style.borderColor = '#fff';
+        }
+      });
+    });
+    if (el.btnSubmitStatus) el.btnSubmitStatus.addEventListener('click', submitStatusPost);
+
+    // Story Viewer Modal wiring
+    if (el.btnCloseStoryViewer) el.btnCloseStoryViewer.addEventListener('click', closeStoryViewer);
+    if (el.statusViewerModal) {
+      el.statusViewerModal.addEventListener('click', (e) => {
+        if (e.target === el.statusViewerModal) closeStoryViewer();
+      });
+    }
   }
 
   // ==========================================================================
@@ -1756,8 +1839,7 @@
     el.userName.textContent = (AppState.user && (AppState.user.displayName || AppState.user.display_name || AppState.user.username)) || 'KYNX User';
     el.userHandle.textContent = '@' + ((AppState.user && AppState.user.username) || 'kynx_user');
 
-    // Initialize Audio & Notifications suite
-    initAudioSuite();
+    // Notifications status check
     if ('Notification' in window) {
       if (Notification.permission === 'granted') {
         updateNotifIcon(true);
@@ -4775,45 +4857,30 @@
   }
 
   function initAudioSuite() {
-    const unlockHandler = () => {
-      try {
-        const audio = getNotifAudio();
-        if (audio) {
-          audio.volume = 0.01;
-          audio.play().then(() => {
-            audio.pause();
-            audio.currentTime = 0;
-            audio.volume = 1.0;
-          }).catch(() => {});
-        }
-      } catch (err) {}
-      document.removeEventListener('click', unlockHandler);
-      document.removeEventListener('keydown', unlockHandler);
-      document.removeEventListener('touchstart', unlockHandler);
-    };
-
-    document.addEventListener('click', unlockHandler, { once: true });
-    document.addEventListener('keydown', unlockHandler, { once: true });
-    document.addEventListener('touchstart', unlockHandler, { once: true });
+    // Background Music Friendly: Do NOT trigger audio.play() on click/touch to avoid interrupting Spotify/Apple Music
   }
 
   function playNotificationSound() {
+    if (AppState.audioMuted) return;
     try {
-      const audio = getNotifAudio();
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.volume = 1.0;
-        const p = audio.play();
-        if (p !== undefined) {
-          p.catch(err => {
-            console.warn('[KYNX Web] Audio playback error:', err);
-          });
-        }
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.18);
+        setTimeout(() => ctx.close().catch(() => {}), 300);
+        return;
       }
-    } catch (e) {
-      console.warn('[KYNX Web] Sound play exception:', e);
-    }
+    } catch (_) {}
   }
 
   async function requestNotificationPermission() {
@@ -4949,6 +5016,583 @@
     if (target) {
       openConversation(target);
     }
+  }
+
+  // ==========================================================================
+  // UPDATES & STATUS STORIES ENGINE
+  // ==========================================================================
+
+  let currentStatusMode = 'photo';
+  let selectedStatusFile = null;
+  let activeStoryTimer = null;
+  let activeStoryProgressInterval = null;
+  let currentViewingStatuses = [];
+  let currentViewingIndex = 0;
+
+  function switchStatusMode(mode) {
+    currentStatusMode = mode;
+    if (mode === 'photo') {
+      if (el.tabStatusPhoto) {
+        el.tabStatusPhoto.classList.add('active');
+        el.tabStatusPhoto.style.background = 'rgba(121,80,255,0.25)';
+        el.tabStatusPhoto.style.borderColor = 'var(--accent-purple)';
+        el.tabStatusPhoto.style.color = '#fff';
+      }
+      if (el.tabStatusText) {
+        el.tabStatusText.classList.remove('active');
+        el.tabStatusText.style.background = 'rgba(255,255,255,0.05)';
+        el.tabStatusText.style.borderColor = 'transparent';
+        el.tabStatusText.style.color = 'var(--text-sub)';
+      }
+      if (el.statusPhotoContainer) el.statusPhotoContainer.style.display = 'block';
+      if (el.statusTextContainer) el.statusTextContainer.style.display = 'none';
+      if (el.statusCaptionGroup) el.statusCaptionGroup.style.display = 'block';
+    } else {
+      if (el.tabStatusText) {
+        el.tabStatusText.classList.add('active');
+        el.tabStatusText.style.background = 'rgba(121,80,255,0.25)';
+        el.tabStatusText.style.borderColor = 'var(--accent-purple)';
+        el.tabStatusText.style.color = '#fff';
+      }
+      if (el.tabStatusPhoto) {
+        el.tabStatusPhoto.classList.remove('active');
+        el.tabStatusPhoto.style.background = 'rgba(255,255,255,0.05)';
+        el.tabStatusPhoto.style.borderColor = 'transparent';
+        el.tabStatusPhoto.style.color = 'var(--text-sub)';
+      }
+      if (el.statusPhotoContainer) el.statusPhotoContainer.style.display = 'none';
+      if (el.statusTextContainer) el.statusTextContainer.style.display = 'block';
+      if (el.statusCaptionGroup) el.statusCaptionGroup.style.display = 'none';
+      if (el.statusTextInput) el.statusTextInput.focus();
+    }
+  }
+
+  function openStatusPostModal() {
+    selectedStatusFile = null;
+    if (el.statusFileInput) el.statusFileInput.value = '';
+    if (el.statusTextInput) el.statusTextInput.value = '';
+    if (el.statusCaptionInput) el.statusCaptionInput.value = '';
+    if (el.statusPreviewBox) el.statusPreviewBox.style.display = 'none';
+    if (el.statusPlaceholderText) el.statusPlaceholderText.style.display = 'block';
+    if (el.statusPostError) el.statusPostError.textContent = '';
+    switchStatusMode('photo');
+    if (el.statusPostModal) el.statusPostModal.style.display = 'flex';
+  }
+
+  function closeStatusPostModal() {
+    if (el.statusPostModal) el.statusPostModal.style.display = 'none';
+    selectedStatusFile = null;
+  }
+
+  function handleStatusFileSelect(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    selectedStatusFile = file;
+    const url = URL.createObjectURL(file);
+    if (el.statusPreviewImg) el.statusPreviewImg.src = url;
+    if (el.statusPreviewBox) el.statusPreviewBox.style.display = 'block';
+    if (el.statusPlaceholderText) el.statusPlaceholderText.style.display = 'none';
+  }
+
+  async function submitStatusPost() {
+    if (!AppState.token) return;
+    if (el.statusPostError) el.statusPostError.textContent = '';
+
+    try {
+      if (el.btnSubmitStatus) el.btnSubmitStatus.disabled = true;
+
+      let mediaUrl = null;
+      let mediaType = 'text';
+      let textContent = '';
+
+      if (currentStatusMode === 'photo') {
+        if (!selectedStatusFile) {
+          throw new Error('Please select a photo or media file to post.');
+        }
+        textContent = el.statusCaptionInput ? el.statusCaptionInput.value.trim() : '';
+        mediaType = 'image';
+
+        const formData = new FormData();
+        formData.append('file', selectedStatusFile);
+        const upRes = await fetch(`${BACKEND_URL}/api/media/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${AppState.token}` },
+          body: formData
+        });
+        if (!upRes.ok) throw new Error('Media upload failed. Please try again.');
+        const upData = await upRes.json();
+        mediaUrl = upData.url || upData.media_url;
+      } else {
+        textContent = el.statusTextInput ? el.statusTextInput.value.trim() : '';
+        if (!textContent) {
+          throw new Error('Please enter text for your status update.');
+        }
+        mediaType = 'text';
+      }
+
+      const res = await fetch(`${BACKEND_URL}/api/status`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${AppState.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: textContent,
+          media_url: mediaUrl,
+          media_type: mediaType,
+          expires_in_hours: 24
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Failed to post status update.');
+      }
+
+      closeStatusPostModal();
+      showHeadsUpCard('Status Updated ⚡', 'Your 24-hour status is now live in your circle!');
+      if (AppState.activeTab === 'updates') {
+        await loadAndRenderUpdates();
+      }
+    } catch (err) {
+      if (el.statusPostError) el.statusPostError.textContent = err.message;
+    } finally {
+      if (el.btnSubmitStatus) el.btnSubmitStatus.disabled = false;
+    }
+  }
+
+  async function deleteStatusPost(statusId) {
+    if (!statusId || !AppState.token) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/status/${statusId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (!res.ok) throw new Error('Failed to delete status');
+      closeStoryViewer();
+      showHeadsUpCard('Status Removed', 'Status update deleted successfully.');
+      if (AppState.activeTab === 'updates') {
+        await loadAndRenderUpdates();
+      }
+    } catch (err) {
+      alert(err.message || 'Error deleting status.');
+    }
+  }
+
+  function openStoryViewer(status, groupStatuses = []) {
+    currentViewingStatuses = groupStatuses.length > 0 ? groupStatuses : [status];
+    currentViewingIndex = currentViewingStatuses.findIndex(s => s.id === status.id);
+    if (currentViewingIndex < 0) currentViewingIndex = 0;
+
+    renderCurrentStoryItem();
+    if (el.statusViewerModal) el.statusViewerModal.style.display = 'flex';
+  }
+
+  function renderCurrentStoryItem() {
+    clearInterval(activeStoryProgressInterval);
+    clearTimeout(activeStoryTimer);
+
+    if (currentViewingIndex >= currentViewingStatuses.length) {
+      closeStoryViewer();
+      return;
+    }
+
+    const item = currentViewingStatuses[currentViewingIndex];
+    const isMe = AppState.user && item.user_id === AppState.user.id;
+    const authorName = item.display_name || item.username || (isMe ? 'You' : 'User');
+    const authorInitial = authorName.substring(0, 2).toUpperCase();
+
+    if (el.storyUserName) el.storyUserName.textContent = authorName;
+    if (el.storyTimeText) el.storyTimeText.textContent = formatTimeAgo(item.created_at);
+    if (el.storyUserAvatar) {
+      el.storyUserAvatar.textContent = item.profile_photo_url ? '' : authorInitial;
+      if (item.profile_photo_url) {
+        el.storyUserAvatar.style.backgroundImage = `url('${resolveMediaUrl(item.profile_photo_url)}')`;
+      } else {
+        el.storyUserAvatar.style.backgroundImage = 'none';
+      }
+    }
+
+    if (el.btnStoryDelete) {
+      el.btnStoryDelete.style.display = isMe ? 'block' : 'none';
+      el.btnStoryDelete.onclick = () => {
+        if (confirm('Delete this status update?')) {
+          deleteStatusPost(item.id);
+        }
+      };
+    }
+
+    if (item.media_url) {
+      if (el.storyContentImg) {
+        el.storyContentImg.src = resolveMediaUrl(item.media_url);
+        el.storyContentImg.style.display = 'block';
+      }
+      if (el.storyContentText) el.storyContentText.style.display = 'none';
+      if (el.storyCaptionText) el.storyCaptionText.textContent = item.text || '';
+    } else {
+      if (el.storyContentImg) el.storyContentImg.style.display = 'none';
+      if (el.storyContentText) {
+        el.storyContentText.textContent = item.text || '';
+        el.storyContentText.style.display = 'block';
+      }
+      if (el.storyCaptionText) el.storyCaptionText.textContent = '';
+    }
+
+    if (el.storyViewsText) {
+      el.storyViewsText.textContent = isMe ? `👁️ ${item.view_count || 0} views` : '';
+    }
+
+    if (!isMe && item.id && AppState.token) {
+      fetch(`${BACKEND_URL}/api/status/${item.id}/view`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      }).catch(() => {});
+    }
+
+    const duration = 5000;
+    const startTime = Date.now();
+    if (el.storyProgressFill) el.storyProgressFill.style.width = '0%';
+
+    activeStoryProgressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(100, (elapsed / duration) * 100);
+      if (el.storyProgressFill) el.storyProgressFill.style.width = `${pct}%`;
+    }, 50);
+
+    activeStoryTimer = setTimeout(() => {
+      clearInterval(activeStoryProgressInterval);
+      currentViewingIndex++;
+      renderCurrentStoryItem();
+    }, duration);
+  }
+
+  function closeStoryViewer() {
+    clearInterval(activeStoryProgressInterval);
+    clearTimeout(activeStoryTimer);
+    if (el.statusViewerModal) el.statusViewerModal.style.display = 'none';
+    currentViewingStatuses = [];
+    currentViewingIndex = 0;
+  }
+
+  async function loadAndRenderUpdates() {
+    if (!AppState.token) return;
+    el.conversationsList.innerHTML = `
+      <div style="padding: 30px 20px; text-align: center; color: var(--text-sub); font-size: 13px;">
+        <div class="typing-dots" style="margin-bottom: 12px; justify-content: center;">
+          <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+        </div>
+        Syncing Status Updates...
+      </div>`;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/status`, {
+        headers: { 'Authorization': `Bearer ${AppState.token}` }
+      });
+      if (!res.ok) throw new Error('Failed to load statuses');
+      const allStatuses = await res.json();
+
+      const myId = AppState.user ? AppState.user.id : null;
+      const myStatuses = allStatuses.filter(s => s.user_id === myId);
+      const otherStatuses = allStatuses.filter(s => s.user_id !== myId);
+
+      const groupedOthers = {};
+      otherStatuses.forEach(s => {
+        if (!groupedOthers[s.user_id]) {
+          groupedOthers[s.user_id] = {
+            user_id: s.user_id,
+            username: s.username,
+            display_name: s.display_name || s.username,
+            profile_photo_url: s.profile_photo_url,
+            statuses: []
+          };
+        }
+        groupedOthers[s.user_id].statuses.push(s);
+      });
+
+      let html = '';
+
+      html += `
+        <div style="padding: 12px 14px 10px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h4 style="font-size: 14px; font-weight: 700; color: #fff; margin: 0;">Status Updates</h4>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">24-hour disappearing stories</div>
+          </div>
+          <button type="button" id="btn-trigger-add-status" style="background: linear-gradient(135deg, #7950FF, #5527D7); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <span>+</span> Add Update
+          </button>
+        </div>
+      `;
+
+      html += `
+        <div style="padding: 6px 10px; margin-bottom: 12px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; padding-left: 4px;">My Status</div>
+      `;
+
+      if (myStatuses.length > 0) {
+        const latest = myStatuses[0];
+        const initial = (AppState.user.display_name || AppState.user.username || 'KG').substring(0, 2).toUpperCase();
+        const views = myStatuses.reduce((acc, curr) => acc + (curr.view_count || 0), 0);
+        html += `
+          <div class="chat-item-card my-status-item" data-status-id="${latest.id}" style="border: 1px solid rgba(121, 80, 255, 0.35); background: rgba(121, 80, 255, 0.08); border-radius: 12px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="position: relative; width: 44px; height: 44px; border-radius: 50%; padding: 2px; background: linear-gradient(135deg, #7950FF, #00FFCC);">
+                <div style="width: 100%; height: 100%; border-radius: 50%; background: #131622; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 14px; background-size: cover; background-position: center; ${AppState.user.profile_photo_url ? `background-image: url('${resolveMediaUrl(AppState.user.profile_photo_url)}');` : ''}">
+                  ${AppState.user.profile_photo_url ? '' : initial}
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 13.5px; font-weight: 700; color: #fff;">My Status (${myStatuses.length})</div>
+                <div style="font-size: 11.5px; color: var(--accent-purple-light); margin-top: 2px;">👁️ ${views} view${views === 1 ? '' : 's'} • Tap to view</div>
+              </div>
+            </div>
+            <button type="button" class="btn-delete-my-status" data-status-id="${latest.id}" title="Delete update" style="background: none; border: none; color: var(--accent-red); font-size: 13px; cursor: pointer; padding: 6px;">🗑️</button>
+          </div>
+        `;
+      } else {
+        const initial = (AppState.user.display_name || AppState.user.username || 'KG').substring(0, 2).toUpperCase();
+        html += `
+          <div id="btn-add-status-empty" style="border: 1px dashed rgba(255, 255, 255, 0.18); border-radius: 12px; padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); transition: all 0.2s;">
+            <div style="position: relative; width: 42px; height: 42px; border-radius: 50%; background: rgba(121,80,255,0.15); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent-purple-light); font-size: 14px;">
+              ${initial}
+              <span style="position: absolute; bottom: -2px; right: -2px; width: 16px; height: 16px; border-radius: 50%; background: var(--accent-purple); color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid #06060C;">+</span>
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 600; color: #fff;">Add to my status</div>
+              <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 1px;">Share a photo or text update with circle</div>
+            </div>
+          </div>
+        `;
+      }
+
+      html += `</div>`;
+
+      html += `
+        <div style="padding: 4px 10px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; padding-left: 4px;">Recent Updates</div>
+      `;
+
+      const otherKeys = Object.keys(groupedOthers);
+      if (otherKeys.length === 0) {
+        html += `
+          <div style="padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 12.5px;">
+            No recent updates from your circle.<br>When friends post updates, they will appear here!
+          </div>
+        `;
+      } else {
+        otherKeys.forEach(uid => {
+          const group = groupedOthers[uid];
+          const latest = group.statuses[0];
+          const name = group.display_name || group.username;
+          const initial = name.substring(0, 2).toUpperCase();
+          const timeAgo = formatTimeAgo(latest.created_at);
+          html += `
+            <div class="chat-item-card other-status-item" data-user-id="${uid}" style="border-radius: 12px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 4px; transition: background 0.15s;">
+              <div style="position: relative; width: 44px; height: 44px; border-radius: 50%; padding: 2px; background: linear-gradient(135deg, #7950FF, #EC4899);">
+                <div style="width: 100%; height: 100%; border-radius: 50%; background: #131622; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 14px; background-size: cover; background-position: center; ${group.profile_photo_url ? `background-image: url('${resolveMediaUrl(group.profile_photo_url)}');` : ''}">
+                  ${group.profile_photo_url ? '' : initial}
+                </div>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 13.5px; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</div>
+                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">${timeAgo} • ${latest.media_url ? '📷 Photo' : '✍️ Text'}</div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      html += `</div>`;
+      el.conversationsList.innerHTML = html;
+
+      const btnTriggerAdd = document.getElementById('btn-trigger-add-status');
+      const btnAddEmpty = document.getElementById('btn-add-status-empty');
+      if (btnTriggerAdd) btnTriggerAdd.addEventListener('click', openStatusPostModal);
+      if (btnAddEmpty) btnAddEmpty.addEventListener('click', openStatusPostModal);
+
+      const myItem = el.conversationsList.querySelector('.my-status-item');
+      if (myItem) {
+        myItem.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-delete-my-status')) return;
+          openStoryViewer(myStatuses[0], myStatuses);
+        });
+      }
+
+      const btnDelMy = el.conversationsList.querySelector('.btn-delete-my-status');
+      if (btnDelMy) {
+        btnDelMy.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const sid = btnDelMy.dataset.statusId;
+          if (confirm('Delete this status update?')) {
+            await deleteStatusPost(sid);
+          }
+        });
+      }
+
+      el.conversationsList.querySelectorAll('.other-status-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const uid = item.dataset.userId;
+          const userGroup = groupedOthers[uid];
+          if (userGroup && userGroup.statuses.length > 0) {
+            openStoryViewer(userGroup.statuses[0], userGroup.statuses);
+          }
+        });
+      });
+
+    } catch (err) {
+      el.conversationsList.innerHTML = `
+        <div style="padding: 30px 20px; text-align: center; color: var(--accent-red); font-size: 13px;">
+          Failed to load status updates.<br>${err.message}
+        </div>
+      `;
+    }
+  }
+
+  // ==========================================================================
+  // SETTINGS & PREFERENCES ENGINE
+  // ==========================================================================
+
+  async function loadAndRenderSettings() {
+    if (!AppState.token) return;
+
+    const user = AppState.user || {};
+    const name = user.display_name || user.displayName || user.username || 'KYNX User';
+    const username = user.username || 'kynx_user';
+    const email = user.email || 'No email attached';
+    const initial = name.substring(0, 2).toUpperCase();
+    const isMuted = AppState.audioMuted;
+
+    let html = `
+      <div style="padding: 14px 12px 30px;">
+        <div style="margin-bottom: 14px; padding: 0 4px;">
+          <h3 style="font-size: 16px; font-weight: 700; color: #fff; margin: 0;">Settings & Preferences</h3>
+          <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Manage profile, audio, privacy & sessions</div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #7950FF, #5527D7); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #fff; flex-shrink: 0; background-size: cover; background-position: center; ${user.profile_photo_url ? `background-image: url('${resolveMediaUrl(user.profile_photo_url)}');` : ''}">
+              ${user.profile_photo_url ? '' : initial}
+            </div>
+            <div style="min-width: 0;">
+              <div style="font-size: 14px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(name)}</div>
+              <div style="font-size: 12px; color: var(--accent-purple-light); margin-top: 1px;">@${escapeHtml(username)}</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(email)}</div>
+            </div>
+          </div>
+          <button type="button" id="btn-settings-edit-profile" style="background: rgba(121,80,255,0.2); border: 1px solid var(--accent-purple); color: #fff; border-radius: 8px; padding: 6px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer; flex-shrink: 0;">Edit</button>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Audio & Notifications</div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <div style="font-size: 13px; font-weight: 600; color: #fff;">In-App Audio Chimes</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Play soft cyber chime on incoming messages</div>
+            </div>
+            <input type="checkbox" id="chk-audio-toggle" ${isMuted ? '' : 'checked'} style="width: 18px; height: 18px; accent-color: var(--accent-purple); cursor: pointer;">
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <div>
+              <div style="font-size: 13px; font-weight: 600; color: #fff;">Background Music Safe Mode</div>
+              <div style="font-size: 11px; color: var(--accent-green);">✓ Active (Never pauses Spotify / Apple Music)</div>
+            </div>
+            <button type="button" id="btn-test-chime" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer;">Test Chime 🔔</button>
+          </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Privacy & Ghost Link</div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <div style="font-size: 13px; font-weight: 600; color: #fff;">Ghost Shield Stealth Mode</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Mask presence and typing telemetry</div>
+            </div>
+            <button type="button" id="btn-settings-ghost-toggle" style="background: ${AppState.ghostShield ? 'rgba(0,255,204,0.2)' : 'rgba(255,255,255,0.08)'}; border: 1px solid ${AppState.ghostShield ? '#00FFCC' : 'rgba(255,255,255,0.2)'}; color: ${AppState.ghostShield ? '#00FFCC' : '#fff'}; border-radius: 8px; padding: 5px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer;">
+              ${AppState.ghostShield ? '🛡️ Enabled' : 'Disabled'}
+            </button>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <div>
+              <div style="font-size: 13px; font-weight: 600; color: #fff;">View-Once Self Destruction</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Photos and voice notes vanish upon opening</div>
+            </div>
+            <span style="font-size: 11px; color: var(--accent-green); font-weight: 600;">Always On ⚡</span>
+          </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Platform & Build</div>
+          
+          <div style="font-size: 12px; color: var(--text-sub); line-height: 1.6;">
+            <div>• <strong>App:</strong> KYNX Web Deck v0.9.38</div>
+            <div>• <strong>Engine:</strong> WebRTC Voice/Video + WebSocket FastSync</div>
+            <div>• <strong>Backend:</strong> FastAPI + Neon PostgreSQL Distributed Pool</div>
+            <div>• <strong>Security:</strong> E2E AES-256-GCM + Ephemeral Session Tokens</div>
+            <div style="margin-top: 4px; color: var(--accent-purple-light);">• <strong>Architect & Lead:</strong> Kavyansh Gautam (@kvynshgautam)</div>
+          </div>
+        </div>
+
+        <button type="button" id="btn-settings-logout" style="width: 100%; padding: 12px; background: rgba(255, 0, 85, 0.12); border: 1px solid rgba(255, 0, 85, 0.4); border-radius: 10px; color: #FF4D6D; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+          🚪 Disconnect Session & Log Out
+        </button>
+      </div>
+    `;
+
+    el.conversationsList.innerHTML = html;
+
+    const btnEditProfile = document.getElementById('btn-settings-edit-profile');
+    if (btnEditProfile) {
+      btnEditProfile.addEventListener('click', () => {
+        openUserProfileModal(AppState.user.id, true);
+      });
+    }
+
+    const chkAudio = document.getElementById('chk-audio-toggle');
+    if (chkAudio) {
+      chkAudio.addEventListener('change', () => {
+        AppState.audioMuted = !chkAudio.checked;
+        localStorage.setItem('kynx_audio_muted', AppState.audioMuted ? 'true' : 'false');
+      });
+    }
+
+    const btnTestChime = document.getElementById('btn-test-chime');
+    if (btnTestChime) {
+      btnTestChime.addEventListener('click', () => {
+        const wasMuted = AppState.audioMuted;
+        AppState.audioMuted = false;
+        playNotificationSound();
+        AppState.audioMuted = wasMuted;
+      });
+    }
+
+    const btnGhostToggle = document.getElementById('btn-settings-ghost-toggle');
+    if (btnGhostToggle) {
+      btnGhostToggle.addEventListener('click', () => {
+        toggleGhostShield();
+        loadAndRenderSettings();
+      });
+    }
+
+    const btnLogout = document.getElementById('btn-settings-logout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', () => logout(true));
+    }
+  }
+
+  function formatTimeAgo(isoString) {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '';
+    const now = Date.now();
+    const diffSec = Math.floor((now - d.getTime()) / 1000);
+    if (diffSec < 60) return 'Just now';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
   }
 
   // Utilities
