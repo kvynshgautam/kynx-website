@@ -5612,8 +5612,46 @@
   }
 
   // ==========================================================================
-  // SETTINGS & PREFERENCES ENGINE
+  // SETTINGS & PREFERENCES ENGINE & THEMES
   // ==========================================================================
+
+  const KYNX_THEMES = [
+    { id: 'obsidian', name: 'Obsidian', bg: '#0B0B12', accent: '#7950FF', label: 'Cosmic Obsidian (Default)' },
+    { id: 'cyan', name: 'Cyber Cyan', bg: '#081226', accent: '#00E5FF', label: 'Electric Cyber Aqua' },
+    { id: 'emerald', name: 'Emerald', bg: '#051d11', accent: '#10B981', label: 'Matrix Hacker Green' },
+    { id: 'crimson', name: 'Crimson', bg: '#1a080f', accent: '#F43F5E', label: 'Cyberpunk Ruby Red' },
+    { id: 'amber', name: 'Solar Amber', bg: '#191206', accent: '#F59E0B', label: 'Solar Cyber Gold' },
+    { id: 'amoled', name: 'AMOLED', bg: '#000000', accent: '#E4E4E7', label: 'Pure Pitch Black' }
+  ];
+
+  function getActiveTheme() {
+    try {
+      return localStorage.getItem('kynx_theme') || 'obsidian';
+    } catch (_) {
+      return 'obsidian';
+    }
+  }
+
+  function applyTheme(themeId) {
+    const valid = KYNX_THEMES.some(t => t.id === themeId);
+    const target = valid ? themeId : 'obsidian';
+    if (target === 'obsidian') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', target);
+    }
+    try {
+      localStorage.setItem('kynx_theme', target);
+    } catch (_) {}
+    const themeObj = KYNX_THEMES.find(t => t.id === target);
+    if (themeObj) {
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) metaTheme.setAttribute('content', themeObj.bg);
+    }
+  }
+
+  // Apply saved theme on script boot
+  applyTheme(getActiveTheme());
 
   async function loadAndRenderSettings() {
     if (!AppState.token) return;
@@ -5624,6 +5662,7 @@
     const email = user.email || 'No email attached';
     const initial = name.substring(0, 2).toUpperCase();
     const isMuted = AppState.audioMuted;
+    const currentTheme = getActiveTheme();
 
     let html = `
       <div style="padding: 14px 12px 30px;">
@@ -5688,6 +5727,25 @@
           </div>
         </div>
 
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">
+            <span>Theme & Appearance</span>
+            <span style="font-size:11px; color:var(--accent-purple-light); font-weight:600;">${(KYNX_THEMES.find(t => t.id === currentTheme) || KYNX_THEMES[0]).name}</span>
+          </div>
+
+          <div class="theme-options-grid">
+            ${KYNX_THEMES.map(t => `
+              <div class="theme-option-card ${currentTheme === t.id ? 'active' : ''}" data-theme-id="${t.id}" title="${t.label}">
+                ${currentTheme === t.id ? '<div class="theme-active-badge"></div>' : ''}
+                <div class="theme-preview-swatch" style="background:${t.bg};">
+                  <div class="theme-preview-dot" style="background:${t.accent};"></div>
+                </div>
+                <div class="theme-card-name" style="${currentTheme === t.id ? 'color:var(--accent-purple-light); font-weight:700;' : ''}">${t.name}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
           <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Platform & Build</div>
           
@@ -5745,6 +5803,16 @@
     if (btnLogout) {
       btnLogout.addEventListener('click', () => logout(true));
     }
+
+    el.conversationsList.querySelectorAll('.theme-option-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const tid = card.dataset.themeId;
+        if (tid) {
+          applyTheme(tid);
+          loadAndRenderSettings();
+        }
+      });
+    });
   }
 
   function formatTimeAgo(isoString) {
