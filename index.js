@@ -6,25 +6,25 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.56",
-  version_code: 66,
-  release_name: "v0.9.56 Android / v0.9.57 iOS: WebRTC Calls, QR Scanner & Hex-Shield Branding",
+  version_name: "0.9.58",
+  version_code: 68,
+  release_name: "Unified v0.9.58 (Android & iOS Build 68): Cross-Platform WebRTC Call Interop & Universal Signed APK",
   apk_filename: "KYNX-latest.apk",
-  file_size: "62.5 MB",
-  sha256: "6ec6fb9e5a93fa54f41b033abf9c4ac049a0b7050e41f81b81fb55a668effc25",
-  ios_version_name: "0.9.57",
-  ios_version_code: 67,
-  ipa_filename: "KYNX-v0.9.57.ipa",
-  ios_file_size: "8.01 MB",
-  ios_sha256: "6279512386c25b3572f73791687f465351be2ecd81d0fabb321faffe6aa69105",
+  file_size: "56.6 MB",
+  sha256: "5d769a771bc0773ad374e21a39eca662cf2ae2b0815698bc90741fe015fc2cb0",
+  ios_version_name: "0.9.58",
+  ios_version_code: 68,
+  ipa_filename: "KYNX-v0.9.58.ipa",
+  ios_file_size: "7.92 MB",
+  ios_sha256: "d7bb13e41c44031b69725ec8feed483bdaea455baae4fa8f99fa272e75b5e8d2",
   release_date: "25 November 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   min_ios: "iOS 15.0+ (arm64)",
   changelog: [
-    "iOS v0.9.57 (Build 67): Native WebRTC 1-on-1 Voice & Video calls, Camera QR scanner for KYNX Web Deck, interactive reaction pills, voice notes & view-once media, and original 3D metallic hex-shield logo.",
-    "Glassy OTP V15 motion architecture across Android Jetpack Compose & iOS SwiftUI.",
-    "Zero bloat, hardware-accelerated performance and cross-platform real-time sync."
+    "Unified v0.9.58 (Android & iOS Build 68): Fixed Android -> iOS instant call disconnect by aligning WebRTC Unified Plan MAXBUNDLE/RTCP-MUX policies, SDP bandwidth formatting, iOS thread safety, and long-lived WebSocket stability.",
+    "Android v0.9.58: Shipped properly release-signed (v1+v2+v3) & 16 KB aligned universal APK replacing prior debug-only build.",
+    "Glassy OTP V15, KYNX Web QR Scanner, Interactive Reactions, and Hex-Shield Branding across both platforms."
   ]
 };
 
@@ -43,7 +43,7 @@ app.get('/api/release', (req, res) => {
 
 // Direct APK & IPA download routes + CDN fallback
 const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk";
-const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.57/KYNX-v0.9.57.ipa";
+const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.58/KYNX-v0.9.58.ipa";
 
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
