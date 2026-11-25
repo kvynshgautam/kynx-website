@@ -18,6 +18,11 @@
       "permanent": false
     },
     {
+      "source": "/download/ipa",
+      "destination": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.57/KYNX-v0.9.57.ipa",
+      "permanent": false
+    },
+    {
       "source": "/downloads/:path*",
       "destination": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
       "permanent": false

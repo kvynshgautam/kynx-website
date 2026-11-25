@@ -8,18 +8,23 @@ const app = express();
 const RELEASE_INFO = {
   version_name: "0.9.56",
   version_code: 66,
-  release_name: "v0.9.56: Glassy OTP V15 Motion Experience & Security",
+  release_name: "v0.9.56 Android / v0.9.57 iOS: WebRTC Calls, QR Scanner & Hex-Shield Branding",
   apk_filename: "KYNX-latest.apk",
   file_size: "62.5 MB",
   sha256: "6ec6fb9e5a93fa54f41b033abf9c4ac049a0b7050e41f81b81fb55a668effc25",
-  release_date: "23 November 2026",
+  ios_version_name: "0.9.57",
+  ios_version_code: 67,
+  ipa_filename: "KYNX-v0.9.57.ipa",
+  ios_file_size: "8.01 MB",
+  ios_sha256: "6279512386c25b3572f73791687f465351be2ecd81d0fabb321faffe6aa69105",
+  release_date: "25 November 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
+  min_ios: "iOS 15.0+ (arm64)",
   changelog: [
-    "Glassy OTP V15 motion architecture in Android Jetpack Compose.",
-    "Dynamic 4-stage physics choreography: 2x3 spring morphing, emerald glow, center checkmark merge, and top slot ascension with ripple rings.",
-    "Blinking active caret and interactive 6-digit hardware & soft keyboard focus.",
-    "Zero bloat, locked 120 FPS performance and Android 15 ready."
+    "iOS v0.9.57 (Build 67): Native WebRTC 1-on-1 Voice & Video calls, Camera QR scanner for KYNX Web Deck, interactive reaction pills, voice notes & view-once media, and original 3D metallic hex-shield logo.",
+    "Glassy OTP V15 motion architecture across Android Jetpack Compose & iOS SwiftUI.",
+    "Zero bloat, hardware-accelerated performance and cross-platform real-time sync."
   ]
 };
 
@@ -36,8 +41,9 @@ app.get('/api/release', (req, res) => {
   res.json(RELEASE_INFO);
 });
 
-// Direct APK download route & CDN fallback
+// Direct APK & IPA download routes + CDN fallback
 const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk";
+const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.57/KYNX-v0.9.57.ipa";
 
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
@@ -45,6 +51,10 @@ app.get('/download/apk', (req, res) => {
     return res.download(apkPath, `KYNX-v${RELEASE_INFO.version_name}.apk`);
   }
   return res.redirect(GITHUB_RELEASE_URL);
+});
+
+app.get('/download/ipa', (req, res) => {
+  return res.redirect(GITHUB_IPA_RELEASE_URL);
 });
 
 app.get('/downloads/:filename', (req, res) => {

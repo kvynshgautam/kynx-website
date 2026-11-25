@@ -731,6 +731,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
+  const btnCopyIosSha = document.getElementById('btn-copy-ios-sha');
+  const iosShaTextElem = document.getElementById('ios-sha-text');
+  if (btnCopyIosSha && iosShaTextElem) {
+    btnCopyIosSha.addEventListener('click', () => {
+      playClickSound();
+      const fullHash = iosShaTextElem.textContent.trim();
+      navigator.clipboard.writeText(fullHash).then(() => {
+        btnCopyIosSha.textContent = "Copied! ✓";
+        setTimeout(() => {
+          btnCopyIosSha.textContent = "Copy Hash";
+        }, 2000);
+      });
+    });
+  }
+
+
   // ==========================================
   // 11. Interactive Terminal Commands
   // ==========================================
@@ -743,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cmd === 'status') {
       cmdText.textContent = 'kynx --status';
       out.innerHTML = `
-        [SYS] KYNX Core v0.9.56 [ONLINE - UPDATED 23-NOV-2026]<br>
+        [SYS] KYNX Core — Android v0.9.56 • iOS v0.9.57 [ONLINE - 25-NOV-2026]<br>
         [ARCHITECT] KG (Lead Systems Engineer)<br>
         [GRID_STATUS] Multi-Hop Mesh (7-Hop E2EE) + WebSockets [ARMED]<br>
         [WEB_DECK] Bidirectional Session Sync Active [MONITORED]<br>

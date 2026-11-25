@@ -139,7 +139,7 @@
         h('div', { className: 'kynx-lab-header' },
           h('div', { className: 'kynx-lab-badge' },
             h('span', { className: 'pulse-dot-green' }),
-            'REACT 18 CYBER ARCHITECTURE LAB • v0.9.56'
+            'REACT 18 CYBER ARCHITECTURE LAB • Android v0.9.56 • iOS v0.9.57'
           ),
           h('h3', { className: 'kynx-lab-title' }, 'Test KYNX Flagship Systems Live'),
           h('p', { className: 'kynx-lab-sub' },

@@ -1,11 +1,17 @@
 {
   "version_code": 66,
   "version_name": "0.9.56",
-  "description": "KYNX v0.9.56 Glassy OTP V15 Motion Architecture: Interactive 6-digit grid with active caret, spring morphing 2x3 grid, emerald glowing borders, center checkmark merge, ascension to top slot with 3 concentric ripple rings, and trusted device cards.",
+  "description": "KYNX v0.9.56 (Android) & v0.9.57 (iOS Build 67): Glassy OTP V15 Motion Architecture, WebRTC Voice & Video Calls, KYNX Web QR Scanner, Interactive Reactions, and Hex-Shield Branding.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
   "sha256_checksum": "6ec6fb9e5a93fa54f41b033abf9c4ac049a0b7050e41f81b81fb55a668effc25",
   "is_mandatory": false,
   "min_supported_version": 1,
   "published_at": "2026-11-23T00:00:00+00:00",
-  "file_size_bytes": 65609002
+  "file_size_bytes": 65609002,
+  "ios_version_code": 67,
+  "ios_version_name": "0.9.57",
+  "ipa_url": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.57/KYNX-v0.9.57.ipa",
+  "ios_sha256_checksum": "6279512386c25b3572f73791687f465351be2ecd81d0fabb321faffe6aa69105",
+  "ios_file_size_bytes": 8402277,
+  "ios_published_at": "2026-11-25T12:30:00+00:00"
 }
