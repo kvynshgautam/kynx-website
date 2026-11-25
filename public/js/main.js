@@ -759,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cmd === 'status') {
       cmdText.textContent = 'kynx --status';
       out.innerHTML = `
-        [SYS] KYNX Core — Unified v0.9.58 (Android &amp; iOS Build 68) [ONLINE - 25-NOV-2026]<br>
+        [SYS] KYNX Core — Unified v0.9.59 (Android &amp; iOS Build 69) [ONLINE - 25-NOV-2026]<br>
         [ARCHITECT] KG (Lead Systems Engineer)<br>
         [GRID_STATUS] Multi-Hop Mesh (7-Hop E2EE) + WebSockets [ARMED]<br>
         [WEB_DECK] Bidirectional Session Sync Active [MONITORED]<br>

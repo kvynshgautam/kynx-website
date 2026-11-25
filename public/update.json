@@ -1,17 +1,17 @@
 {
-  "version_code": 68,
-  "version_name": "0.9.58",
-  "description": "KYNX Unified v0.9.58 (Build 68 — Android & iOS): Release-signed universal APK (v1+v2+v3), cross-platform Android <-> iOS WebRTC call interop & SDP fixes, long-lived iOS WebSocket stability, and Glassy OTP V15.",
+  "version_code": 69,
+  "version_name": "0.9.59",
+  "description": "KYNX Unified v0.9.59 (Build 69 — Android & iOS): SDP NULL parser repair, 12s background call relay buffer, iOS scenePhase foreground reconnect, and release-signed universal APK.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "5d769a771bc0773ad374e21a39eca662cf2ae2b0815698bc90741fe015fc2cb0",
+  "sha256_checksum": "a55ed24bffc325cbe3f5a58bcbcc6661551d006c608ea29d2d0f5f9333d9c047",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-25T16:05:00+00:00",
+  "published_at": "2026-11-25T16:30:00+00:00",
   "file_size_bytes": 59322974,
-  "ios_version_code": 68,
-  "ios_version_name": "0.9.58",
-  "ipa_url": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.58/KYNX-v0.9.58.ipa",
-  "ios_sha256_checksum": "d7bb13e41c44031b69725ec8feed483bdaea455baae4fa8f99fa272e75b5e8d2",
-  "ios_file_size_bytes": 8305038,
-  "ios_published_at": "2026-11-25T16:05:00+00:00"
+  "ios_version_code": 69,
+  "ios_version_name": "0.9.59",
+  "ipa_url": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.59/KYNX-v0.9.59.ipa",
+  "ios_sha256_checksum": "62b3fca296840de9aa9183895bde9597ec1604bf5258c135b70a5519abad9c99",
+  "ios_file_size_bytes": 8316811,
+  "ios_published_at": "2026-11-25T16:30:00+00:00"
 }

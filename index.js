@@ -6,25 +6,25 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.58",
-  version_code: 68,
-  release_name: "Unified v0.9.58 (Android & iOS Build 68): Cross-Platform WebRTC Call Interop & Universal Signed APK",
+  version_name: "0.9.59",
+  version_code: 69,
+  release_name: "Unified v0.9.59 (Android & iOS Build 69): SDP NULL Repair & 12s Background Call Grace",
   apk_filename: "KYNX-latest.apk",
   file_size: "56.6 MB",
-  sha256: "5d769a771bc0773ad374e21a39eca662cf2ae2b0815698bc90741fe015fc2cb0",
-  ios_version_name: "0.9.58",
-  ios_version_code: 68,
-  ipa_filename: "KYNX-v0.9.58.ipa",
-  ios_file_size: "7.92 MB",
-  ios_sha256: "d7bb13e41c44031b69725ec8feed483bdaea455baae4fa8f99fa272e75b5e8d2",
+  sha256: "a55ed24bffc325cbe3f5a58bcbcc6661551d006c608ea29d2d0f5f9333d9c047",
+  ios_version_name: "0.9.59",
+  ios_version_code: 69,
+  ipa_filename: "KYNX-v0.9.59.ipa",
+  ios_file_size: "7.93 MB",
+  ios_sha256: "62b3fca296840de9aa9183895bde9597ec1604bf5258c135b70a5519abad9c99",
   release_date: "25 November 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   min_ios: "iOS 15.0+ (arm64)",
   changelog: [
-    "Unified v0.9.58 (Android & iOS Build 68): Fixed Android -> iOS instant call disconnect by aligning WebRTC Unified Plan MAXBUNDLE/RTCP-MUX policies, SDP bandwidth formatting, iOS thread safety, and long-lived WebSocket stability.",
-    "Android v0.9.58: Shipped properly release-signed (v1+v2+v3) & 16 KB aligned universal APK replacing prior debug-only build.",
-    "Glassy OTP V15, KYNX Web QR Scanner, Interactive Reactions, and Hex-Shield Branding across both platforms."
+    "Unified v0.9.59 (Android & iOS Build 69): Automatic SDP sanitizer preventing SessionDescription NULL errors between Android & iOS.",
+    "12-second server call-offer buffer + iOS 30s background WebSocket grace and instant foreground reconnect.",
+    "Release-signed (v1+v2+v3) & 16 KB page-aligned universal Android APK (uninstall old debug-signed builds once before upgrading)."
   ]
 };
 
@@ -43,7 +43,7 @@ app.get('/api/release', (req, res) => {
 
 // Direct APK & IPA download routes + CDN fallback
 const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk";
-const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.58/KYNX-v0.9.58.ipa";
+const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.59/KYNX-v0.9.59.ipa";
 
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
