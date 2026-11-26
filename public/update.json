@@ -1,17 +1,17 @@
 {
-  "version_code": 71,
-  "version_name": "0.9.61",
-  "description": "KYNX Unified v0.9.61 (Build 71 — Android & iOS): Removed Walkie-Talkie PTT across Android & iOS for clean notifications + full iOS-APK feature parity (Cyber Wallpapers, Burn Secret Text, Watch Together YouTube, Multi-Peer Group Calls, Video/File Attachments, Face ID/PIN Vault Lock, Offline Cache & OTA Updates).",
+  "version_code": 72,
+  "version_name": "0.9.62",
+  "description": "KYNX Unified v0.9.62 (Build 72 — Android & iOS): Full Android-to-iOS feature parity & Cross-Platform BLE Mesh Interop (SHA-256 GATT crypto alignment, bidirectional GATT central/peripheral frames, offline outbox & disk media cache, inline waveform/video/zoom players, UserProfileSheet, T9 dialpad, minimized call pill & audio route picker, swipe-to-reply, AI smart replies/polish, scheduled messages, burn auto-delete, stories strip & reduced motion).",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "a275d52a90a00a319b9db7480056baae1086c72edc998ba631f28ded35c26ec0",
+  "sha256_checksum": "801d3fa8eb2810f81379c53e4dd81c710c57c65cbaa1e2ca4bfa26ec448b75ae",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-26T07:00:00+00:00",
+  "published_at": "2026-11-26T07:35:00+00:00",
   "file_size_bytes": 58765918,
-  "ios_version_code": 71,
-  "ios_version_name": "0.9.61",
-  "ipa_url": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.61/KYNX-v0.9.61.ipa",
-  "ios_sha256_checksum": "7dac03650ca45249e8265a6d0526f19176050fc23d5e3b9761caf6b8826534ce",
-  "ios_file_size_bytes": 8734316,
-  "ios_published_at": "2026-11-26T07:00:00+00:00"
+  "ios_version_code": 72,
+  "ios_version_name": "0.9.62",
+  "ipa_url": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.62/KYNX-v0.9.62.ipa",
+  "ios_sha256_checksum": "be2b5d6a0f2a1b38c7aecb8660b73a838dec674fae741d041a0027c9e51daa18",
+  "ios_file_size_bytes": 9172812,
+  "ios_published_at": "2026-11-26T07:35:00+00:00"
 }

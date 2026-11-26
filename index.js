@@ -6,25 +6,25 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.61",
-  version_code: 71,
-  release_name: "Unified v0.9.61 (Android & iOS Build 71): Streamlined Chat & Complete Parity",
+  version_name: "0.9.62",
+  version_code: 72,
+  release_name: "Unified v0.9.62 (Android & iOS Build 72): Full Parity & BLE Interop",
   apk_filename: "KYNX-latest.apk",
   file_size: "56.04 MB",
-  sha256: "a275d52a90a00a319b9db7480056baae1086c72edc998ba631f28ded35c26ec0",
-  ios_version_name: "0.9.61",
-  ios_version_code: 71,
-  ipa_filename: "KYNX-v0.9.61.ipa",
-  ios_file_size: "8.33 MB",
-  ios_sha256: "7dac03650ca45249e8265a6d0526f19176050fc23d5e3b9761caf6b8826534ce",
+  sha256: "801d3fa8eb2810f81379c53e4dd81c710c57c65cbaa1e2ca4bfa26ec448b75ae",
+  ios_version_name: "0.9.62",
+  ios_version_code: 72,
+  ipa_filename: "KYNX-v0.9.62.ipa",
+  ios_file_size: "8.75 MB",
+  ios_sha256: "be2b5d6a0f2a1b38c7aecb8660b73a838dec674fae741d041a0027c9e51daa18",
   release_date: "26 November 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   min_ios: "iOS 15.0+ (arm64)",
   changelog: [
-    "Unified v0.9.61 (Android & iOS Build 71): Removed Walkie-Talkie PTT mode across both Android & iOS for cleaner message notifications and audio handling.",
-    "Multi-peer Group Voice & Video calls, Video/Document file sharing, Face ID + Vault PIN App Lock, Offline local JSON cache, and OTA updater.",
-    "Status Photo/Video & Viewers Sheet, Profile Photo Upload, Extended Theme/Bubble/Glass/TextScale Controls, and Blocked Users Manager."
+    "Unified v0.9.62 (Android & iOS Build 72): Full Android-to-iOS feature parity across Calls, Chat, Status, Contacts, Settings & BLE Mesh.",
+    "Cross-platform Android <-> iOS BLE GATT Mesh interop (SHA-256 key derivation, GATT notifications & frame routing, thread isolation).",
+    "Inline Voice Waveform, Video Player, Zoom Image Viewer, UserProfileSheet, T9 Dialpad, Call Minimize/Route Picker, Offline Outbox & AI Smart Replies/Polish."
   ]
 };
 
@@ -43,7 +43,7 @@ app.get('/api/release', (req, res) => {
 
 // Direct APK & IPA download routes + CDN fallback
 const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk";
-const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.61/KYNX-v0.9.61.ipa";
+const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.62/KYNX-v0.9.62.ipa";
 
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
