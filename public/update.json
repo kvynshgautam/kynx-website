@@ -1,17 +1,17 @@
 {
-  "version_code": 75,
-  "version_name": "0.9.65",
-  "description": "KYNX Unified v0.9.65 (Build 75 — Android & iOS): Crystal-clear 720p @ 60fps HD WebRTC Video & Voice upgrade (500 kbps–4.0 Mbps bitrate, hardware H.264 priority, safe 30fps sensor fallback, 48kHz Opus FEC) + KYNX signature ringtone & chime.",
+  "version_code": 76,
+  "version_name": "0.9.66",
+  "description": "KYNX Unified v0.9.66 (Build 76 — Android & iOS): Fixed Android <-> iOS BLE GATT Radar discovery (removed iOS primary-ad overflow, serialized Android requestMtu/discoverServices/writeDescriptor handshake, added iOS didSubscribeTo & didFailToConnect + MTU-aware framing) alongside 720p60 HD calls & KYNX audio.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "79eb65a27d666a0cb3020766d40e25906247b1573c147ab25a66247799dfe831",
+  "sha256_checksum": "f149cea14839906b44c4878094899dea3d3c633987c75c09812fe5aa89c59b38",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-26T08:10:00+00:00",
+  "published_at": "2026-11-26T08:30:00+00:00",
   "file_size_bytes": 58765918,
-  "ios_version_code": 75,
-  "ios_version_name": "0.9.65",
-  "ipa_url": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.65/KYNX-v0.9.65.ipa",
-  "ios_sha256_checksum": "216572e2172c91dcb85164450b318c3d307fe9d6d98f0454341243cf676d94e4",
-  "ios_file_size_bytes": 10787077,
-  "ios_published_at": "2026-11-26T08:10:00+00:00"
+  "ios_version_code": 76,
+  "ios_version_name": "0.9.66",
+  "ipa_url": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.66/KYNX-v0.9.66.ipa",
+  "ios_sha256_checksum": "7610c4020f3faf275581b7d755d0f3af8d61cc719473b2eebe1e55aa6e597e1a",
+  "ios_file_size_bytes": 10792428,
+  "ios_published_at": "2026-11-26T08:30:00+00:00"
 }
