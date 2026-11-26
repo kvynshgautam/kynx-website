@@ -6,25 +6,25 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.59",
-  version_code: 69,
-  release_name: "Unified v0.9.59 (Android & iOS Build 69): SDP NULL Repair & 12s Background Call Grace",
+  version_name: "0.9.60",
+  version_code: 70,
+  release_name: "Unified v0.9.60 (Android & iOS Build 70): Complete iOS-APK Parity & Power Features",
   apk_filename: "KYNX-latest.apk",
-  file_size: "56.6 MB",
-  sha256: "a55ed24bffc325cbe3f5a58bcbcc6661551d006c608ea29d2d0f5f9333d9c047",
-  ios_version_name: "0.9.59",
-  ios_version_code: 69,
-  ipa_filename: "KYNX-v0.9.59.ipa",
-  ios_file_size: "7.93 MB",
-  ios_sha256: "62b3fca296840de9aa9183895bde9597ec1604bf5258c135b70a5519abad9c99",
-  release_date: "25 November 2026",
+  file_size: "56.06 MB",
+  sha256: "03377c05f12b5d1df6e84ee8990265139e6ae177c57a6ead9cfa198017ce4139",
+  ios_version_name: "0.9.60",
+  ios_version_code: 70,
+  ipa_filename: "KYNX-v0.9.60.ipa",
+  ios_file_size: "8.34 MB",
+  ios_sha256: "70e59770eff8f45fa5204c9fd28cf91683e04e4dc0b3a5da71ec72afe0887f99",
+  release_date: "26 November 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   min_ios: "iOS 15.0+ (arm64)",
   changelog: [
-    "Unified v0.9.59 (Android & iOS Build 69): Automatic SDP sanitizer preventing SessionDescription NULL errors between Android & iOS.",
-    "12-second server call-offer buffer + iOS 30s background WebSocket grace and instant foreground reconnect.",
-    "Release-signed (v1+v2+v3) & 16 KB page-aligned universal Android APK (uninstall old debug-signed builds once before upgrading)."
+    "Unified v0.9.60 (Android & iOS Build 70): Full iOS-APK parity — Cyber Wallpapers, Burn Secret Text, Watch Together YouTube, and Walkie-Talkie PTT.",
+    "Multi-peer Group Voice & Video calls, Video/Document file sharing, Face ID + Vault PIN App Lock, Offline local JSON cache, and OTA updater.",
+    "Status Photo/Video & Viewers Sheet, Profile Photo Upload, Extended Theme/Bubble/Glass/TextScale Controls, and Blocked Users Manager."
   ]
 };
 
@@ -43,7 +43,7 @@ app.get('/api/release', (req, res) => {
 
 // Direct APK & IPA download routes + CDN fallback
 const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk";
-const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.59/KYNX-v0.9.59.ipa";
+const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.60/KYNX-v0.9.60.ipa";
 
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
