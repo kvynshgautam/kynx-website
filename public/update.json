@@ -1,17 +1,17 @@
 {
-  "version_code": 73,
-  "version_name": "0.9.63",
-  "description": "KYNX Unified v0.9.63 (Build 73 — Android & iOS): Bundled KYNX signature ringtone & notification chime in iOS (.ipa) with live Settings previews & background alert audio + full Android-iOS parity & cross-platform BLE Mesh GATT interop.",
+  "version_code": 74,
+  "version_name": "0.9.64",
+  "description": "KYNX Unified v0.9.64 (Build 74 — Android & iOS): Crystal-clear 720p @ 30fps HD WebRTC Video & Voice upgrade (350 kbps–2.5 Mbps bitrate, hardware H.264 priority, 48kHz Opus FEC without voice clipping, BALANCED degradation & faster ICE) + KYNX signature ringtone & chime.",
   "apk_url": "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk",
-  "sha256_checksum": "0b37e47af360c26834f299424c0e1813067c1a3cef1b1f63a493b14b6354672a",
+  "sha256_checksum": "d218ea2f78d1f582f4768014fc14ca23ce1ce9456d348e8a2ae7662bca33fabf",
   "is_mandatory": false,
   "min_supported_version": 1,
-  "published_at": "2026-11-26T07:45:00+00:00",
+  "published_at": "2026-11-26T08:00:00+00:00",
   "file_size_bytes": 58765918,
-  "ios_version_code": 73,
-  "ios_version_name": "0.9.63",
-  "ipa_url": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.63/KYNX-v0.9.63.ipa",
-  "ios_sha256_checksum": "b84f8b4179b2f38d51dce60a0889a9ac822a6defbf85f8a42aa31647d12fa2d5",
-  "ios_file_size_bytes": 10780287,
-  "ios_published_at": "2026-11-26T07:45:00+00:00"
+  "ios_version_code": 74,
+  "ios_version_name": "0.9.64",
+  "ipa_url": "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.64/KYNX-v0.9.64.ipa",
+  "ios_sha256_checksum": "ff965066d7015d3d4cb5588a488d76622612b15d8ba2ec35fb82ff29598805bb",
+  "ios_file_size_bytes": 10787565,
+  "ios_published_at": "2026-11-26T08:00:00+00:00"
 }

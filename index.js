@@ -6,25 +6,25 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.63",
-  version_code: 73,
-  release_name: "Unified v0.9.63 (Android & iOS Build 73): KYNX Audio Suite & Full Parity",
+  version_name: "0.9.64",
+  version_code: 74,
+  release_name: "Unified v0.9.64 (Android & iOS Build 74): 720p30 HD Calls & Full Parity",
   apk_filename: "KYNX-latest.apk",
   file_size: "56.04 MB",
-  sha256: "0b37e47af360c26834f299424c0e1813067c1a3cef1b1f63a493b14b6354672a",
-  ios_version_name: "0.9.63",
-  ios_version_code: 73,
-  ipa_filename: "KYNX-v0.9.63.ipa",
-  ios_file_size: "10.28 MB",
-  ios_sha256: "b84f8b4179b2f38d51dce60a0889a9ac822a6defbf85f8a42aa31647d12fa2d5",
+  sha256: "d218ea2f78d1f582f4768014fc14ca23ce1ce9456d348e8a2ae7662bca33fabf",
+  ios_version_name: "0.9.64",
+  ios_version_code: 74,
+  ipa_filename: "KYNX-v0.9.64.ipa",
+  ios_file_size: "10.29 MB",
+  ios_sha256: "ff965066d7015d3d4cb5588a488d76622612b15d8ba2ec35fb82ff29598805bb",
   release_date: "26 November 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   min_ios: "iOS 15.0+ (arm64)",
   changelog: [
-    "Unified v0.9.63 (Android & iOS Build 73): Bundled KYNX's exact signature ringtone & notification chime into iOS (.ipa) with Settings previews and local background notification audio.",
-    "Cross-platform Android <-> iOS BLE GATT Mesh interop (SHA-256 key derivation, GATT notifications & frame routing, thread isolation).",
-    "Full UI parity: Inline Voice Waveform, Video Player, Zoom Image Viewer, UserProfileSheet, T9 Dialpad, Call Minimize/Route Picker, Offline Outbox & AI Smart Replies/Polish."
+    "Unified v0.9.64 (Android & iOS Build 74): Upgraded WebRTC Voice & Video Calls to crisp 720p @ 30fps HD (350 kbps–2.5 Mbps bitrate, hardware H.264 priority, 48kHz Opus FEC without voice clipping).",
+    "Bundled KYNX's exact signature ringtone & notification chime into iOS (.ipa) with Settings previews and local background notification audio.",
+    "Cross-platform Android <-> iOS BLE GATT Mesh interop & complete Android-iOS UI parity."
   ]
 };
 
@@ -43,7 +43,7 @@ app.get('/api/release', (req, res) => {
 
 // Direct APK & IPA download routes + CDN fallback
 const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk";
-const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.63/KYNX-v0.9.63.ipa";
+const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.64/KYNX-v0.9.64.ipa";
 
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
