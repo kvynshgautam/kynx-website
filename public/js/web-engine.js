@@ -2720,11 +2720,6 @@
                 PowerState.lastWatchMsgId = m.id;
                 applyWatchCommandLocally(wCmd);
               }
-              if (!isMine && isPttMessage(txt, m.media_type || m.mediaType) && !PowerState.seenPttIds.has(m.id)) {
-                PowerState.seenPttIds.add(m.id);
-                const mUrl = resolveMediaUrl(m.media_url || m.mediaUrl);
-                if (mUrl) playPttAudioUrl(mUrl, true);
-              }
             }
           } else {
             // Sync live edits, deletions, and reactions on existing bubbles
@@ -2881,20 +2876,12 @@
       const rendered = appendMessageToUI(msg);
       if (rendered) scrollChatToBottom();
 
-      // Live Watch Together sync & Walkie-Talkie instant auto-play
+      // Live Watch Together sync
       const txt = msg.text || msg.content || '';
       const wCmd = parseWatchMessage(txt);
       if (wCmd && msg.id !== PowerState.lastWatchMsgId) {
         PowerState.lastWatchMsgId = msg.id;
         applyWatchCommandLocally(wCmd);
-      }
-      const myIdNow = AppState.user ? (AppState.user.id || AppState.user.userId) : null;
-      const senderNow = msg.sender_id || msg.senderId;
-      const isMineNow = (myIdNow && senderNow === myIdNow) || msg.isMine;
-      if (!isMineNow && isPttMessage(txt, msg.media_type || msg.mediaType) && !PowerState.seenPttIds.has(msg.id)) {
-        PowerState.seenPttIds.add(msg.id);
-        const mUrl = resolveMediaUrl(msg.media_url || msg.mediaUrl);
-        if (mUrl) playPttAudioUrl(mUrl, true);
       }
     }
 

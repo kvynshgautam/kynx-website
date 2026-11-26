@@ -6,23 +6,23 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.60",
-  version_code: 70,
-  release_name: "Unified v0.9.60 (Android & iOS Build 70): Complete iOS-APK Parity & Power Features",
+  version_name: "0.9.61",
+  version_code: 71,
+  release_name: "Unified v0.9.61 (Android & iOS Build 71): Streamlined Chat & Complete Parity",
   apk_filename: "KYNX-latest.apk",
-  file_size: "56.06 MB",
-  sha256: "03377c05f12b5d1df6e84ee8990265139e6ae177c57a6ead9cfa198017ce4139",
-  ios_version_name: "0.9.60",
-  ios_version_code: 70,
-  ipa_filename: "KYNX-v0.9.60.ipa",
-  ios_file_size: "8.34 MB",
-  ios_sha256: "70e59770eff8f45fa5204c9fd28cf91683e04e4dc0b3a5da71ec72afe0887f99",
+  file_size: "56.04 MB",
+  sha256: "a275d52a90a00a319b9db7480056baae1086c72edc998ba631f28ded35c26ec0",
+  ios_version_name: "0.9.61",
+  ios_version_code: 71,
+  ipa_filename: "KYNX-v0.9.61.ipa",
+  ios_file_size: "8.33 MB",
+  ios_sha256: "7dac03650ca45249e8265a6d0526f19176050fc23d5e3b9761caf6b8826534ce",
   release_date: "26 November 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   min_ios: "iOS 15.0+ (arm64)",
   changelog: [
-    "Unified v0.9.60 (Android & iOS Build 70): Full iOS-APK parity — Cyber Wallpapers, Burn Secret Text, Watch Together YouTube, and Walkie-Talkie PTT.",
+    "Unified v0.9.61 (Android & iOS Build 71): Removed Walkie-Talkie PTT mode across both Android & iOS for cleaner message notifications and audio handling.",
     "Multi-peer Group Voice & Video calls, Video/Document file sharing, Face ID + Vault PIN App Lock, Offline local JSON cache, and OTA updater.",
     "Status Photo/Video & Viewers Sheet, Profile Photo Upload, Extended Theme/Bubble/Glass/TextScale Controls, and Blocked Users Manager."
   ]
@@ -43,7 +43,7 @@ app.get('/api/release', (req, res) => {
 
 // Direct APK & IPA download routes + CDN fallback
 const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk";
-const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.60/KYNX-v0.9.60.ipa";
+const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.61/KYNX-v0.9.61.ipa";
 
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
