@@ -6,25 +6,25 @@ const app = express();
 
 // Manifest info
 const RELEASE_INFO = {
-  version_name: "0.9.62",
-  version_code: 72,
-  release_name: "Unified v0.9.62 (Android & iOS Build 72): Full Parity & BLE Interop",
+  version_name: "0.9.63",
+  version_code: 73,
+  release_name: "Unified v0.9.63 (Android & iOS Build 73): KYNX Audio Suite & Full Parity",
   apk_filename: "KYNX-latest.apk",
   file_size: "56.04 MB",
-  sha256: "801d3fa8eb2810f81379c53e4dd81c710c57c65cbaa1e2ca4bfa26ec448b75ae",
-  ios_version_name: "0.9.62",
-  ios_version_code: 72,
-  ipa_filename: "KYNX-v0.9.62.ipa",
-  ios_file_size: "8.75 MB",
-  ios_sha256: "be2b5d6a0f2a1b38c7aecb8660b73a838dec674fae741d041a0027c9e51daa18",
+  sha256: "0b37e47af360c26834f299424c0e1813067c1a3cef1b1f63a493b14b6354672a",
+  ios_version_name: "0.9.63",
+  ios_version_code: 73,
+  ipa_filename: "KYNX-v0.9.63.ipa",
+  ios_file_size: "10.28 MB",
+  ios_sha256: "b84f8b4179b2f38d51dce60a0889a9ac822a6defbf85f8a42aa31647d12fa2d5",
   release_date: "26 November 2026",
   developer: "KG",
   min_android: "Android 8.0+ (API 26) to Android 16 (16 KB Compatible)",
   min_ios: "iOS 15.0+ (arm64)",
   changelog: [
-    "Unified v0.9.62 (Android & iOS Build 72): Full Android-to-iOS feature parity across Calls, Chat, Status, Contacts, Settings & BLE Mesh.",
+    "Unified v0.9.63 (Android & iOS Build 73): Bundled KYNX's exact signature ringtone & notification chime into iOS (.ipa) with Settings previews and local background notification audio.",
     "Cross-platform Android <-> iOS BLE GATT Mesh interop (SHA-256 key derivation, GATT notifications & frame routing, thread isolation).",
-    "Inline Voice Waveform, Video Player, Zoom Image Viewer, UserProfileSheet, T9 Dialpad, Call Minimize/Route Picker, Offline Outbox & AI Smart Replies/Polish."
+    "Full UI parity: Inline Voice Waveform, Video Player, Zoom Image Viewer, UserProfileSheet, T9 Dialpad, Call Minimize/Route Picker, Offline Outbox & AI Smart Replies/Polish."
   ]
 };
 
@@ -43,7 +43,7 @@ app.get('/api/release', (req, res) => {
 
 // Direct APK & IPA download routes + CDN fallback
 const GITHUB_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/latest/download/KYNX-latest.apk";
-const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.62/KYNX-v0.9.62.ipa";
+const GITHUB_IPA_RELEASE_URL = "https://github.com/kvynshgautam/kynx-website/releases/download/v0.9.63/KYNX-v0.9.63.ipa";
 
 app.get('/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'downloads', 'KYNX-latest.apk');
